@@ -7,8 +7,8 @@
   --xuan-paper: #f6f2eb;
   --xuan-surface: #fffdf9;
   --xuan-soft: #f1ece4;
-  --xuan-ink: #4b4f4d;
-  --xuan-muted: #747876;
+  --xuan-ink: #27332e;
+  --xuan-muted: #66716c;
   --xuan-accent: #9a4650;
   --xuan-accent-dark: #7d3540;
   --xuan-sage: #63786d;
@@ -67,13 +67,7 @@ h3 {
 }
 
 [class~="text-[#292d2b]"],
-[class~="text-[#2f3430]"],
-.text-neutral-900,
-.text-neutral-800,
-.text-neutral-700,
-.text-gray-900,
-.text-gray-800,
-.text-black {
+[class~="text-[#2f3430]"] {
   color: var(--xuan-ink) !important;
 }
 
