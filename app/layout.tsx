@@ -5,11 +5,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "宣知党建｜基层党建工作平台", template: "%s" },
-  description: "面向基层党务工作者，按工作事项查制度、看流程、找清单和模板，把复杂的党务工作一步一步做清楚。",
+  title: { default: "小宣资料库｜党建资料下载", template: "%s" },
+  description: "整理常用党建资料、制度文件和工作模板，支持分类查找、收藏与下载。",
   openGraph: {
-    title: "宣知党建｜基层党建工作平台",
-    description: "查制度、看流程、找模板，把党建工作一步一步做清楚。",
+    title: "小宣资料库｜党建资料下载",
+    description: "查找、收藏和下载常用党建资料。",
     type: "website"
   }
 };

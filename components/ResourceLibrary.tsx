@@ -110,11 +110,11 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
   return (
     <section className="mx-auto max-w-6xl px-5 pb-16 pt-10 lg:px-8">
       <div className="mb-8 rounded-[2rem] border border-[#ebe5dc] bg-white/88 p-6 shadow-sm md:p-8">
-        <p className="text-sm font-medium text-[#6f8b7b]">资料入口</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">找到资料，完成工作</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-600">文件是主体，知识说明是辅助。先下载模板，再看制度依据、办理流程和注意事项。</p>
+        <p className="text-sm font-medium text-[#6f8b7b]">小宣资料库</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">找到需要的党建资料</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-600">按专题查找常用文件、制度材料和工作模板，支持收藏与下载。</p>
         <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_170px_170px_140px]">
-          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索标题、简介、专题、阶段、文件类型" className="h-12 rounded-2xl bg-[#f7f4ee] px-5 text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
+          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索资料名称、专题或文件类型" className="h-12 rounded-2xl bg-[#f7f4ee] px-5 text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
           <Select value={topic} onChange={setTopic} options={topics} />
           <Select value={vipFilter} onChange={setVipFilter} options={vipOptions.map((item) => item.value)} labels={Object.fromEntries(vipOptions.map((item) => [item.value, item.label]))} />
           <Select value={sortBy} onChange={setSortBy} options={sortOptions.map((item) => item.value)} labels={Object.fromEntries(sortOptions.map((item) => [item.value, item.label]))} />
@@ -150,7 +150,6 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" onClick={() => download(material)} className="rounded-2xl bg-[#6f8b7b] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#49695c]">下载文件</button>
                 <Link href={`/materials/${articleSlug}`} className="rounded-2xl border border-[#ebe5dc] bg-[#fbfaf6] px-5 py-2.5 text-sm text-neutral-600">查看详情</Link>
-                <Link href={`/materials/${articleSlug}#knowledge-network`} className="rounded-2xl border border-[#ebe5dc] bg-[#fbfaf6] px-5 py-2.5 text-sm text-neutral-600">关联阅读</Link>
               </div>
             </article>
           );
