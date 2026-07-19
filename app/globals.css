@@ -25,7 +25,6 @@ body {
     radial-gradient(circle at 88% 4%, rgba(154, 70, 80, 0.07), transparent 26rem),
     linear-gradient(180deg, #faf7f2 0%, var(--xuan-paper) 58%, #f2ede6 100%);
   color: var(--xuan-ink);
-  font-size: 0.9375rem;
   font-family: "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -76,37 +75,6 @@ h3 {
 .text-gray-800,
 .text-black {
   color: var(--xuan-ink) !important;
-}
-
-/* 大标题统一缩小一级；不调整图标使用的宽高与定位。 */
-.text-6xl {
-  font-size: 3rem !important;
-  line-height: 1 !important;
-}
-
-.text-5xl {
-  font-size: 2.25rem !important;
-  line-height: 2.5rem !important;
-}
-
-.text-4xl {
-  font-size: 1.875rem !important;
-  line-height: 2.25rem !important;
-}
-
-.text-3xl {
-  font-size: 1.5rem !important;
-  line-height: 2rem !important;
-}
-
-.text-2xl {
-  font-size: 1.25rem !important;
-  line-height: 1.75rem !important;
-}
-
-.text-xl {
-  font-size: 1.125rem !important;
-  line-height: 1.75rem !important;
 }
 
 [class~="text-[#98373a]"],

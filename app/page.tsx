@@ -50,7 +50,7 @@ export default async function HomePage() {
           <SectionTitle eyebrow="高频工作" title="从规定动作出发" description="进入专题后，可以顺着流程、清单、制度依据和模板逐项查看。" />
           <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {workTopics.slice(0, 4).map((topic, index) => (
-              <Link key={topic.slug} href={`/topics/${topic.slug}`} className="flex min-h-64 flex-col rounded-2xl border border-[#e2dfda] bg-white p-6 transition hover:-translate-y-0.5 hover:border-[#c9aaa8] hover:shadow-sm">
+              <Link key={topic.slug} href={`/topics/${topic.slug}`} className="flex min-h-[13rem] flex-col rounded-2xl border border-[#e2dfda] bg-white p-6 transition hover:-translate-y-0.5 hover:border-[#c9aaa8] hover:shadow-sm">
                 <span className="text-xs font-semibold text-[#a33a3d]">{String(index + 1).padStart(2, "0")}</span>
                 <h3 className="mt-5 text-xl font-semibold text-[#292d2b]">{topic.name}</h3>
                 <p className="mt-3 flex-1 text-sm leading-7 text-neutral-600">{topic.summary}</p>
