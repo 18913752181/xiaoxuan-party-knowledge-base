@@ -9,17 +9,6 @@ import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 
 const topicAllOption = "专题";
-const vipOptions = [
-  { value: "all", label: "是否会员专属" },
-  { value: "free", label: "普通下载" },
-  { value: "member", label: "会员专属" }
-];
-const sortOptions = [
-  { value: "newest", label: "最新更新" },
-  { value: "downloads", label: "下载最多" },
-  { value: "favorites", label: "收藏最多" }
-];
-
 function fileTone(fileType: string) {
   const tones: Record<string, string> = {
     Word: "bg-[#edf3ef] text-[#4f6f62]",
@@ -36,8 +25,6 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
   const [materials, setMaterials] = useState<Material[]>([]);
   const [keyword, setKeyword] = useState(searchParams.get("q") || "");
   const [topic, setTopic] = useState(initialTopic || searchParams.get("topic") || topicAllOption);
-  const [vipFilter, setVipFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
 
@@ -73,16 +60,11 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
           .toLowerCase();
         return (
           (topic === topicAllOption || materialTopic === topic) &&
-          (vipFilter === "all" || (vipFilter === "member" && isMemberOnly(material)) || (vipFilter === "free" && !isMemberOnly(material))) &&
           (!query || searchableText.includes(query))
         );
       })
-      .sort((a, b) => {
-        if (sortBy === "downloads") return numericCount(b.download_count) - numericCount(a.download_count);
-        if (sortBy === "favorites") return numericCount(b.favorite_count) - numericCount(a.favorite_count);
-        return dateValue(b.updated_at || b.uploaded_at) - dateValue(a.updated_at || a.uploaded_at);
-      });
-  }, [keyword, materials, sortBy, topic, vipFilter]);
+      .sort((a, b) => dateValue(b.updated_at || b.uploaded_at) - dateValue(a.updated_at || a.uploaded_at));
+  }, [keyword, materials, topic]);
 
   async function onToggleFavorite(material: Material) {
     const result = await toggleFavorite(material, favoriteSlugs);
@@ -113,11 +95,9 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
         <p className="text-sm font-medium text-[#6f8b7b]">小宣资料库</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">找到需要的党建资料</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-600">按专题查找常用文件、制度材料和工作模板，支持收藏与下载。</p>
-        <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_170px_170px_140px]">
+        <div className="mt-6 grid gap-3 md:grid-cols-[1fr_220px]">
           <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索资料名称、专题或文件类型" className="h-12 rounded-2xl bg-[#f7f4ee] px-5 text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
           <Select value={topic} onChange={setTopic} options={topics} />
-          <Select value={vipFilter} onChange={setVipFilter} options={vipOptions.map((item) => item.value)} labels={Object.fromEntries(vipOptions.map((item) => [item.value, item.label]))} />
-          <Select value={sortBy} onChange={setSortBy} options={sortOptions.map((item) => item.value)} labels={Object.fromEntries(sortOptions.map((item) => [item.value, item.label]))} />
         </div>
       </div>
 
@@ -162,15 +142,6 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
 
 function Select({ value, onChange, options, labels }: { value: string; onChange: (value: string) => void; options: string[]; labels?: Record<string, string> }) {
   return <select value={value} onChange={(event) => onChange(event.target.value)} className="h-12 rounded-2xl border border-[#ebe5dc] bg-white px-4 text-sm text-neutral-600 outline-none">{options.map((option) => <option key={option} value={option}>{labels?.[option] || option}</option>)}</select>;
-}
-
-function isMemberOnly(material: Material) {
-  return material.member_only === true || material.isVip === true;
-}
-
-function numericCount(value: number | undefined) {
-  const count = Number(value);
-  return Number.isFinite(count) ? count : 0;
 }
 
 function dateValue(value?: string) {
