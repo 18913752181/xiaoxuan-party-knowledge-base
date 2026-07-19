@@ -1,0 +1,31 @@
+﻿<view class="container">
+  <view class="hero-title">资料库</view>
+  <view class="hero-subtitle">按专题查找常用模板、流程清单和知识说明。</view>
+
+  <input class="search-box" value="{{keyword}}" bindinput="onKeywordInput" placeholder="搜索标题、简介、专题、文件类型" />
+
+  <scroll-view scroll-x class="topic-scroll">
+    <view class="topic-chip {{currentTopic === '' ? 'active' : ''}}" bindtap="clearTopic">全部</view>
+    <view wx:for="{{topics}}" wx:key="*this" class="topic-chip {{currentTopic === item ? 'active' : ''}}" data-topic="{{item}}" bindtap="selectTopic">{{item}}</view>
+  </scroll-view>
+
+  <view class="section-head">
+    <view class="section-title">共 {{materials.length}} 份资料</view>
+  </view>
+
+  <view wx:if="{{materials.length === 0}}" class="empty">没有找到匹配资料</view>
+  <view wx:for="{{materials}}" wx:key="id" class="card">
+    <view class="meta-row">
+      <text class="badge">{{item.fileType}}</text>
+      <text class="badge badge-soft">{{item.topic}}</text>
+      <text class="badge badge-soft" wx:if="{{item.stage}}">{{item.stage}}</text>
+    </view>
+    <view class="card-title" data-id="{{item.id}}" bindtap="openDetail">{{item.title}}</view>
+    <view class="card-desc">{{item.description}}</view>
+    <view class="card-desc">更新 {{item.updatedDate}}</view>
+    <view class="action-row">
+      <view class="primary-btn" data-id="{{item.id}}" bindtap="download">下载文件</view>
+      <view class="secondary-btn" data-id="{{item.id}}" bindtap="openDetail">查看详情</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,33 @@
+﻿<view class="container">
+  <view class="hero-title">小宣同志资料库</view>
+  <view class="hero-subtitle">把常用资料整理好，方便你在微信里随时查找和下载。</view>
+
+  <input class="search-box" value="{{keyword}}" bindinput="onKeywordInput" confirm-type="search" bindconfirm="search" placeholder="搜索资料标题、专题、文件类型" />
+
+  <view class="section-head">
+    <view class="section-title">专题入口</view>
+  </view>
+  <view class="topic-grid">
+    <view class="topic-item" wx:for="{{topics}}" wx:key="*this" data-topic="{{item}}" bindtap="openTopic">{{item}}</view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">热门资料</view>
+    <view class="section-more" bindtap="search">查看全部</view>
+  </view>
+
+  <view wx:if="{{hotMaterials.length === 0}}" class="empty">暂无资料，请先生成 materials.json</view>
+  <view wx:for="{{hotMaterials}}" wx:key="id" class="card">
+    <view class="meta-row">
+      <text class="badge">{{item.fileType}}</text>
+      <text class="badge badge-soft">{{item.topic}}</text>
+    </view>
+    <view class="card-title" data-id="{{item.id}}" bindtap="openDetail">{{item.title}}</view>
+    <view class="card-desc">{{item.description}}</view>
+    <view class="card-desc">更新 {{item.updatedDate}}</view>
+    <view class="action-row">
+      <view class="primary-btn" data-id="{{item.id}}" bindtap="download">下载文件</view>
+      <view class="secondary-btn" data-id="{{item.id}}" bindtap="openDetail">查看详情</view>
+    </view>
+  </view>
+</view>

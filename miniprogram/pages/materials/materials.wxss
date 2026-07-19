@@ -1,0 +1,21 @@
+﻿.topic-scroll {
+  margin-top: 24rpx;
+  white-space: nowrap;
+}
+
+.topic-chip {
+  display: inline-flex;
+  margin-right: 14rpx;
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: #fffdf8;
+  border: 1rpx solid #e4ded2;
+  color: #69726d;
+  font-size: 26rpx;
+}
+
+.topic-chip.active {
+  background: #6f8f7e;
+  border-color: #6f8f7e;
+  color: #ffffff;
+}

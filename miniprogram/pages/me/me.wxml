@@ -1,0 +1,32 @@
+﻿<view class="container">
+  <view class="profile-card">
+    <view class="hero-title">我的</view>
+    <view class="hero-subtitle">当前为本地预览状态，收藏和下载记录保存在本机微信开发者工具里。</view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">我的收藏</view>
+  </view>
+  <view wx:if="{{favorites.length === 0}}" class="empty">还没有收藏资料</view>
+  <view wx:for="{{favorites}}" wx:key="id" class="card">
+    <view class="meta-row">
+      <text class="badge">{{item.fileType}}</text>
+      <text class="badge badge-soft">{{item.topic}}</text>
+    </view>
+    <view class="card-title" data-id="{{item.id}}" bindtap="openDetail">{{item.title}}</view>
+    <view class="card-desc">{{item.description}}</view>
+    <view class="action-row">
+      <view class="primary-btn" data-id="{{item.id}}" bindtap="download">下载文件</view>
+      <view class="secondary-btn" data-id="{{item.id}}" bindtap="openDetail">查看详情</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">最近下载</view>
+  </view>
+  <view wx:if="{{downloads.length === 0}}" class="empty">暂无下载记录</view>
+  <view wx:for="{{downloads}}" wx:key="id" class="card">
+    <view class="card-title" data-id="{{item.id}}" bindtap="openDetail">{{item.title}}</view>
+    <view class="card-desc">{{item.fileType}} · {{item.topic}}</view>
+  </view>
+</view>

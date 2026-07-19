@@ -1,0 +1,115 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --xuan-paper: #f6f2eb;
+  --xuan-surface: #fffdf9;
+  --xuan-soft: #f1ece4;
+  --xuan-ink: #27332e;
+  --xuan-muted: #66716c;
+  --xuan-accent: #9a4650;
+  --xuan-accent-dark: #7d3540;
+  --xuan-sage: #63786d;
+  --xuan-line: #ddd6cc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% -4%, rgba(255, 255, 255, 0.98), transparent 30rem),
+    radial-gradient(circle at 88% 4%, rgba(154, 70, 80, 0.07), transparent 26rem),
+    linear-gradient(180deg, #faf7f2 0%, var(--xuan-paper) 58%, #f2ede6 100%);
+  color: var(--xuan-ink);
+  font-family: "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  letter-spacing: -0.025em;
+}
+
+::selection {
+  background: var(--xuan-accent);
+  color: #ffffff;
+}
+
+/* 统一现有页面的纸张、墨色与强调色，仅调整视觉色彩，不改变布局尺寸。 */
+.bg-white {
+  background-color: var(--xuan-surface) !important;
+}
+
+.text-brand-ink {
+  color: var(--xuan-ink) !important;
+}
+
+[class~="bg-[#fbfaf6]"],
+[class~="bg-[#faf9f7]"],
+[class~="bg-[#f7f6f3]"],
+[class~="bg-[#f7f4ee]"] {
+  background-color: var(--xuan-soft) !important;
+}
+
+[class~="border-[#e3e0db]"],
+[class~="border-[#e5e2dd]"],
+[class~="border-[#e9e6e1]"],
+[class~="border-[#ebe5dc]"],
+[class~="border-[#ece9e4]"] {
+  border-color: var(--xuan-line) !important;
+}
+
+[class~="text-[#292d2b]"],
+[class~="text-[#2f3430]"] {
+  color: var(--xuan-ink) !important;
+}
+
+[class~="text-[#98373a]"],
+[class~="text-[#a33a3d]"],
+[class~="text-[#8d2f32]"] {
+  color: var(--xuan-accent) !important;
+}
+
+[class~="bg-[#a33a3d]"],
+[class~="bg-[#b73a3d]"] {
+  background-color: var(--xuan-accent) !important;
+}
+
+[class~="hover:bg-[#852c2f]"]:hover,
+[class~="hover:bg-[#8f1d22]"]:hover {
+  background-color: var(--xuan-accent-dark) !important;
+}
+
+[class~="bg-[#303633]"] {
+  background-color: #34443d !important;
+}
+
+.prose-content p {
+  margin-bottom: 1rem;
+  line-height: 1.9;
+}
+
+.prose-content h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.85rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.prose-content ul {
+  margin-bottom: 1rem;
+  list-style: disc;
+  padding-left: 1.4rem;
+}
+
+.prose-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.8;
+}

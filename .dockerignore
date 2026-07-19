@@ -1,0 +1,11 @@
+.git
+.github
+.next
+node_modules
+.env*
+!.env.production.example
+dev-*.log
+npm-debug.log*
+DEPLOY_CHINA.md
+README.md
+miniprogram

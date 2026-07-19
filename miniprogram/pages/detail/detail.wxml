@@ -1,0 +1,54 @@
+﻿<view class="container" wx:if="{{material}}">
+  <view class="file-panel">
+    <view class="meta-row">
+      <text class="file-icon">{{material.fileType}}</text>
+      <text class="badge badge-soft">{{material.topic}}</text>
+      <text class="badge badge-soft" wx:if="{{material.stage}}">{{material.stage}}</text>
+    </view>
+    <view class="detail-title">{{material.title}}</view>
+    <view class="detail-desc">{{material.description}}</view>
+    <view class="file-meta">{{material.fileName || '资料文件'}} {{material.fileSize ? ' · ' + material.fileSize : ''}} · 更新 {{material.updatedDate}}</view>
+    <view class="action-row">
+      <view class="primary-btn" bindtap="download">下载文件</view>
+      <view class="secondary-btn" bindtap="toggleFavorite">{{favorite ? '已收藏' : '收藏'}}</view>
+    </view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.scenarios}}">
+    <view class="section-title">什么时候用</view>
+    <view class="section-text">{{material.scenarios}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.process}}">
+    <view class="section-title">怎么用</view>
+    <view class="section-text">{{material.process}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.policyBasis}}">
+    <view class="section-title">政策依据</view>
+    <view class="section-text">{{material.policyBasis}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.notices}}">
+    <view class="section-title">注意事项</view>
+    <view class="section-text">{{material.notices}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.faq}}">
+    <view class="section-title">FAQ</view>
+    <view class="section-text">{{material.faq}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{material.note}}">
+    <view class="section-title">小宣提醒</view>
+    <view class="section-text">{{material.note}}</view>
+  </view>
+
+  <view class="content-section" wx:if="{{relatedMaterials.length}}">
+    <view class="section-title">关联资料</view>
+    <view class="related-item" wx:for="{{relatedMaterials}}" wx:key="id" data-id="{{item.id}}" bindtap="openRelated">
+      <view>{{item.title}}</view>
+      <text>{{item.fileType}}</text>
+    </view>
+  </view>
+</view>

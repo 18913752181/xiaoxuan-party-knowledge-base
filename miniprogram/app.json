@@ -1,0 +1,36 @@
+﻿{
+  "pages": [
+    "pages/index/index",
+    "pages/materials/materials",
+    "pages/detail/detail",
+    "pages/me/me"
+  ],
+  "window": {
+    "navigationBarTitleText": "小宣同志资料库",
+    "navigationBarBackgroundColor": "#f7f4ed",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f4ed"
+  },
+  "tabBar": {
+    "color": "#7a807b",
+    "selectedColor": "#6f8f7e",
+    "backgroundColor": "#fffdf8",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/materials/materials",
+        "text": "资料库"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

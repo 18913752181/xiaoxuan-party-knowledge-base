@@ -1,0 +1,4 @@
+﻿.topic-item:active,
+.card:active {
+  opacity: 0.82;
+}
