@@ -65,14 +65,20 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
 
   const slides = useMemo(() => {
     const newest = sortedMaterials[0];
-    const popular = [...materials].sort((a, b) => popularity(b) - popularity(a))[0];
+    const popular = [...materials].sort((a, b) => popularity(b) - popularity(a)).find((item) => getArticleSlug(item) !== getArticleSlug(newest));
     const policy = sortedMaterials.find((item) => `${item.topic || ""}${item.category || ""}${item.file_type || ""}`.includes("制度"));
-    const candidates = [
+    const primary = [
       newest && { label: "本周新资料", material: newest },
       popular && { label: "热门专题", material: popular },
       policy && { label: "最新制度", material: policy }
     ].filter(Boolean) as Array<{ label: string; material: Material }>;
-    return candidates.filter((item, index) => candidates.findIndex((candidate) => getArticleSlug(candidate.material) === getArticleSlug(item.material)) === index);
+    const unique = primary.filter((item, index) => primary.findIndex((candidate) => getArticleSlug(candidate.material) === getArticleSlug(item.material)) === index);
+    const fallbackLabels = ["本周新资料", "热门专题", "最新制度"];
+    for (const material of sortedMaterials) {
+      if (unique.length >= 3) break;
+      if (!unique.some((item) => getArticleSlug(item.material) === getArticleSlug(material))) unique.push({ label: fallbackLabels[unique.length], material });
+    }
+    return unique.slice(0, 3);
   }, [materials, sortedMaterials]);
 
   useEffect(() => {
@@ -127,11 +133,9 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
       <section className="border-b border-[#e9e6e1] bg-white">
         <div className="mx-auto max-w-6xl px-5 py-7 lg:px-8 lg:py-10">
           <p className="text-sm font-medium text-[#9a4650]">小宣资料库</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">需要哪份党建资料？</h1>
-          <p className="mt-3 text-sm leading-7 text-neutral-500">搜索主题党日、组织生活会、发展党员、党支部换届……</p>
-          <div className="mt-5 flex items-center rounded-2xl bg-[#f1f0ed] px-4 shadow-inner ring-1 ring-[#ebe5dc] focus-within:ring-[#b77b80]">
+          <div className="mt-4 flex items-center rounded-2xl bg-[#f1f0ed] px-4 shadow-inner ring-1 ring-[#ebe5dc] focus-within:ring-[#b77b80]">
             <span className="mr-3 text-xl text-neutral-400" aria-hidden="true">⌕</span>
-            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="输入资料名称或工作主题" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
+            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、组织生活会、发展党员、党支部换届……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
             {keyword ? <button type="button" onClick={() => setKeyword("")} className="px-2 text-sm text-neutral-400">清除</button> : null}
           </div>
         </div>
@@ -205,57 +209,46 @@ function FeaturedCarousel({ slides, active, onChange }: { slides: Array<{ label:
   const current = slides[active];
   const slug = getArticleSlug(current.material);
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#303a36] p-6 text-white shadow-sm md:p-9">
-      <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-[#9a4650]/25 blur-2xl" />
+    <section className="relative overflow-hidden rounded-3xl border border-[#e1d4cc] bg-[#eee4de] p-5 text-brand-ink shadow-sm md:p-7">
+      <div className="absolute -right-14 -top-20 h-48 w-48 rounded-full bg-[#c98e94]/25 blur-2xl" />
+      <div className="absolute bottom-0 right-16 h-24 w-40 rounded-full bg-white/55 blur-2xl" />
       <div className="relative max-w-3xl">
-        <p className="text-xs font-medium tracking-[0.18em] text-white/60">{current.label}</p>
-        <h2 className="mt-4 text-2xl font-semibold leading-tight md:text-3xl">{current.material.title}</h2>
-        {meaningful(current.material.description || current.material.summary) ? <p className="mt-3 line-clamp-2 text-sm leading-7 text-white/70">{current.material.description || current.material.summary}</p> : null}
-        <Link href={`/materials/${slug}`} className="mt-6 inline-flex rounded-xl border border-white/25 px-4 py-2 text-sm text-white transition hover:bg-white/10">查看资料</Link>
+        <p className="text-xs font-medium tracking-[0.18em] text-[#9a4650]">{current.label}</p>
+        <h2 className="mt-3 line-clamp-2 text-xl font-semibold leading-snug md:text-2xl">{current.material.title}</h2>
+        {meaningful(current.material.description || current.material.summary) ? <p className="mt-2 line-clamp-1 text-sm leading-6 text-neutral-600">{current.material.description || current.material.summary}</p> : null}
+        <Link href={`/materials/${slug}`} className="mt-4 inline-flex rounded-xl border border-[#cbb8ad] bg-white/45 px-4 py-2 text-sm text-[#7d3540] transition hover:bg-white/70">查看资料</Link>
       </div>
-      {slides.length > 1 ? <div className="relative mt-7 flex gap-2">{slides.map((slide, index) => <button key={`${slide.label}-${getArticleSlug(slide.material)}`} type="button" onClick={() => onChange(index)} aria-label={`查看第${index + 1}张`} className={`h-1.5 rounded-full transition-all ${active === index ? "w-8 bg-white" : "w-3 bg-white/35"}`} />)}</div> : null}
+      {slides.length > 1 ? <div className="relative mt-5 flex gap-2">{slides.map((slide, index) => <button key={`${slide.label}-${getArticleSlug(slide.material)}`} type="button" onClick={() => onChange(index)} aria-label={`查看第${index + 1}张`} className={`h-1.5 rounded-full transition-all ${active === index ? "w-8 bg-[#9a4650]" : "w-3 bg-[#9a4650]/25"}`} />)}</div> : null}
     </section>
   );
 }
 
 function QuestionEntry() {
-  const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const body = [
-      `遇到的工作：${form.get("work") || ""}`,
-      `想找的资料：${form.get("material") || ""}`,
-      `所属行业：${form.get("industry") || ""}`,
-      `是否希望公开回答：${form.get("publicAnswer") || "否"}`
-    ].join("\n");
-    window.location.href = `mailto:1743398170@qq.com?subject=${encodeURIComponent("宣知资料需求提交")}&body=${encodeURIComponent(body)}`;
+    const question = String(form.get("question") || "").trim();
+    if (!question) return;
+    const existing = JSON.parse(window.localStorage.getItem("xiaoxuan-questions") || "[]") as Array<{ question: string; submittedAt: string }>;
+    window.localStorage.setItem("xiaoxuan-questions", JSON.stringify([...existing, { question, submittedAt: new Date().toISOString() }]));
     setSubmitted(true);
   }
 
+  if (submitted) {
+    return <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#d9cec3] bg-[#f0e7e1] p-8 text-center"><div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#9a4650] text-lg text-white">✓</div><h2 className="mt-3 text-xl font-semibold text-brand-ink">问题提交成功</h2><p className="mt-2 text-sm text-neutral-500">我们会整理高频需求，持续补充资料。</p></section>;
+  }
+
   return (
-    <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#e3d8cf] bg-[#f5eee8] p-6 md:p-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="text-sm font-medium text-[#9a4650]">资料需求</p><h2 className="mt-2 text-2xl font-semibold text-brand-ink">没找到需要的资料？</h2><p className="mt-2 text-sm leading-6 text-neutral-500">提交你的问题，我们会从高频需求中整理新模板、新问答和新专题。</p></div>
-        <button type="button" onClick={() => setOpen((value) => !value)} className="shrink-0 rounded-xl bg-[#9a4650] px-5 py-3 text-sm font-medium text-white">{open ? "收起" : "提交问题"}</button>
-      </div>
-      {open ? (
-        <form onSubmit={submit} className="mt-6 grid gap-4 border-t border-[#dfd0c5] pt-6 md:grid-cols-2">
-          <QuestionField name="work" label="遇到什么工作" placeholder="例如：准备召开组织生活会" required />
-          <QuestionField name="material" label="想找什么资料" placeholder="例如：会议通知和记录模板" required />
-          <QuestionField name="industry" label="所属行业" placeholder="例如：国企、学校、社区" />
-          <label className="text-sm text-neutral-600">是否希望公开回答<select name="publicAnswer" className="mt-2 h-12 w-full rounded-xl border border-[#ddcec4] bg-white px-4 outline-none"><option>否</option><option>是</option></select></label>
-          <div className="md:col-span-2"><button type="submit" className="rounded-xl bg-[#303a36] px-5 py-3 text-sm font-medium text-white">发送问题</button>{submitted ? <span className="ml-3 text-sm text-neutral-500">已打开邮件应用，请确认发送。</span> : null}</div>
-        </form>
-      ) : null}
+    <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#e3d8cf] bg-[#f5eee8] p-5 md:p-6">
+      <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <label htmlFor="question-input" className="shrink-0 text-base font-semibold text-brand-ink">我想知道</label>
+        <input id="question-input" name="question" required placeholder="输入你遇到的问题或想找的资料" className="h-12 min-w-0 flex-1 rounded-xl border border-[#ddcec4] bg-white px-4 text-sm outline-none placeholder:text-neutral-400" />
+        <button type="submit" className="h-12 shrink-0 rounded-xl bg-[#9a4650] px-5 text-sm font-medium text-white">提交问题</button>
+      </form>
     </section>
   );
-}
-
-function QuestionField({ name, label, placeholder, required = false }: { name: string; label: string; placeholder: string; required?: boolean }) {
-  return <label className="text-sm text-neutral-600">{label}<input name={name} required={required} placeholder={placeholder} className="mt-2 h-12 w-full rounded-xl border border-[#ddcec4] bg-white px-4 outline-none placeholder:text-neutral-400" /></label>;
 }
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
