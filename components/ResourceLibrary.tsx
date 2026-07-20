@@ -11,7 +11,7 @@ import type { Material } from "@/lib/types";
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
 
-export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }) {
+export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { initialTopic?: string; libraryOnly?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -132,7 +132,7 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
     <div className="pb-20 lg:pb-0">
       <section className="border-b border-[#e9e6e1] bg-white">
         <div className="mx-auto max-w-6xl px-5 py-7 lg:px-8 lg:py-10">
-          <p className="text-sm font-medium text-[#9a4650]">小宣资料库</p>
+          <p className="text-sm font-medium text-[#9a4650]">{libraryOnly ? "全部资料" : "小宣资料库"}</p>
           <div className="mt-4 flex items-center rounded-2xl bg-[#f1f0ed] px-4 shadow-inner ring-1 ring-[#ebe5dc] focus-within:ring-[#b77b80]">
             <span className="mr-3 text-xl text-neutral-400" aria-hidden="true">⌕</span>
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、组织生活会、发展党员、党支部换届……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
@@ -142,9 +142,9 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
       </section>
 
       <main className="mx-auto max-w-6xl space-y-10 px-5 py-7 lg:px-8 lg:py-10">
-        {slides.length ? <FeaturedCarousel slides={slides} active={Math.min(activeSlide, slides.length - 1)} onChange={setActiveSlide} /> : null}
+        {!libraryOnly && slides.length ? <FeaturedCarousel slides={slides} active={Math.min(activeSlide, slides.length - 1)} onChange={setActiveSlide} /> : null}
 
-        {frequentTopics.length ? (
+        {!libraryOnly && frequentTopics.length ? (
           <section>
             <SectionHeader title="高频工作" subtitle="只展示已有较完整资料的专题" />
             <div className="mt-4 grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -161,7 +161,7 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
 
         <section id="latest-materials" className="scroll-mt-28">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeader title={topic === topicAllOption ? "最新资料" : topic} subtitle="最近更新的真实内容" />
+            <SectionHeader title={topic === topicAllOption ? (libraryOnly ? "全部资料" : "最新资料") : topic} subtitle={libraryOnly ? `共 ${filteredMaterials.length} 份真实资料` : "最近更新的真实内容"} />
             <select value={topic} onChange={(event) => setTopic(event.target.value)} className="h-11 rounded-xl border border-[#e4ded5] bg-white px-4 text-sm text-neutral-600 outline-none">
               <option value={topicAllOption}>{topicAllOption}</option>
               {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
@@ -170,7 +170,7 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
 
           {message ? <div className="mt-4 rounded-xl border border-[#d9cab1] bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</div> : null}
           <div className="mt-4 divide-y divide-[#eeeae4] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#ebe5dc]">
-            {filteredMaterials.slice(0, 12).map((material) => {
+            {filteredMaterials.slice(0, libraryOnly ? undefined : 12).map((material) => {
               const slug = getArticleSlug(material);
               const isFavorite = favoriteSlugs.includes(slug);
               return (
@@ -199,7 +199,7 @@ export function ResourceLibrary({ initialTopic = "" }: { initialTopic?: string }
           {!filteredMaterials.length ? <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">没有找到匹配资料，请更换关键词或专题。</div> : null}
         </section>
 
-        <QuestionEntry />
+        {!libraryOnly ? <QuestionEntry /> : null}
       </main>
     </div>
   );

@@ -43,5 +43,7 @@ export function SiteHeader() {
 }
 
 function MobileNavItem({ href, symbol, label }: { href: string; symbol: string; label: string }) {
-  return <Link href={href} className="flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 hover:bg-[#f7f4ee] hover:text-[#9a4650]"><span className="text-lg leading-none" aria-hidden="true">{symbol}</span><span>{label}</span></Link>;
+  const className = "flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 hover:bg-[#f7f4ee] hover:text-[#9a4650]";
+  const content = <><span className="text-lg leading-none" aria-hidden="true">{symbol}</span><span>{label}</span></>;
+  return href.includes("#") ? <a href={href} className={className}>{content}</a> : <Link href={href} className={className}>{content}</Link>;
 }
