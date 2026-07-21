@@ -22,11 +22,6 @@ function cleanNetworkItems(items?: string[]) {
   return (items || []).map((item) => item.trim()).filter((item) => item && !["无", "暂无", "待补充"].includes(item));
 }
 
-function isPolicyMaterial(item: Material) {
-  const text = [item.title, item.file_name].join(" ");
-  return /制度|条例|规定|办法|细则|准则|意见|规范/.test(text);
-}
-
 export default function MaterialDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -92,19 +87,9 @@ export default function MaterialDetailPage() {
   };
   const previousItems = cleanNetworkItems(material.relatedMap?.previous);
   const nextItems = cleanNetworkItems(material.relatedMap?.next);
-  const recommendedPolicyMaterials = cleanNetworkItems(material.relatedMap?.recommended)
-    .map(findLinkedMaterial)
-    .filter((item): item is Material => Boolean(item && isPolicyMaterial(item)));
-  const automaticPolicyMaterials = allMaterials.filter((item) =>
-    item.id !== material.id
-    && (item.topic || item.category) === (material.topic || material.category)
-    && isPolicyMaterial(item)
-    && Boolean(item.file_url || item.downloadable)
-  );
-  const policyMaterials = [...recommendedPolicyMaterials, ...automaticPolicyMaterials]
-    .filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index)
-    .slice(0, 6);
-  const hasKnowledgeNetwork = previousItems.length > 0 || nextItems.length > 0 || policyMaterials.length > 0;
+  const relatedItems = cleanNetworkItems(material.relatedMap?.related);
+  const recommendedItems = cleanNetworkItems(material.relatedMap?.recommended);
+  const hasKnowledgeNetwork = previousItems.length > 0 || nextItems.length > 0 || relatedItems.length > 0 || recommendedItems.length > 0;
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
@@ -157,7 +142,8 @@ export default function MaterialDetailPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {previousItems.length ? <NetworkList title="上一步工作" items={previousItems} findMaterial={findLinkedMaterial} /> : null}
               {nextItems.length ? <NetworkList title="下一步工作" items={nextItems} findMaterial={findLinkedMaterial} /> : null}
-              {policyMaterials.length ? <PolicyFileList items={policyMaterials} /> : null}
+              {relatedItems.length ? <NetworkList title="相关资料" items={relatedItems} findMaterial={findLinkedMaterial} /> : null}
+              {recommendedItems.length ? <NetworkList title="推荐阅读" items={recommendedItems} findMaterial={findLinkedMaterial} /> : null}
             </div>
           </section> : null}
         </div>
@@ -182,13 +168,4 @@ function NetworkList({ title, items, findMaterial }: { title: string; items: str
       </ul>
     </div>
   );
-}
-
-function PolicyFileList({ items }: { items: Material[] }) {
-  return <div className="rounded-2xl bg-white p-4 md:col-span-2">
-    <h3 className="font-semibold text-brand-ink">制度文件</h3>
-    <ul className="mt-3 grid gap-2 text-sm">
-      {items.map((item) => <li key={item.id}><Link href={`/materials/${item.slug || item.id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7f4ee] px-4 py-3 text-[#5f7f70] hover:text-[#49695c]"><span>{item.title}</span><span className="shrink-0 text-xs">查看下载 →</span></Link></li>)}
-    </ul>
-  </div>;
 }
