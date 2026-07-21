@@ -10,7 +10,7 @@ import type { Material } from "@/lib/types";
 
 function blocks(text?: string) {
   if (!text) return null;
-  return text.split(/\n{2,}/).map((item) => <p key={item} className="whitespace-pre-wrap leading-8 text-neutral-700">{item.trim()}</p>);
+  return text.split(/\n{2,}/).map((item) => <p key={item} className="whitespace-pre-wrap text-sm leading-6 text-neutral-600">{item.trim()}</p>);
 }
 
 function hasKnowledgeContent(text?: string) {
@@ -166,7 +166,7 @@ export default function MaterialDetailPage() {
 }
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-6"><h2 className="text-2xl font-semibold text-brand-ink">{title}</h2><div className="mt-4 grid gap-4">{children}</div></section>;
+  return <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-5 md:p-6"><h2 className="text-base font-semibold text-brand-ink">{title}</h2><div className="mt-3 grid gap-3">{children}</div></section>;
 }
 
 function NetworkList({ title, items, findMaterial }: { title: string; items: string[]; findMaterial: (title: string) => Material | null }) {
