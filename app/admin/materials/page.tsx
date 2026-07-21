@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { formatDisplayDate } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 
+const statusLabels: Record<string, string> = {
+  published: "已发布",
+  draft: "草稿",
+  hidden: "已隐藏"
+};
+
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [message, setMessage] = useState("正在读取资料...");
@@ -54,7 +60,7 @@ export default function AdminMaterialsPage() {
           <div>
             <Link href="/admin" className="text-sm text-[#6f8f7e]">返回后台</Link>
             <h1 className="mt-4 text-3xl font-semibold">资料列表</h1>
-            <p className="mt-3 text-sm text-[#6d746f]">管理所有 content 文件夹中的资料节点。</p>
+            <p className="mt-3 text-sm text-[#6d746f]">共有 {materials.length} 份资料</p>
           </div>
           <Link href="/admin/new" className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white">新增资料</Link>
         </div>
@@ -83,7 +89,7 @@ export default function AdminMaterialsPage() {
                     <td className="px-4 py-3">{item.topic || item.category}</td>
                     <td className="px-4 py-3">{item.stage || "-"}</td>
                     <td className="px-4 py-3">{item.file_type}</td>
-                    <td className="px-4 py-3">{item.status || "published"}</td>
+                    <td className="px-4 py-3">{statusLabels[item.status || "published"] || item.status || "已发布"}</td>
                     <td className="px-4 py-3">{formatDisplayDate(item.updated_at)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-3">
