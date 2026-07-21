@@ -82,10 +82,11 @@ export default function MaterialDetailPage() {
   const scenarioContent = material.scenarios || material.introduction || material.article;
   const policyContent = material.policyBasis || material.legal_basis;
   const noticeContent = material.notices || material.downloadNote;
-  const findLinkedMaterial = (title: string) => {
-    const normalized = title.trim();
+  const findLinkedMaterial = (reference: string) => {
+    const normalized = reference.trim();
     if (!normalized) return null;
-    return allMaterials.find((item) => item.title === normalized)
+    return allMaterials.find((item) => item.slug === normalized || item.id === normalized)
+      || allMaterials.find((item) => item.title === normalized)
       || allMaterials.find((item) => item.title.includes(normalized) || normalized.includes(item.title))
       || null;
   };
@@ -169,14 +170,14 @@ function DetailSection({ title, children }: { title: string; children: React.Rea
   return <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-5 md:p-6"><h2 className="text-base font-semibold text-brand-ink">{title}</h2><div className="mt-3 grid gap-3">{children}</div></section>;
 }
 
-function NetworkList({ title, items, findMaterial }: { title: string; items: string[]; findMaterial: (title: string) => Material | null }) {
+function NetworkList({ title, items, findMaterial }: { title: string; items: string[]; findMaterial: (reference: string) => Material | null }) {
   return (
     <div className="rounded-2xl bg-white p-4">
       <h3 className="font-semibold text-brand-ink">{title}</h3>
       <ul className="mt-3 grid gap-2 text-sm text-neutral-700">
         {items.map((item) => {
           const linkedMaterial = findMaterial(item);
-          return <li key={item}>{linkedMaterial ? <Link href={`/materials/${linkedMaterial.slug || linkedMaterial.id}`} className="text-[#5f7f70] hover:text-[#49695c]">{item}</Link> : <span>{item}</span>}</li>;
+          return <li key={item}>{linkedMaterial ? <Link href={`/materials/${linkedMaterial.slug || linkedMaterial.id}`} className="text-[#5f7f70] hover:text-[#49695c]">{linkedMaterial.title}</Link> : <span>{item}</span>}</li>;
         })}
       </ul>
     </div>

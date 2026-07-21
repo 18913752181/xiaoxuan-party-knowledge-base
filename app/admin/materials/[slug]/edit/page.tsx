@@ -30,11 +30,13 @@ const networkFields = [
 ];
 
 const joinList = (items?: string[]) => (items || []).join("、");
+const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
 
 export default function AdminMaterialEditPage() {
   const params = useParams<{ slug: string }>();
   const [material, setMaterial] = useState<Material | null>(null);
   const [topics, setTopics] = useState<string[]>([]);
+  const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>({});
   const [file, setFile] = useState<File | null>(null);
   const [isVip, setIsVip] = useState(false);
@@ -77,6 +79,13 @@ export default function AdminMaterialEditPage() {
       })
       .catch((error) => setMessage(`读取失败：${error.message}`));
   }, [params.slug]);
+
+  useEffect(() => {
+    fetch("/api/admin/materials", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((rows) => setAllMaterials(Array.isArray(rows) ? rows : []))
+      .catch(() => setAllMaterials([]));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -204,9 +213,17 @@ export default function AdminMaterialEditPage() {
         </Section>
 
         <Section title="知识网络">
-          <div className="grid gap-4 md:grid-cols-2">
+          <p className="text-sm leading-6 text-[#6d746f]">先选择专题，再选择需要关联的文章。保存后，前台会显示文章标题并可直接进入对应资料。</p>
+          <div className="mt-2 grid gap-4 md:grid-cols-2">
             {networkFields.map((field) => (
-              <Input key={field.key} label={field.label} value={form[field.key] || ""} onChange={(value) => setField(field.key, value)} />
+              <RelationPicker
+                key={field.key}
+                label={field.label}
+                value={form[field.key] || ""}
+                materials={allMaterials}
+                currentSlug={material.slug || material.id}
+                onChange={(value) => setField(field.key, value)}
+              />
             ))}
           </div>
         </Section>
@@ -219,6 +236,52 @@ export default function AdminMaterialEditPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function RelationPicker({ label, value, materials, currentSlug, onChange }: {
+  label: string;
+  value: string;
+  materials: Material[];
+  currentSlug: string;
+  onChange: (value: string) => void;
+}) {
+  const available = materials.filter((item) => (item.slug || item.id) !== currentSlug);
+  const topicOptions = Array.from(new Set(available.map((item) => item.topic || item.category).filter(Boolean))).sort();
+  const [topic, setTopic] = useState("");
+  const [article, setArticle] = useState("");
+  const selected = splitList(value);
+  const articles = topic ? available.filter((item) => (item.topic || item.category) === topic) : [];
+  const titleFor = (reference: string) => materials.find((item) => item.slug === reference || item.id === reference)?.title || reference;
+
+  function addArticle() {
+    if (!article || selected.includes(article)) return;
+    onChange([...selected, article].join("、"));
+    setArticle("");
+  }
+
+  function removeArticle(reference: string) {
+    onChange(selected.filter((item) => item !== reference).join("、"));
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-[#e4ded2] bg-[#fffdf8] p-4">
+      <h3 className="text-sm font-semibold text-[#48524c]">{label}</h3>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <select value={topic} onChange={(event) => { setTopic(event.target.value); setArticle(""); }} className="w-full rounded-xl border border-[#ddd5c8] bg-white px-3 py-3 text-sm outline-none focus:border-[#7f9a8a]">
+          <option value="">选择专题</option>
+          {topicOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select value={article} onChange={(event) => setArticle(event.target.value)} disabled={!topic} className="w-full rounded-xl border border-[#ddd5c8] bg-white px-3 py-3 text-sm outline-none disabled:text-[#a9aaa7]">
+          <option value="">选择文章</option>
+          {articles.map((item) => <option key={item.slug || item.id} value={item.slug || item.id}>{item.title}</option>)}
+        </select>
+      </div>
+      <button type="button" onClick={addArticle} disabled={!article} className="mt-3 rounded-full bg-[#6f8f7e] px-4 py-2 text-xs font-medium text-white disabled:opacity-40">添加关联</button>
+      {selected.length ? <ul className="mt-3 grid gap-2">
+        {selected.map((reference) => <li key={reference} className="flex items-start justify-between gap-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-[#59635d]"><span>{titleFor(reference)}</span><button type="button" onClick={() => removeArticle(reference)} className="shrink-0 text-[#a6404d]">移除</button></li>)}
+      </ul> : <p className="mt-3 text-xs text-[#969b97]">暂未关联文章</p>}
+    </div>
   );
 }
 
