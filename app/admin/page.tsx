@@ -17,6 +17,11 @@ const links = [
     description: "新增专题，或修改现有专题名称，并同步更新资料专题字段。"
   },
   {
+    href: "/admin/questions",
+    title: "问题管理",
+    description: "查看前台收集的问题，填写小宣的回答，并决定是否在前台公开。"
+  },
+  {
     href: "/",
     title: "返回前台",
     description: "回到小宣同志基层党建工作平台首页。"

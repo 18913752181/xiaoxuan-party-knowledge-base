@@ -225,29 +225,51 @@ function FeaturedCarousel({ slides, active, onChange }: { slides: Array<{ label:
 
 function QuestionEntry() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [publicQuestions, setPublicQuestions] = useState<Array<{ id: string; question: string; answer: string }>>([]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    fetch("/api/questions", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((rows) => setPublicQuestions(Array.isArray(rows) ? rows : []))
+      .catch(() => setPublicQuestions([]));
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const question = String(form.get("question") || "").trim();
     if (!question) return;
-    const existing = JSON.parse(window.localStorage.getItem("xiaoxuan-questions") || "[]") as Array<{ question: string; submittedAt: string }>;
-    window.localStorage.setItem("xiaoxuan-questions", JSON.stringify([...existing, { question, submittedAt: new Date().toISOString() }]));
-    setSubmitted(true);
-  }
-
-  if (submitted) {
-    return <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#d9cec3] bg-[#f0e7e1] p-8 text-center"><div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#9a4650] text-lg text-white">✓</div><h2 className="mt-3 text-xl font-semibold text-brand-ink">问题提交成功</h2><p className="mt-2 text-sm text-neutral-500">我们会整理高频需求，持续补充资料。</p></section>;
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await fetch("/api/questions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "提交失败，请稍后重试。");
+      setSubmitted(true);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "提交失败，请稍后重试。");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#e3d8cf] bg-[#f5eee8] p-5 md:p-6">
-      <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label htmlFor="question-input" className="shrink-0 text-base font-semibold text-brand-ink">我想知道</label>
-        <input id="question-input" name="question" required placeholder="输入你遇到的问题或想找的资料" className="h-12 min-w-0 flex-1 rounded-xl border border-[#ddcec4] bg-white px-4 text-sm outline-none placeholder:text-neutral-400" />
-        <button type="submit" className="h-12 shrink-0 rounded-xl bg-[#9a4650] px-5 text-sm font-medium text-white">提交问题</button>
-      </form>
-    </section>
+    <div className="grid gap-5">
+      {submitted ? <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#d9cec3] bg-[#f0e7e1] p-8 text-center"><div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#9a4650] text-lg text-white">✓</div><h2 className="mt-3 text-xl font-semibold text-brand-ink">问题提交成功</h2><p className="mt-2 text-sm text-neutral-500">我们会整理高频需求，持续补充资料。</p></section> : <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#e3d8cf] bg-[#f5eee8] p-5 md:p-6">
+        <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label htmlFor="question-input" className="shrink-0 text-base font-semibold text-brand-ink">我想知道</label>
+          <input id="question-input" name="question" required maxLength={500} placeholder="输入你遇到的问题或想找的资料" className="h-12 min-w-0 flex-1 rounded-xl border border-[#ddcec4] bg-white px-4 text-sm outline-none placeholder:text-neutral-400" />
+          <button type="submit" disabled={submitting} className="h-12 shrink-0 rounded-xl bg-[#9a4650] px-5 text-sm font-medium text-white disabled:opacity-50">{submitting ? "提交中" : "提交问题"}</button>
+        </form>
+        {error ? <p className="mt-3 text-sm text-[#9a4650]">{error}</p> : null}
+      </section>}
+      {publicQuestions.length ? <section className="rounded-3xl border border-[#e3d8cf] bg-white p-5 md:p-6">
+        <h2 className="text-xl font-semibold text-brand-ink">小宣答疑</h2>
+        <div className="mt-4 divide-y divide-[#eee8e0]">{publicQuestions.map((item) => <article key={item.id} className="py-4 first:pt-0 last:pb-0"><h3 className="text-sm font-semibold leading-6 text-[#3f4943]">问：{item.question}</h3><p className="mt-2 text-sm leading-7 text-neutral-600"><span className="font-medium text-[#9a4650]">小宣的回答：</span>{item.answer}</p></article>)}</div>
+      </section> : null}
+    </div>
   );
 }
 

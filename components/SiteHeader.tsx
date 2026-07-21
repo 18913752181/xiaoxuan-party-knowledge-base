@@ -33,17 +33,17 @@ export function SiteHeader() {
         </div>
       </header>
       <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-[#e8e4de] bg-white/95 px-3 py-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(54,48,42,0.06)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
-        <MobileNavItem href="/" symbol="⌂" label="首页" />
-        <MobileNavItem href="/library" symbol="▤" label="资料库" />
-        <MobileNavItem href="/#submit-question" symbol="?" label="提交问题" />
-        <MobileNavItem href="/me" symbol="○" label="我的" />
+        <MobileNavItem href="/" label="首页" />
+        <MobileNavItem href="/library" label="资料库" />
+        <MobileNavItem href="/#submit-question" label="提交问题" />
+        <MobileNavItem href="/me" label="我的" />
       </nav>
     </>
   );
 }
 
-function MobileNavItem({ href, symbol, label }: { href: string; symbol: string; label: string }) {
-  const className = "flex flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 hover:bg-[#f7f4ee] hover:text-[#9a4650]";
-  const content = <><span className="text-lg leading-none" aria-hidden="true">{symbol}</span><span>{label}</span></>;
+function MobileNavItem({ href, label }: { href: string; label: string }) {
+  const className = "flex items-center justify-center rounded-xl px-1 py-3 text-sm hover:bg-[#f7f4ee] hover:text-[#9a4650]";
+  const content = <span>{label}</span>;
   return href.includes("#") ? <a href={href} className={className}>{content}</a> : <Link href={href} className={className}>{content}</Link>;
 }
