@@ -227,7 +227,8 @@ function QuestionEntry() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [publicQuestions, setPublicQuestions] = useState<Array<{ id: string; question: string; answer: string }>>([]);
+  const [publicQuestions, setPublicQuestions] = useState<Array<{ id: string; question: string }>>([]);
+  const [activeQuestion, setActiveQuestion] = useState(0);
 
   useEffect(() => {
     fetch("/api/questions", { cache: "no-store" })
@@ -235,6 +236,12 @@ function QuestionEntry() {
       .then((rows) => setPublicQuestions(Array.isArray(rows) ? rows : []))
       .catch(() => setPublicQuestions([]));
   }, []);
+
+  useEffect(() => {
+    if (publicQuestions.length < 2) return;
+    const timer = window.setInterval(() => setActiveQuestion((current) => (current + 1) % publicQuestions.length), 4500);
+    return () => window.clearInterval(timer);
+  }, [publicQuestions.length]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -265,9 +272,10 @@ function QuestionEntry() {
         </form>
         {error ? <p className="mt-3 text-sm text-[#9a4650]">{error}</p> : null}
       </section>}
-      {publicQuestions.length ? <section className="rounded-3xl border border-[#e3d8cf] bg-white p-5 md:p-6">
+      {publicQuestions.length ? <section className="overflow-hidden rounded-3xl border border-[#e3d8cf] bg-white p-5 md:p-6">
         <h2 className="text-xl font-semibold text-brand-ink">小宣答疑</h2>
-        <div className="mt-4 divide-y divide-[#eee8e0]">{publicQuestions.map((item) => <article key={item.id} className="py-4 first:pt-0 last:pb-0"><h3 className="text-sm font-semibold leading-6 text-[#3f4943]">问：{item.question}</h3><p className="mt-2 text-sm leading-7 text-neutral-600"><span className="font-medium text-[#9a4650]">小宣的回答：</span>{item.answer}</p></article>)}</div>
+        <Link href={`/questions/${publicQuestions[activeQuestion]?.id}`} className="mt-4 flex min-h-20 items-center justify-between gap-4 rounded-2xl bg-[#f7f2ed] px-5 py-4 transition hover:bg-[#f2e9e3]"><h3 className="text-sm font-semibold leading-6 text-[#3f4943]">问：{publicQuestions[activeQuestion]?.question}</h3><span className="shrink-0 text-sm text-[#9a4650]">查看回答 →</span></Link>
+        {publicQuestions.length > 1 ? <div className="mt-4 flex gap-2">{publicQuestions.map((item, index) => <button key={item.id} type="button" onClick={() => setActiveQuestion(index)} aria-label={`查看第${index + 1}个问题`} className={`h-1.5 rounded-full transition-all ${index === activeQuestion ? "w-8 bg-[#9a4650]" : "w-3 bg-[#9a4650]/20"}`} />)}</div> : null}
       </section> : null}
     </div>
   );
