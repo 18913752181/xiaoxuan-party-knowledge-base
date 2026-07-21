@@ -273,8 +273,8 @@ function QuestionEntry() {
         {error ? <p className="mt-3 text-sm text-[#9a4650]">{error}</p> : null}
       </section>}
       {publicQuestions.length ? <section className="overflow-hidden rounded-3xl border border-[#e3d8cf] bg-white p-5 md:p-6">
-        <h2 className="text-xl font-semibold text-brand-ink">小宣答疑</h2>
-        <Link href={`/questions/${publicQuestions[activeQuestion]?.id}`} className="mt-4 flex min-h-20 items-center justify-between gap-4 rounded-2xl bg-[#f7f2ed] px-5 py-4 transition hover:bg-[#f2e9e3]"><h3 className="text-sm font-semibold leading-6 text-[#3f4943]">问：{publicQuestions[activeQuestion]?.question}</h3><span className="shrink-0 text-sm text-[#9a4650]">查看回答 →</span></Link>
+        <h2 className="text-xl font-semibold text-brand-ink">答疑区</h2>
+        <Link href={`/questions/${publicQuestions[activeQuestion]?.id}`} className="mt-4 inline-flex max-w-full items-center rounded-2xl bg-[#f7f2ed] px-5 py-4 transition hover:bg-[#f2e9e3]"><h3 className="text-sm font-semibold leading-6 text-[#3f4943]">问：{publicQuestions[activeQuestion]?.question}</h3></Link>
         {publicQuestions.length > 1 ? <div className="mt-4 flex gap-2">{publicQuestions.map((item, index) => <button key={item.id} type="button" onClick={() => setActiveQuestion(index)} aria-label={`查看第${index + 1}个问题`} className={`h-1.5 rounded-full transition-all ${index === activeQuestion ? "w-8 bg-[#9a4650]" : "w-3 bg-[#9a4650]/20"}`} />)}</div> : null}
       </section> : null}
     </div>
