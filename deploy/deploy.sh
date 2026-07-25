@@ -15,12 +15,20 @@ test -f "$ENV_FILE" || { echo "Missing $ENV_FILE"; exit 1; }
 export APP_UID="${APP_UID:-$(id -u)}"
 export APP_GID="${APP_GID:-$(id -g)}"
 
-# The production container mounts a persistent content directory so materials
-# uploaded from the admin panel survive deployments. Seed new repository
-# materials into that directory without deleting or overwriting server uploads.
+# Keep production materials identical to the repository. The local repository
+# is the source of truth: additions, edits, and deletions are all mirrored.
 mkdir -p "$CONTENT_DIR"
 if [ -d "$APP_DIR/content" ]; then
-  cp -a -n "$APP_DIR/content/." "$CONTENT_DIR/"
+  case "$CONTENT_DIR" in
+    /srv/xiaoxuan/shared/content|/srv/xiaoxuan/shared/content/)
+      find "$CONTENT_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+      cp -a "$APP_DIR/content/." "$CONTENT_DIR/"
+      ;;
+    *)
+      echo "Refusing to replace unexpected content directory: $CONTENT_DIR"
+      exit 1
+      ;;
+  esac
 fi
 
 previous_image="$(docker image inspect xiaoxuan-site:latest --format '{{.Id}}' 2>/dev/null || true)"
