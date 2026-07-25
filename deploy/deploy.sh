@@ -4,6 +4,7 @@ set -Eeuo pipefail
 APP_DIR="${APP_DIR:-/srv/xiaoxuan/app}"
 ENV_FILE="${ENV_FILE:-/srv/xiaoxuan/shared/app.env}"
 LOCK_FILE="${LOCK_FILE:-/tmp/xiaoxuan-deploy.lock}"
+CONTENT_DIR="${CONTENT_DIR:-/srv/xiaoxuan/shared/content}"
 
 exec 9>"$LOCK_FILE"
 flock -n 9 || { echo "Another deployment is running."; exit 1; }
@@ -13,6 +14,14 @@ test -f "$ENV_FILE" || { echo "Missing $ENV_FILE"; exit 1; }
 
 export APP_UID="${APP_UID:-$(id -u)}"
 export APP_GID="${APP_GID:-$(id -g)}"
+
+# The production container mounts a persistent content directory so materials
+# uploaded from the admin panel survive deployments. Seed new repository
+# materials into that directory without deleting or overwriting server uploads.
+mkdir -p "$CONTENT_DIR"
+if [ -d "$APP_DIR/content" ]; then
+  cp -a -n "$APP_DIR/content/." "$CONTENT_DIR/"
+fi
 
 previous_image="$(docker image inspect xiaoxuan-site:latest --format '{{.Id}}' 2>/dev/null || true)"
 if [ -n "$previous_image" ]; then
