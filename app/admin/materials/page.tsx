@@ -148,6 +148,7 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">阶段</th>
                 <th className="px-4 py-3">文件类型</th>
                 <th className="px-4 py-3">状态</th>
+                <th className="px-4 py-3">是否会员专属</th>
                 <th className="px-4 py-3">更新时间</th>
                 <th className="px-4 py-3">操作</th>
               </tr>
@@ -162,6 +163,11 @@ export default function AdminMaterialsPage() {
                     <td className="px-4 py-3">{item.stage || "-"}</td>
                     <td className="px-4 py-3">{item.file_type}</td>
                     <td className="px-4 py-3">{statusLabels[item.status || "published"] || item.status || "已发布"}</td>
+                    <td className="px-4 py-3">
+                      <span className={item.member_only ? "font-medium text-[#9b744f]" : "text-[#6d746f]"}>
+                        {item.member_only ? "是" : "否"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">{formatDisplayDate(item.updated_at)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-3">
@@ -177,7 +183,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={7} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={8} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>

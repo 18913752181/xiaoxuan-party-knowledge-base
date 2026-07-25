@@ -21,6 +21,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   const [topic, setTopic] = useState(initialTopic || searchParams.get("topic") || topicAllOption);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [memberOnlyMaterial, setMemberOnlyMaterial] = useState<Material | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
@@ -146,6 +147,11 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   }
 
   async function download(material: Material) {
+    if (material.member_only) {
+      setMemberOnlyMaterial(material);
+      setMessage("");
+      return;
+    }
     setMessage("正在准备下载...");
     const result = await downloadMaterialFile(material);
     if (!result.ok) {
@@ -159,6 +165,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
 
   function chooseTopic(name: string) {
     setTopic(name);
+    setMemberOnlyMaterial(null);
     document.querySelector("#latest-materials")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -227,13 +234,22 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
 
         <section id="latest-materials" className="scroll-mt-28">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeader title={topic === topicAllOption ? (libraryOnly ? "全部资料" : "最新资料") : topic} subtitle={libraryOnly ? `共 ${filteredMaterials.length} 份` : undefined} />
-            <select value={topic} onChange={(event) => setTopic(event.target.value)} className="h-11 rounded-xl border border-[#e4ded5] bg-white px-4 text-sm text-neutral-600 outline-none">
+            <SectionHeader title={topic === topicAllOption ? (libraryOnly ? "全部资料" : "最新资料") : "专题资料"} subtitle={libraryOnly ? `共 ${filteredMaterials.length} 份` : undefined} />
+            <select value={topic} onChange={(event) => { setTopic(event.target.value); setMemberOnlyMaterial(null); }} className="h-11 rounded-xl border border-[#e4ded5] bg-white px-4 text-sm text-neutral-600 outline-none">
               <option value={topicAllOption}>{topicAllOption}</option>
               {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
             </select>
           </div>
 
+          {memberOnlyMaterial ? (
+            <div className="mt-5 rounded-3xl border-2 border-[#9a4650] bg-[#fff7f5] px-6 py-10 text-center shadow-sm">
+              <span className="inline-flex rounded-full bg-[#9a4650] px-4 py-1.5 text-sm font-semibold text-white">会员专属资料</span>
+              <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{memberOnlyMaterial.title}</h3>
+              <p className="mt-4 text-base font-medium text-[#9a4650]">该资料为会员专属，后续开放。</p>
+              <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="mt-6 rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">返回资料列表</button>
+            </div>
+          ) : (
+          <>
           {message ? <div className="mt-4 rounded-xl border border-[#d9cab1] bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</div> : null}
           <div className="mt-4 divide-y divide-[#eeeae4] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#ebe5dc]">
             {filteredMaterials.slice(0, libraryOnly ? undefined : 12).map((material) => {
@@ -263,6 +279,8 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
             })}
           </div>
           {!filteredMaterials.length ? <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">没有找到匹配资料，请更换关键词或专题。</div> : null}
+          </>
+          )}
         </section>
 
         {!libraryOnly ? <QuestionEntry /> : null}
