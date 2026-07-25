@@ -13,7 +13,7 @@ function friendlyAuthMessage(message: string) {
     return "该邮箱已注册，请直接登录";
   }
   if (lower.includes("password should be at least 6 characters")) {
-    return "密码至少 6 位";
+    return "密码至少 8 位，并且必须同时包含字母和数字";
   }
   if (lower.includes("email not confirmed")) {
     return "邮箱未确认，请先完成邮箱验证或关闭邮箱确认";

@@ -12,25 +12,20 @@ const statusOptions = [
 ];
 
 const knowledgeFields = [
-  { key: "introduction", label: "知识简介" },
-  { key: "policyBasis", label: "政策依据" },
-  { key: "scenarios", label: "适用场景" },
-  { key: "process", label: "办理流程" },
-  { key: "notices", label: "注意事项" },
-  { key: "faq", label: "常见问题 FAQ" },
-  { key: "downloadNote", label: "下载说明" },
-  { key: "note", label: "小宣提醒" }
+  { key: "note", label: "小宣提醒" },
+  { key: "policyBasis", label: "制度依据" },
+  { key: "notices", label: "填写说明与注意事项" },
+  { key: "faq", label: "常见问题" }
 ];
 
 const networkFields = [
-  { key: "previous", label: "前置节点" },
-  { key: "next", label: "后续节点" },
-  { key: "related", label: "关联节点" },
-  { key: "recommended", label: "推荐阅读" }
+  { key: "previous", label: "上一步工作" },
+  { key: "next", label: "下一步工作" }
 ];
 
 const joinList = (items?: string[]) => (items || []).join("、");
 const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
+const titleFromFileName = (fileName = "") => fileName.replace(/\.(docx?|xlsx?|pdf|pptx?)$/i, "").trim();
 
 export default function AdminMaterialEditPage() {
   const params = useParams<{ slug: string }>();
@@ -55,7 +50,7 @@ export default function AdminMaterialEditPage() {
         setMaterial(row);
         setIsVip(Boolean(row.member_only));
         setForm({
-          title: row.title || "",
+          title: row.title || titleFromFileName(row.file_name),
           topic: row.topic || row.category || "",
           category: row.topic || row.category || "",
           stage: row.stage || "",
@@ -188,7 +183,17 @@ export default function AdminMaterialEditPage() {
             <p>当前文件：{material.file_name || "暂无"}</p>
             <p className="mt-1">文件类型：{material.file_type || "未标注"}　文件大小：{material.file_size || "-"}</p>
           </div>
-          <input type="file" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" onChange={(event) => setFile(event.target.files?.[0] || null)} className="mt-4 block w-full rounded-xl border border-[#ddd5c8] bg-[#fffdf8] px-4 py-3 text-sm" />
+          <input
+            type="file"
+            accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
+            onChange={(event) => {
+              const selectedFile = event.target.files?.[0] || null;
+              setFile(selectedFile);
+              if (selectedFile) setField("title", titleFromFileName(selectedFile.name));
+            }}
+            className="mt-4 block w-full rounded-xl border border-[#ddd5c8] bg-[#fffdf8] px-4 py-3 text-sm"
+          />
+          <p className="mt-2 text-xs text-[#8b918d]">选择新文件后会自动带入文件名，标题仍可继续修改。</p>
         </Section>
 
         <Section title="资料基本信息">
@@ -196,7 +201,6 @@ export default function AdminMaterialEditPage() {
             <Input label="标题" value={form.title || ""} onChange={(value) => setField("title", value)} />
             <Select label="所属专题" value={form.topic || ""} options={topicOptions} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage || ""} onChange={(value) => setField("stage", value)} />
-            <Input label="标签" value={form.tags || ""} onChange={(value) => setField("tags", value)} />
             <Select label="状态" value={form.status || "published"} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary || ""} onChange={(value) => setField("summary", value)} />
@@ -213,7 +217,7 @@ export default function AdminMaterialEditPage() {
         </Section>
 
         <Section title="知识网络">
-          <p className="text-sm leading-6 text-[#6d746f]">先选择专题，再选择需要关联的文章。保存后，前台会显示文章标题并可直接进入对应资料。</p>
+          <p className="text-sm leading-6 text-[#6d746f]">按实际工作顺序关联上一步和下一步资料。未填写的关系不会在前台显示。</p>
           <div className="mt-2 grid gap-4 md:grid-cols-2">
             {networkFields.map((field) => (
               <RelationPicker

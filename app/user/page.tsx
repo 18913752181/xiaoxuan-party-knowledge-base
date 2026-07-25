@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listMyFavorites, type FavoriteRow } from "@/lib/favorites";
-import { missingSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 type PageState = "loading" | "guest" | "ready" | "error";
 
@@ -16,27 +15,20 @@ export default function UserPage() {
 
   useEffect(() => {
     async function loadSession() {
-      if (missingSupabaseEnv.length > 0 || !supabase) {
-        setState("error");
-        setMessage(`缺少环境变量：${missingSupabaseEnv.join(", ")}`);
-        return;
-      }
-
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
-        setState("error");
-        setMessage(`读取 session 失败：${error.message}`);
-        return;
-      }
-
-      if (!data.session?.user) {
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      if (!response.ok) {
         setState("guest");
         return;
       }
 
-      setEmail(data.session.user.email || "匿名用户");
-      setUserId(data.session.user.id);
+      const data = await response.json();
+      if (!data.user) {
+        setState("guest");
+        return;
+      }
+
+      setEmail(data.user.email || "匿名用户");
+      setUserId(data.user.id);
       setState("ready");
 
       const favoriteResult = await listMyFavorites();
@@ -51,7 +43,7 @@ export default function UserPage() {
   }, []);
 
   async function signOut() {
-    if (supabase) await supabase.auth.signOut();
+    await fetch("/api/auth/logout", { method: "POST" });
     setEmail("");
     setUserId("");
     setFavorites([]);

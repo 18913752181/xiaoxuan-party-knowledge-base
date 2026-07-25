@@ -5,10 +5,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "小宣资料库｜党建资料下载", template: "%s" },
+  title: { default: "小宣资料库", template: "%s" },
   description: "整理常用党建资料、制度文件和工作模板，支持分类查找、收藏与下载。",
   openGraph: {
-    title: "小宣资料库｜党建资料下载",
+    title: "小宣资料库",
     description: "查找、收藏和下载常用党建资料。",
     type: "website"
   }

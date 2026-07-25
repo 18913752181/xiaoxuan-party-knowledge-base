@@ -1,15 +1,11 @@
 ﻿import { readFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
+import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseUrl = rawSupabaseUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 function encodeDownloadName(name: string) {
   return encodeURIComponent(name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-"));
@@ -32,31 +28,11 @@ function downloadFileName(headerName: string) {
   return `attachment; filename*=UTF-8''${encoded}`;
 }
 
-async function requireUser(request: Request) {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return { ok: false, response: NextResponse.json({ error: "下载功能暂未配置登录服务。" }, { status: 503 }) };
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: "请先登录后再下载文件。" }, { status: 401 });
   }
-
-  const authorization = request.headers.get("authorization") || "";
-  const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (!token) {
-    return { ok: false, response: NextResponse.json({ error: "请先登录后再下载文件。" }, { status: 401 }) };
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user) {
-    return { ok: false, response: NextResponse.json({ error: "登录状态已失效，请重新登录后下载。" }, { status: 401 }) };
-  }
-
-  return { ok: true };
-}
-
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const auth = await requireUser(request);
-  if (!auth.ok) return auth.response;
 
   const slug = decodeURIComponent(params.id).replace(/^content-/, "");
   const unit = await getContentUnitBySlug(slug);
@@ -72,7 +48,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     console.error("Failed to update download count", error);
   });
 
-  return new NextResponse(new Uint8Array(buffer), {
+  const response = new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": contentType(fileName),
       "Content-Length": String(buffer.byteLength),
@@ -80,4 +56,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
       "Cache-Control": "private, no-store"
     }
   });
+  if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
+  return response;
 }

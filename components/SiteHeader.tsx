@@ -1,14 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/library", label: "资料库" },
-  { href: "/#submit-question", label: "提交问题" }
+  { href: "/#submit-question", label: "提交问题" },
+  { href: "/me", label: "我的" }
 ];
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash);
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, [pathname]);
+
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-[#ddd6cc] bg-[#faf7f2]/94 backdrop-blur-xl">
@@ -33,17 +46,21 @@ export function SiteHeader() {
         </div>
       </header>
       <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-[#e8e4de] bg-white/95 px-3 py-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(54,48,42,0.06)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
-        <MobileNavItem href="/" label="首页" />
-        <MobileNavItem href="/library" label="资料库" />
-        <MobileNavItem href="/#submit-question" label="提交问题" />
-        <MobileNavItem href="/me" label="我的" />
+        <MobileNavItem href="/" label="首页" active={pathname === "/" && hash !== "#submit-question"} />
+        <MobileNavItem href="/library" label="资料库" active={pathname === "/library" || pathname.startsWith("/materials/")} />
+        <MobileNavItem href="/#submit-question" label="提交问题" active={pathname === "/" && hash === "#submit-question"} />
+        <MobileNavItem href="/me" label="我的" active={pathname === "/me" || pathname.startsWith("/me/")} />
       </nav>
     </>
   );
 }
 
-function MobileNavItem({ href, label }: { href: string; label: string }) {
-  const className = "flex items-center justify-center rounded-xl px-1 py-3 text-sm hover:bg-[#f7f4ee] hover:text-[#9a4650]";
+function MobileNavItem({ href, label, active }: { href: string; label: string; active: boolean }) {
+  const className = `flex items-center justify-center rounded-xl px-1 py-3 text-sm transition ${
+    active
+      ? "bg-[#f3e7e6] font-semibold text-[#9a4650]"
+      : "text-neutral-500 hover:bg-[#f7f4ee] hover:text-[#9a4650]"
+  }`;
   const content = <span>{label}</span>;
   return href.includes("#") ? <a href={href} className={className}>{content}</a> : <Link href={href} className={className}>{content}</Link>;
 }

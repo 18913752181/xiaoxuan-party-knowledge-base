@@ -11,17 +11,19 @@ export default function MePage() {
   if (!profile) {
     return (
       <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
-        <div className="rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm">
+        <Link href="/login" className="block rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm transition hover:border-[#cddbd3] hover:bg-[#fbfaf6]">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#edf3ef] text-2xl text-[#6f8b7b]">宣</div>
             <div>
-              <h1 className="text-2xl font-semibold text-brand-ink">点击登录</h1>
-              <p className="mt-2 text-sm text-neutral-500">登录后查看收藏、下载记录和账号设置。</p>
+              <h1 className="text-2xl font-semibold text-brand-ink">点我登录</h1>
+              <p className="mt-2 text-sm text-neutral-500">登录后查看下载和收藏的文档。</p>
             </div>
           </div>
-          <Link href="/login" className="mt-8 inline-flex rounded-2xl bg-[#6f8b7b] px-6 py-3 text-sm font-medium text-white">
-            去登录
-          </Link>
+        </Link>
+
+        <div className="mt-5 overflow-hidden rounded-[2rem] border border-[#ebe5dc] bg-white shadow-sm">
+          <MenuItem href="/login" title="下载的文档" desc="登录后查看下载过的资料" />
+          <MenuItem href="/login" title="收藏的文档" desc="登录后查看收藏的资料" />
         </div>
       </section>
     );
@@ -40,8 +42,8 @@ export default function MePage() {
       </div>
 
       <div className="mt-5 overflow-hidden rounded-[2rem] border border-[#ebe5dc] bg-white shadow-sm">
-        <MenuItem href="/me/favorites" title="我的收藏" desc="保存常用资料和工作节点" />
-        <MenuItem href="/me/downloads" title="下载记录" desc="最近下载过的模板文件" />
+        <MenuItem href="/me/downloads" title="下载的文档" desc="查看下载过的模板和资料" />
+        <MenuItem href="/me/favorites" title="收藏的文档" desc="查看收藏的常用资料" />
         <MenuItem href="/library" title="最近浏览" desc="继续查找资料和工作流程" />
         <MenuItem href="/user" title="账号设置" desc="查看登录邮箱和账号状态" />
         {profile.is_admin ? <MenuItem href="/admin" title="管理后台" desc="录入和编辑资料" /> : null}

@@ -76,6 +76,14 @@ export async function addTopic(name: string) {
   return topics;
 }
 
+export async function deleteTopic(name: string) {
+  const topicName = name.trim();
+  if (!topicName) throw new Error("专题名称不能为空");
+  const topics = (await listTopics()).filter((item) => item !== topicName);
+  await writeJson(topicsPath, topics);
+  return topics;
+}
+
 export async function renameTopic(oldName: string, newName: string) {
   const from = oldName.trim();
   const to = newName.trim();

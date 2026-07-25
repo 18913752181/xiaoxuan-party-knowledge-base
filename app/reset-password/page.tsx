@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { formatAuthError } from "@/lib/auth-errors";
+import { isValidPassword, PASSWORD_RULE_MESSAGE } from "@/lib/password-policy";
 import { missingSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 const cleanResetUrl = () => {
@@ -95,8 +96,8 @@ export default function ResetPasswordPage() {
     setError("");
     setMessage("");
 
-    if (password.length < 6) {
-      setError("新密码至少 6 位。");
+    if (!isValidPassword(password)) {
+      setError(PASSWORD_RULE_MESSAGE);
       return;
     }
     if (password !== confirmPassword) {
@@ -149,11 +150,12 @@ export default function ResetPasswordPage() {
             <input
               type="password"
               required
-              minLength={6}
+              minLength={8}
+              pattern="(?=.*[A-Za-z])(?=.*\d).{8,}"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
-              placeholder="至少 6 位"
+              placeholder="至少 8 位，包含字母和数字"
             />
           </label>
 
@@ -162,7 +164,7 @@ export default function ResetPasswordPage() {
             <input
               type="password"
               required
-              minLength={6}
+              minLength={8}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"

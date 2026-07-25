@@ -18,6 +18,52 @@ function hasKnowledgeContent(text?: string) {
   return Boolean(value && value !== "待补充" && value !== "暂无" && value !== "无");
 }
 
+const officialPolicyLinks = [
+  {
+    title: "中国共产党章程",
+    href: "https://download.12371.cn/wenjian/2022/11/1/djcbesddz.pdf",
+  },
+  {
+    title: "中国共产党基层组织选举工作条例",
+    href: "https://www.idcpc.gov.cn/zgzc/zcwj/202008/t20200819_139529.html",
+  },
+  {
+    title: "中国共产党支部工作条例（试行）",
+    href: "https://www.idcpc.gov.cn/zgzc/zcwj/201912/t20191216_106820.html",
+  },
+];
+
+function policyLinks(text: string) {
+  const items = text
+    .split(/[；;\n]+/)
+    .map((item) => item.trim().replace(/[。；;]+$/, ""))
+    .filter(Boolean);
+
+  return (
+    <ul className="grid gap-3 text-sm leading-6">
+      {items.map((item) => {
+        const official = officialPolicyLinks.find((policy) => item.includes(policy.title));
+        return (
+          <li key={item}>
+            {official ? (
+              <a
+                href={official.href}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#5f7f70] underline decoration-[#a9b9b0] underline-offset-4 hover:text-[#49695c]"
+              >
+                {item}
+              </a>
+            ) : (
+              <span className="text-neutral-600">{item}</span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function cleanNetworkItems(items?: string[]) {
   return (items || []).map((item) => item.trim()).filter((item) => item && !["无", "暂无", "待补充"].includes(item));
 }
@@ -74,7 +120,6 @@ export default function MaterialDetailPage() {
 
   const articleSlug = getArticleSlug(material);
   const isFavorite = favoriteSlugs.includes(articleSlug);
-  const scenarioContent = material.scenarios || material.introduction || material.article;
   const policyContent = material.policyBasis || material.legal_basis;
   const noticeContent = material.notices || material.downloadNote;
   const findLinkedMaterial = (reference: string) => {
@@ -87,9 +132,9 @@ export default function MaterialDetailPage() {
   };
   const previousItems = cleanNetworkItems(material.relatedMap?.previous);
   const nextItems = cleanNetworkItems(material.relatedMap?.next);
-  const relatedItems = cleanNetworkItems(material.relatedMap?.related);
-  const recommendedItems = cleanNetworkItems(material.relatedMap?.recommended);
-  const hasKnowledgeNetwork = previousItems.length > 0 || nextItems.length > 0 || relatedItems.length > 0 || recommendedItems.length > 0;
+  const previousLinks = previousItems.map(findLinkedMaterial).filter((item): item is Material => Boolean(item));
+  const nextLinks = nextItems.map(findLinkedMaterial).filter((item): item is Material => Boolean(item));
+  const hasKnowledgeNetwork = previousLinks.length > 0 || nextLinks.length > 0;
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
@@ -128,22 +173,17 @@ export default function MaterialDetailPage() {
         </div>
 
         <div className="grid gap-6 p-6 md:p-8">
-          {hasKnowledgeContent(scenarioContent) ? <DetailSection title="什么时候用">{blocks(scenarioContent)}</DetailSection> : null}
-          {hasKnowledgeContent(material.process) ? <DetailSection title="怎么用">{blocks(material.process)}</DetailSection> : null}
-          {hasKnowledgeContent(policyContent) ? <DetailSection title="制度依据">{blocks(policyContent)}</DetailSection> : null}
+          {hasKnowledgeContent(material.note) ? <DetailSection title="小宣提醒">{blocks(material.note)}</DetailSection> : null}
+          {hasKnowledgeContent(policyContent) ? <DetailSection title="制度依据">{policyLinks(policyContent!)}</DetailSection> : null}
           {hasKnowledgeContent(noticeContent) ? <DetailSection title="填写说明与注意事项">{blocks(noticeContent)}</DetailSection> : null}
           {hasKnowledgeContent(material.faq) ? <DetailSection title="常见问题">{blocks(material.faq)}</DetailSection> : null}
-          {hasKnowledgeContent(material.note) ? <DetailSection title="小宣提醒">{blocks(material.note)}</DetailSection> : null}
 
           {hasKnowledgeNetwork ? <section id="knowledge-network" className="rounded-[1.75rem] border border-[#ebe5dc] bg-[#fbfaf6] p-6">
             <p className="text-sm font-medium text-[#6f8b7b]">关联知识</p>
             <h2 className="mt-2 text-2xl font-semibold text-brand-ink">知识网络</h2>
-            <p className="mt-3 leading-8 text-neutral-700">{material.topic || material.category}{material.stage ? ` > ${material.stage}` : ""} &gt; {material.title}</p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {previousItems.length ? <NetworkList title="上一步工作" items={previousItems} findMaterial={findLinkedMaterial} /> : null}
-              {nextItems.length ? <NetworkList title="下一步工作" items={nextItems} findMaterial={findLinkedMaterial} /> : null}
-              {relatedItems.length ? <NetworkList title="相关资料" items={relatedItems} findMaterial={findLinkedMaterial} /> : null}
-              {recommendedItems.length ? <NetworkList title="推荐阅读" items={recommendedItems} findMaterial={findLinkedMaterial} /> : null}
+              {previousLinks.length ? <NetworkList title="上一步工作" items={previousLinks} /> : null}
+              {nextLinks.length ? <NetworkList title="下一步工作" items={nextLinks} /> : null}
             </div>
           </section> : null}
         </div>
@@ -156,15 +196,16 @@ function DetailSection({ title, children }: { title: string; children: React.Rea
   return <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-5 md:p-6"><h2 className="text-base font-semibold text-brand-ink">{title}</h2><div className="mt-3 grid gap-3">{children}</div></section>;
 }
 
-function NetworkList({ title, items, findMaterial }: { title: string; items: string[]; findMaterial: (reference: string) => Material | null }) {
+function NetworkList({ title, items }: { title: string; items: Material[] }) {
   return (
     <div className="rounded-2xl bg-white p-4">
       <h3 className="font-semibold text-brand-ink">{title}</h3>
       <ul className="mt-3 grid gap-2 text-sm text-neutral-700">
-        {items.map((item) => {
-          const linkedMaterial = findMaterial(item);
-          return <li key={item}>{linkedMaterial ? <Link href={`/materials/${linkedMaterial.slug || linkedMaterial.id}`} className="text-[#5f7f70] hover:text-[#49695c]">{linkedMaterial.title}</Link> : <span>{item}</span>}</li>;
-        })}
+        {items.map((item) => (
+          <li key={item.slug || item.id}>
+            <Link href={`/materials/${item.slug || item.id}`} className="text-[#5f7f70] hover:text-[#49695c]">{item.title}</Link>
+          </li>
+        ))}
       </ul>
     </div>
   );

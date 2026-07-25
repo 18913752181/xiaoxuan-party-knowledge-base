@@ -1,7 +1,6 @@
 "use client";
 
 import type { Material } from "@/lib/types";
-import { missingSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 export type FavoriteRow = {
   id: string;
@@ -43,78 +42,45 @@ async function updateLocalFavoriteCount(articleSlug: string, delta: 1 | -1) {
 }
 
 export async function getCurrentUserId() {
-  if (missingSupabaseEnv.length > 0 || !supabase) {
-    return { userId: "", error: `缺少环境变量：${missingSupabaseEnv.join(", ")}` };
-  }
-
-  const { data, error } = await supabase.auth.getSession();
-  if (error) return { userId: "", error: error.message };
-  if (!data.session?.user) return { userId: "", error: "登录后可收藏" };
-
-  return { userId: data.session.user.id, error: "" };
+  const response = await fetch("/api/auth/session", { cache: "no-store" });
+  if (!response.ok) return { userId: "", error: "登录后可收藏" };
+  const data = await response.json();
+  return { userId: data.user?.id || "", error: data.user?.id ? "" : "登录后可收藏" };
 }
 
 export async function listMyFavorites() {
-  const { userId, error } = await getCurrentUserId();
-  if (error) return { rows: [] as FavoriteRow[], error };
-
-  const { data, error: queryError } = await supabase!
-    .from("favorites")
-    .select("id,user_id,article_slug,title,category,created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (queryError) {
-    return { rows: [] as FavoriteRow[], error: formatSupabaseError(queryError.message) };
-  }
-
-  return { rows: (data || []) as FavoriteRow[], error: "" };
+  const response = await fetch("/api/favorites", { cache: "no-store" });
+  const result = await response.json().catch(() => ({ rows: [], error: "收藏读取失败。" }));
+  return {
+    rows: (result.rows || []) as FavoriteRow[],
+    error: response.ok ? result.error || "" : result.error || "登录后可收藏"
+  };
 }
 
 export async function toggleFavorite(
   material: Material,
   currentFavoriteSlugs: string[]
 ): Promise<ToggleFavoriteResult> {
-  const { userId, error } = await getCurrentUserId();
-  if (error) return { ok: false, favorited: false, error };
-
   const articleSlug = getArticleSlug(material);
   const isFavorited = currentFavoriteSlugs.includes(articleSlug);
-
-  if (isFavorited) {
-    const { error: deleteError } = await supabase!
-      .from("favorites")
-      .delete()
-      .eq("user_id", userId)
-      .eq("article_slug", articleSlug);
-
-    if (deleteError) {
-      return {
-        ok: false,
-        favorited: true,
-        error: formatSupabaseError(deleteError.message)
-      };
-    }
-
-    const favoriteCount = await updateLocalFavoriteCount(articleSlug, -1);
-    return { ok: true, favorited: false, favoriteCount, error: "" };
-  }
-
-  const { error: insertError } = await supabase!.from("favorites").insert({
-    user_id: userId,
-    article_slug: articleSlug,
-    title: material.title,
-    category: material.category
+  const response = await fetch("/api/favorites", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      articleSlug,
+      title: material.title,
+      category: material.category
+    })
   });
-
-  if (insertError) {
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
     return {
       ok: false,
-      favorited: false,
-      error: formatSupabaseError(insertError.message)
+      favorited: isFavorited,
+      error: formatSupabaseError(result.error || "收藏操作失败。")
     };
   }
 
-  const favoriteCount = await updateLocalFavoriteCount(articleSlug, 1);
-  return { ok: true, favorited: true, favoriteCount, error: "" };
+  const favoriteCount = await updateLocalFavoriteCount(articleSlug, result.favorited ? 1 : -1);
+  return { ok: true, favorited: Boolean(result.favorited), favoriteCount, error: "" };
 }

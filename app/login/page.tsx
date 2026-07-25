@@ -1,84 +1,116 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatAuthError } from "@/lib/auth-errors";
-import { missingSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
-  const [loading, setLoading] = useState<"login" | "logout" | "anonymous" | "">("");
+  const [loading, setLoading] = useState<"send" | "verify" | "logout" | "">("");
+  const [countdown, setCountdown] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const isDevelopment = process.env.NODE_ENV === "development";
 
   useEffect(() => {
     async function refreshSession() {
-      if (!supabase) return;
-      const { data } = await supabase.auth.getSession();
-      setCurrentUser(data.session?.user.email || (data.session?.user ? "匿名用户" : ""));
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setCurrentUser(data.user?.email || "");
     }
 
     refreshSession();
   }, []);
 
-  function validateConfig() {
-    if (missingSupabaseEnv.length > 0 || !supabase) {
-      setError(`缺少环境变量：${missingSupabaseEnv.join(", ")}`);
-      return false;
-    }
-    return true;
-  }
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = window.setInterval(() => {
+      setCountdown((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [countdown]);
 
-  function validateForm() {
-    if (!email.trim()) {
-      setError("邮箱不能为空。");
-      return false;
-    }
-    if (password.length < 6) {
-      setError("密码至少 6 位。");
-      return false;
-    }
-    return true;
-  }
-
-  async function login(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function sendCode() {
     setError("");
     setMessage("");
-    if (!validateConfig() || !validateForm()) return;
+    const normalizedEmail = email.trim().toLowerCase();
 
-    setLoading("login");
-    const { data, error: signInError } = await supabase!.auth.signInWithPassword({
-      email,
-      password
-    });
-    setLoading("");
-
-    if (signInError) {
-      setError(formatAuthError("登录失败", signInError));
+    if (!normalizedEmail) {
+      setError("请输入邮箱地址。");
       return;
     }
 
-    setCurrentUser(data.user?.email || "匿名用户");
+    setLoading("send");
+    const response = await fetch("/api/auth/send-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: normalizedEmail })
+    });
+    setLoading("");
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      setError(result.error || "发送验证码失败。");
+      return;
+    }
+
+    setVerifiedEmail(normalizedEmail);
+    setVerificationCode("");
+    setCountdown(60);
+    setMessage("6 位验证码已发送，请查看邮箱。新邮箱验证后会自动创建账号。");
+  }
+
+  async function verifyCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+    const normalizedEmail = email.trim().toLowerCase();
+    const token = verificationCode.trim();
+
+    if (!verifiedEmail) {
+      setError("请先发送邮箱验证码。");
+      return;
+    }
+    if (normalizedEmail !== verifiedEmail) {
+      setError("邮箱已修改，请重新发送验证码。");
+      return;
+    }
+    if (!/^\d{6}$/.test(token)) {
+      setError("请输入邮箱中收到的 6 位验证码。");
+      return;
+    }
+
+    setLoading("verify");
+    const response = await fetch("/api/auth/verify-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: verifiedEmail, token })
+    });
+    setLoading("");
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(data.error || "验证码错误或已失效。");
+      return;
+    }
+
+    setCurrentUser(data.user?.email || verifiedEmail);
     router.push("/user");
+    router.refresh();
   }
 
   async function logout() {
     setError("");
     setMessage("");
-    if (!validateConfig()) return;
-
     setLoading("logout");
-    const { error: signOutError } = await supabase!.auth.signOut();
+    const response = await fetch("/api/auth/logout", { method: "POST" });
     setLoading("");
 
-    if (signOutError) {
-      setError(formatAuthError("退出失败", signOutError));
+    if (!response.ok) {
+      setError("退出失败，请稍后重试。");
       return;
     }
 
@@ -86,44 +118,34 @@ export default function LoginPage() {
     setMessage("已退出登录。");
   }
 
-  async function devLogin() {
-    setError("");
-    setMessage("");
-    if (!validateConfig()) return;
-
-    setLoading("anonymous");
-    const { data, error: signInError } = await supabase!.auth.signInAnonymously();
-    setLoading("");
-
-    if (signInError) {
-      setError(formatAuthError("开发模式登录失败", signInError));
-      return;
-    }
-
-    if (!data.session) {
-      setError("开发模式登录失败：Supabase 没有返回 session。");
-      return;
-    }
-
-    setCurrentUser(data.user?.email || "匿名用户");
-    router.push("/user");
-  }
-
   return (
     <section className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
-          <p className="text-sm font-medium text-brand-sageDark">账号登录</p>
-          <h1 className="mt-3 text-4xl font-semibold text-brand-ink">邮箱和密码登录</h1>
+          <p className="text-sm font-medium text-brand-sageDark">邮箱验证码登录</p>
+          <h1 className="mt-3 text-2xl font-semibold text-neutral-700">登录宣知网</h1>
           <p className="mt-5 text-base leading-8 text-neutral-600">
-            使用已注册邮箱和密码登录。忘记密码时，可以通过邮箱重置。
-          </p>
-          <p className="mt-4 text-sm leading-7 text-neutral-500">
-            资料内容仍然读取本地 content 文件夹；这里不接文章数据库、不接支付。
+            输入邮箱并验证 6 位验证码即可登录。首次使用的新邮箱会自动创建账号，无需设置和记忆密码。
           </p>
         </div>
 
-        <form onSubmit={login} className="rounded-2xl border border-brand-line bg-white p-6 shadow-soft">
+        {currentUser ? (
+          <section className="rounded-2xl border border-[#cfe4d5] bg-[#f1f8f3] p-6 shadow-soft">
+            <p className="text-sm text-brand-sageDark">当前已登录</p>
+            <p className="mt-2 break-all text-base font-medium text-neutral-700">{currentUser}</p>
+            <p className="mt-3 text-sm leading-7 text-neutral-600">登录状态将自动保留，下次进入无需再次验证。</p>
+            <button
+              type="button"
+              onClick={logout}
+              disabled={Boolean(loading)}
+              className="mt-6 h-12 w-full rounded-full border border-brand-line bg-white font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading === "logout" ? "正在退出..." : "退出登录"}
+            </button>
+          </section>
+        ) : null}
+
+        <form onSubmit={verifyCode} className={`rounded-2xl border border-brand-line bg-white p-6 shadow-soft ${currentUser ? "hidden" : ""}`}>
           {currentUser ? (
             <div className="mb-5 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-4 py-3 text-sm text-brand-sageDark">
               当前已登录：{currentUser}
@@ -132,34 +154,40 @@ export default function LoginPage() {
 
           <label className="block text-sm text-neutral-600">
             邮箱
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
-              placeholder="name@example.com"
-            />
+            <div className="mt-2 flex gap-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-12 min-w-0 flex-1 rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
+                placeholder="name@example.com"
+              />
+              <button
+                type="button"
+                onClick={sendCode}
+                disabled={Boolean(loading) || countdown > 0}
+                className="shrink-0 rounded-xl bg-brand-sage px-4 text-sm font-medium text-white transition hover:bg-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading === "send" ? "发送中..." : countdown > 0 ? `${countdown} 秒` : "发送验证码"}
+              </button>
+            </div>
           </label>
 
           <label className="mt-4 block text-sm text-neutral-600">
-            密码
+            邮箱验证码
             <input
-              type="password"
+              type="text"
               required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
-              placeholder="至少 6 位"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 tracking-normal outline-none focus:border-brand-sage"
+              placeholder="请输入6位验证码"
             />
           </label>
-
-          {missingSupabaseEnv.length > 0 ? (
-            <div className="mt-5 rounded-xl border border-[#ead5d0] bg-[#fff5f2] px-4 py-3 text-sm text-[#9a5245]">
-              缺少环境变量：{missingSupabaseEnv.join(", ")}
-            </div>
-          ) : null}
 
           {error ? (
             <div className="mt-5 rounded-xl border border-[#ead5d0] bg-[#fff5f2] px-4 py-3 text-sm leading-7 text-[#9a5245]">
@@ -168,7 +196,7 @@ export default function LoginPage() {
           ) : null}
 
           {message ? (
-            <div className="mt-5 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-4 py-3 text-sm text-brand-sageDark">
+            <div className="mt-5 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-4 py-3 text-sm leading-7 text-brand-sageDark">
               {message}
             </div>
           ) : null}
@@ -178,37 +206,19 @@ export default function LoginPage() {
             disabled={Boolean(loading)}
             className="mt-6 h-12 w-full rounded-full bg-brand-sage font-medium text-white transition hover:bg-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading === "login" ? "正在登录..." : "登录"}
+            {loading === "verify" ? "正在验证..." : "验证并登录"}
           </button>
 
-          <button
-            type="button"
-            onClick={logout}
-            disabled={Boolean(loading)}
-            className="mt-3 h-12 w-full rounded-full border border-brand-line bg-brand-gray font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading === "logout" ? "正在退出..." : "退出登录"}
-          </button>
-
-          {isDevelopment ? (
+          {currentUser ? (
             <button
               type="button"
-              onClick={devLogin}
+              onClick={logout}
               disabled={Boolean(loading)}
-              className="mt-3 h-12 w-full rounded-full border border-brand-line bg-white font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-3 h-12 w-full rounded-full border border-brand-line bg-brand-gray font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading === "anonymous" ? "正在登录..." : "开发模式登录"}
+              {loading === "logout" ? "正在退出..." : "退出登录"}
             </button>
           ) : null}
-
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link href="/register" className="text-brand-sageDark hover:underline">
-              还没有账号？去注册
-            </Link>
-            <Link href="/forgot-password" className="text-neutral-500 hover:text-brand-sageDark">
-              忘记密码？
-            </Link>
-          </div>
         </form>
       </div>
     </section>
