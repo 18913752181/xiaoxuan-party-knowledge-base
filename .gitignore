@@ -10,5 +10,6 @@ yarn-error.log*
 pnpm-debug.log*
 *.tsbuildinfo
 dev-*.log
+.codex-dev-*.log
 
 .vercel

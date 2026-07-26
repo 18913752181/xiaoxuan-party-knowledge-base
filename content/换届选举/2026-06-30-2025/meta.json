@@ -7,12 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": true,
+  "isVip": false,
   "downloadable": true,
   "relatedArticles": [
+    "2026-07-26-material-cush",
     "2026-07-01-material-4ee12w"
   ],
-  "updatedAt": "2026-07-25T15:15:12.894Z",
+  "updatedAt": "2026-07-26T09:37:23.213Z",
   "createdAt": "2026-06-30T15:06:14.346Z",
   "downloadCount": 4,
   "favoriteCount": 0,

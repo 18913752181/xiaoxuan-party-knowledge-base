@@ -31,6 +31,14 @@ const officialPolicyLinks = [
     title: "中国共产党支部工作条例（试行）",
     href: "https://www.idcpc.gov.cn/zgzc/zcwj/201912/t20191216_106820.html",
   },
+  {
+    title: "中国共产党党员教育管理工作条例",
+    href: "https://www.12371.cn/special/dyjygztl/",
+  },
+  {
+    title: "全国党员教育培训工作规划（2024—2028年）",
+    href: "https://www.12371.cn/special/dyjygh20242028/",
+  },
 ];
 
 function policyLinks(text: string) {
@@ -42,20 +50,29 @@ function policyLinks(text: string) {
   return (
     <ul className="grid gap-3 text-sm leading-6">
       {items.map((item) => {
-        const official = officialPolicyLinks.find((policy) => item.includes(policy.title));
+        const markdownLink = item.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/);
+        const customLink = item.match(/^(.*?)\s*[|｜]\s*(https?:\/\/\S+)$/);
+        const label = markdownLink?.[1]?.trim() || customLink?.[1]?.trim() || item;
+        const customHref = markdownLink?.[2] || customLink?.[2];
+        const normalizedLabel = label.replace(/[()（）－—-]/g, "");
+        const official = officialPolicyLinks.find((policy) => {
+          const normalizedTitle = policy.title.replace(/[()（）－—-]/g, "");
+          return normalizedLabel.includes(normalizedTitle) || normalizedTitle.includes(normalizedLabel);
+        });
+        const href = customHref || official?.href;
         return (
           <li key={item}>
-            {official ? (
+            {href ? (
               <a
-                href={official.href}
+                href={href}
                 target="_blank"
                 rel="noreferrer"
                 className="text-[#5f7f70] underline decoration-[#a9b9b0] underline-offset-4 hover:text-[#49695c]"
               >
-                {item}
+                {label}
               </a>
             ) : (
-              <span className="text-neutral-600">{item}</span>
+              <span className="text-neutral-600">{label}</span>
             )}
           </li>
         );

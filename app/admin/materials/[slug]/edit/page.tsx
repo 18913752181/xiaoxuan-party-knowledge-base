@@ -212,7 +212,14 @@ export default function AdminMaterialEditPage() {
 
         <Section title="知识说明内容">
           {knowledgeFields.map((field) => (
-            <TextArea key={field.key} label={field.label} value={form[field.key] || ""} onChange={(value) => setField(field.key, value)} />
+            <div key={field.key}>
+              <TextArea label={field.label} value={form[field.key] || ""} onChange={(value) => setField(field.key, value)} />
+              {field.key === "policyBasis" ? (
+                <p className="mt-2 text-xs leading-5 text-[#8b918d]">
+                  每项制度单独一行。常用制度会自动链接；其他制度可填写“制度名称｜官方原文网址”。
+                </p>
+              ) : null}
+            </div>
           ))}
         </Section>
 

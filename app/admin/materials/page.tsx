@@ -15,6 +15,8 @@ export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [message, setMessage] = useState("正在读取资料...");
   const [deletingSlug, setDeletingSlug] = useState("");
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [topic, setTopic] = useState("全部分类");
 
@@ -51,6 +53,7 @@ export default function AdminMaterialsPage() {
       if (!response.ok) throw new Error("资料读取失败");
       const rows = await response.json();
       setMaterials(Array.isArray(rows) ? rows : []);
+      setSelectedSlugs([]);
       setMessage("");
     } catch (error) {
       setMessage(error instanceof Error ? `读取失败：${error.message}` : "读取失败");
@@ -73,11 +76,56 @@ export default function AdminMaterialsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "删除失败");
       setMaterials((current) => current.filter((row) => (row.slug || row.id) !== slug));
+      setSelectedSlugs((current) => current.filter((selectedSlug) => selectedSlug !== slug));
       setMessage(`已删除：${item.title}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "删除失败");
     } finally {
       setDeletingSlug("");
+    }
+  }
+
+  function toggleSelected(slug: string) {
+    setSelectedSlugs((current) =>
+      current.includes(slug) ? current.filter((item) => item !== slug) : [...current, slug]
+    );
+  }
+
+  function toggleAllFiltered() {
+    const filteredSlugs = filteredMaterials.map((item) => item.slug || item.id);
+    const allSelected = filteredSlugs.length > 0 && filteredSlugs.every((slug) => selectedSlugs.includes(slug));
+    setSelectedSlugs((current) =>
+      allSelected
+        ? current.filter((slug) => !filteredSlugs.includes(slug))
+        : Array.from(new Set([...current, ...filteredSlugs]))
+    );
+  }
+
+  async function updateMembership(memberOnly: boolean) {
+    if (!selectedSlugs.length) return;
+    setBulkUpdating(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/materials", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: selectedSlugs, memberOnly })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "批量修改失败");
+
+      const updatedRows = new Map<string, Material>(
+        (Array.isArray(data.materials) ? data.materials : []).map((item: Material) => [item.slug || item.id, item])
+      );
+      setMaterials((current) =>
+        current.map((item) => updatedRows.get(item.slug || item.id) || item)
+      );
+      setMessage(`已将 ${updatedRows.size} 份资料设为${memberOnly ? "会员专属" : "普通资料"}。`);
+      setSelectedSlugs([]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "批量修改失败");
+    } finally {
+      setBulkUpdating(false);
     }
   }
 
@@ -139,10 +187,44 @@ export default function AdminMaterialsPage() {
           </div>
         </section>
 
+        {selectedSlugs.length ? (
+          <section className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#d8d0c4] bg-[#fffdf9] px-4 py-3 shadow-sm">
+            <span className="text-sm font-medium text-[#465149]">已选择 {selectedSlugs.length} 份资料</span>
+            <button
+              type="button"
+              onClick={() => updateMembership(true)}
+              disabled={bulkUpdating}
+              className="rounded-xl bg-[#9b744f] px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              设为会员专属
+            </button>
+            <button
+              type="button"
+              onClick={() => updateMembership(false)}
+              disabled={bulkUpdating}
+              className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50"
+            >
+              设为普通资料
+            </button>
+            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkUpdating} className="text-sm text-[#6d746f] disabled:opacity-50">
+              取消选择
+            </button>
+          </section>
+        ) : null}
+
         <div className="mt-6 overflow-x-auto rounded-2xl border border-[#e4ded2] bg-white shadow-sm">
-          <table className="w-full min-w-[980px] text-left text-sm">
+          <table className="w-full min-w-[1080px] text-left text-sm">
             <thead className="bg-[#fbfaf6] text-[#59635d]">
               <tr>
+                <th className="w-12 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="选择当前筛选的全部资料"
+                    checked={filteredMaterials.length > 0 && filteredMaterials.every((item) => selectedSlugs.includes(item.slug || item.id))}
+                    onChange={toggleAllFiltered}
+                    className="h-4 w-4 accent-[#6f8f7e]"
+                  />
+                </th>
                 <th className="px-4 py-3">标题</th>
                 <th className="px-4 py-3">专题</th>
                 <th className="px-4 py-3">阶段</th>
@@ -158,6 +240,15 @@ export default function AdminMaterialsPage() {
                 const slug = item.slug || item.id;
                 return (
                   <tr key={item.id} className="border-t border-[#eee8dc]">
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label={`选择${item.title}`}
+                        checked={selectedSlugs.includes(slug)}
+                        onChange={() => toggleSelected(slug)}
+                        className="h-4 w-4 accent-[#6f8f7e]"
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.topic || item.category}</td>
                     <td className="px-4 py-3">{item.stage || "-"}</td>
@@ -183,7 +274,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={8} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={9} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>

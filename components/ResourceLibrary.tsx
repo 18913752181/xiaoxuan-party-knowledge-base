@@ -21,6 +21,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   const [topic, setTopic] = useState(initialTopic || searchParams.get("topic") || topicAllOption);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [memberOnlyMaterial, setMemberOnlyMaterial] = useState<Material | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -31,7 +32,8 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
         return response.json();
       })
       .then((rows) => setMaterials(Array.isArray(rows) ? rows : []))
-      .catch((error) => setMessage(`资料读取失败：${error.message}`));
+      .catch((error) => setMessage(`资料读取失败：${error.message}`))
+      .finally(() => setIsLoading(false));
 
     listMyFavorites().then(({ rows, error }) => {
       if (!error) setFavoriteSlugs(rows.map((row) => row.article_slug));
@@ -251,8 +253,11 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
           ) : (
           <>
           {message ? <div className="mt-4 rounded-xl border border-[#d9cab1] bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</div> : null}
+          {isLoading ? (
+            <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">正在读取资料库…</div>
+          ) : (
           <div className="mt-4 divide-y divide-[#eeeae4] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#ebe5dc]">
-            {filteredMaterials.slice(0, libraryOnly ? undefined : 12).map((material) => {
+            {filteredMaterials.slice(0, libraryOnly ? undefined : 3).map((material) => {
               const slug = getArticleSlug(material);
               const isFavorite = favoriteSlugs.includes(slug);
               return (
@@ -278,7 +283,15 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
               );
             })}
           </div>
-          {!filteredMaterials.length ? <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">没有找到匹配资料，请更换关键词或专题。</div> : null}
+          )}
+          {!isLoading && !filteredMaterials.length ? <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">没有找到匹配资料，请更换关键词或专题。</div> : null}
+          {!libraryOnly && !isLoading && filteredMaterials.length ? (
+            <p className="mt-4 text-center text-xs text-neutral-400">
+              首页仅展示最新 3 份，全部资料请前往
+              <Link href="/library" className="ml-1 text-[#9a4650] hover:underline">资料库</Link>
+              。
+            </p>
+          ) : null}
           </>
           )}
         </section>
@@ -350,8 +363,7 @@ function QuestionEntry() {
     <div className="grid gap-5">
       {submitted ? <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#d9cec3] bg-[#f0e7e1] p-8 text-center"><div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#9a4650] text-lg text-white">✓</div><h2 className="mt-3 text-xl font-semibold text-brand-ink">问题提交成功</h2><p className="mt-2 text-sm text-neutral-500">我们会整理高频需求，持续补充资料。</p></section> : <section id="submit-question" className="scroll-mt-28 rounded-3xl border border-[#e3d8cf] bg-[#f5eee8] p-5 md:p-6">
         <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label htmlFor="question-input" className="shrink-0 text-base font-semibold text-brand-ink">我想知道</label>
-          <input id="question-input" name="question" required maxLength={500} placeholder="输入你遇到的问题或想找的资料" className="h-12 min-w-0 flex-1 rounded-xl border border-[#ddcec4] bg-white px-4 text-sm outline-none placeholder:text-neutral-400" />
+          <textarea id="question-input" name="question" required maxLength={500} aria-label="输入问题" placeholder="输入你遇到的问题或想找的资料" className="min-h-20 min-w-0 flex-1 resize-none rounded-xl border border-[#ddcec4] bg-white px-4 py-3 text-sm leading-6 outline-none placeholder:text-neutral-400 sm:min-h-16" />
           <button type="submit" disabled={submitting} className="h-12 shrink-0 rounded-xl bg-[#9a4650] px-5 text-sm font-medium text-white disabled:opacity-50">{submitting ? "提交中" : "提交问题"}</button>
         </form>
         {error ? <p className="mt-3 text-sm text-[#9a4650]">{error}</p> : null}

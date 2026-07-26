@@ -12,6 +12,10 @@
   ],
   "linkedNodes": [
     {
+      "title": "2026-07-26-material-cush",
+      "relation": "前置节点"
+    },
+    {
       "title": "2026-07-01-material-4ee12w",
       "relation": "后续节点"
     }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Material } from "@/lib/types";
 
 const statusOptions = [
   { value: "draft", label: "草稿" },
@@ -9,26 +10,34 @@ const statusOptions = [
   { value: "hidden", label: "已隐藏" }
 ];
 
+const knowledgeFields = [
+  { key: "note", label: "小宣提醒" },
+  { key: "policyBasis", label: "制度依据" },
+  { key: "notices", label: "填写说明与注意事项" },
+  { key: "faq", label: "常见问题" }
+];
+
+const networkFields = [
+  { key: "previous", label: "上一步工作" },
+  { key: "next", label: "下一步工作" }
+];
+
 const emptyForm = {
   title: "",
   topic: "",
   stage: "",
-  tags: "",
   summary: "",
   status: "published",
-  introduction: "",
   policyBasis: "",
-  scenarios: "",
-  process: "",
   notices: "",
   faq: "",
-  downloadNote: "",
   note: "",
   previous: "",
-  next: "",
-  related: "",
-  recommended: ""
+  next: ""
 };
+
+const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
+const titleFromFileName = (fileName = "") => fileName.replace(/\.(docx?|xlsx?|pdf|pptx?)$/i, "").trim();
 
 function fileTypeFromName(fileName: string) {
   const ext = fileName.split(".").pop()?.toLowerCase();
@@ -47,6 +56,7 @@ function formatSize(bytes: number) {
 
 export default function AdminNewPage() {
   const [topics, setTopics] = useState<string[]>([]);
+  const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>(emptyForm);
   const [file, setFile] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -88,6 +98,13 @@ export default function AdminNewPage() {
     };
   }, []);
 
+  useEffect(() => {
+    fetch("/api/admin/materials", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((rows) => setAllMaterials(Array.isArray(rows) ? rows : []))
+      .catch(() => setAllMaterials([]));
+  }, []);
+
   const fileInfo = useMemo(() => {
     if (!file) return null;
     return {
@@ -106,7 +123,7 @@ export default function AdminNewPage() {
     setFile(nextFile);
     setForm((current) => ({
       ...current,
-      title: nextFile ? nextFile.name.replace(/\.[^.]+$/, "") : ""
+      title: nextFile ? titleFromFileName(nextFile.name) : ""
     }));
   }
 
@@ -124,7 +141,7 @@ export default function AdminNewPage() {
       body.append("isVip", String(isVip));
       body.append("seoTitle", form.title);
       body.append("seoDescription", form.summary);
-      body.append("seoKeywords", form.tags);
+      body.append("seoKeywords", "");
       body.append("file", file);
       const response = await fetch("/api/admin/generate", { method: "POST", body });
       const data = await response.json();
@@ -172,10 +189,9 @@ export default function AdminNewPage() {
 
         <Section title="二、资料基本信息">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="标题" value={form.title} onChange={() => {}} readOnly placeholder="选择文件后自动显示文件名" />
+            <Input label="标题" value={form.title} onChange={(value) => setField("title", value)} placeholder="选择文件后自动显示文件名" />
             <Select label="所属专题" value={form.topic} options={topics} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage} onChange={(value) => setField("stage", value)} />
-            <Input label="标签" value={form.tags} onChange={(value) => setField("tags", value)} placeholder="用逗号分隔" />
             <Select label="状态" value={form.status} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary} onChange={(value) => setField("summary", value)} />
@@ -186,22 +202,30 @@ export default function AdminNewPage() {
         </Section>
 
         <Section title="三、知识说明内容">
-          <TextArea label="知识简介" value={form.introduction} onChange={(value) => setField("introduction", value)} />
-          <TextArea label="政策依据" value={form.policyBasis} onChange={(value) => setField("policyBasis", value)} />
-          <TextArea label="适用场景" value={form.scenarios} onChange={(value) => setField("scenarios", value)} />
-          <TextArea label="办理流程" value={form.process} onChange={(value) => setField("process", value)} />
-          <TextArea label="注意事项" value={form.notices} onChange={(value) => setField("notices", value)} />
-          <TextArea label="常见问题 FAQ" value={form.faq} onChange={(value) => setField("faq", value)} />
-          <TextArea label="下载说明" value={form.downloadNote} onChange={(value) => setField("downloadNote", value)} />
-          <TextArea label="小宣提醒" value={form.note} onChange={(value) => setField("note", value)} />
+          {knowledgeFields.map((field) => (
+            <div key={field.key}>
+              <TextArea label={field.label} value={form[field.key]} onChange={(value) => setField(field.key, value)} />
+              {field.key === "policyBasis" ? (
+                <p className="mt-2 text-xs leading-5 text-[#8b918d]">
+                  每项制度单独一行。常用制度会自动链接；其他制度可填写“制度名称｜官方原文网址”。
+                </p>
+              ) : null}
+            </div>
+          ))}
         </Section>
 
         <Section title="四、知识网络">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input label="前置节点" value={form.previous} onChange={(value) => setField("previous", value)} />
-            <Input label="后续节点" value={form.next} onChange={(value) => setField("next", value)} />
-            <Input label="关联节点" value={form.related} onChange={(value) => setField("related", value)} />
-            <Input label="推荐阅读" value={form.recommended} onChange={(value) => setField("recommended", value)} />
+          <p className="text-sm leading-6 text-[#6d746f]">按实际工作顺序关联上一步和下一步资料。未填写的关系不会在前台显示。</p>
+          <div className="mt-2 grid gap-4 md:grid-cols-2">
+            {networkFields.map((field) => (
+              <RelationPicker
+                key={field.key}
+                label={field.label}
+                value={form[field.key]}
+                materials={allMaterials}
+                onChange={(value) => setField(field.key, value)}
+              />
+            ))}
           </div>
         </Section>
 
@@ -213,6 +237,50 @@ export default function AdminNewPage() {
         {status ? <p className="mt-4 text-sm text-[#6d746f]">{status}</p> : null}
       </div>
     </main>
+  );
+}
+
+function RelationPicker({ label, value, materials, onChange }: {
+  label: string;
+  value: string;
+  materials: Material[];
+  onChange: (value: string) => void;
+}) {
+  const topicOptions = Array.from(new Set(materials.map((item) => item.topic || item.category).filter(Boolean))).sort();
+  const [topic, setTopic] = useState("");
+  const [article, setArticle] = useState("");
+  const selected = splitList(value);
+  const articles = topic ? materials.filter((item) => (item.topic || item.category) === topic) : [];
+  const titleFor = (reference: string) => materials.find((item) => item.slug === reference || item.id === reference)?.title || reference;
+
+  function addArticle() {
+    if (!article || selected.includes(article)) return;
+    onChange([...selected, article].join("、"));
+    setArticle("");
+  }
+
+  function removeArticle(reference: string) {
+    onChange(selected.filter((item) => item !== reference).join("、"));
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-[#e4ded2] bg-[#fffdf8] p-4">
+      <h3 className="text-sm font-semibold text-[#48524c]">{label}</h3>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <select value={topic} onChange={(event) => { setTopic(event.target.value); setArticle(""); }} className="w-full rounded-xl border border-[#ddd5c8] bg-white px-3 py-3 text-sm outline-none focus:border-[#7f9a8a]">
+          <option value="">选择专题</option>
+          {topicOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select value={article} onChange={(event) => setArticle(event.target.value)} disabled={!topic} className="w-full rounded-xl border border-[#ddd5c8] bg-white px-3 py-3 text-sm outline-none disabled:text-[#a9aaa7]">
+          <option value="">选择文章</option>
+          {articles.map((item) => <option key={item.slug || item.id} value={item.slug || item.id}>{item.title}</option>)}
+        </select>
+      </div>
+      <button type="button" onClick={addArticle} disabled={!article} className="mt-3 rounded-full bg-[#6f8f7e] px-4 py-2 text-xs font-medium text-white disabled:opacity-40">添加关联</button>
+      {selected.length ? <ul className="mt-3 grid gap-2">
+        {selected.map((reference) => <li key={reference} className="flex items-start justify-between gap-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-[#59635d]"><span>{titleFor(reference)}</span><button type="button" onClick={() => removeArticle(reference)} className="shrink-0 text-[#a6404d]">移除</button></li>)}
+      </ul> : <p className="mt-3 text-xs text-[#969b97]">暂未关联文章</p>}
+    </div>
   );
 }
 
