@@ -32,6 +32,10 @@ export type Material = {
   file_url: string;
   storage_path?: string | null;
   tags?: string[];
+  organizationLevels?: string[];
+  workSections?: string[];
+  workItems?: string[];
+  sort_order?: number;
   article?: string;
   summary?: string;
   introduction?: string;

@@ -6,6 +6,7 @@ export type DownloadResult = {
   ok: boolean;
   error?: string;
   needsLogin?: boolean;
+  membershipRequired?: boolean;
 };
 
 export type RecordedDownload = {
@@ -69,15 +70,6 @@ function fileNameFromDisposition(disposition: string | null, fallback: string) {
   return safeFileName(plainMatch?.[1] || fallback);
 }
 
-async function responseError(response: Response) {
-  try {
-    const body = await response.json();
-    return body?.error || body?.message || `下载失败：${response.status}`;
-  } catch {
-    return `下载失败：${response.status}`;
-  }
-}
-
 export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
   const response = await fetch(url, { credentials: "same-origin" });
 
@@ -86,7 +78,16 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
   }
 
   if (!response.ok) {
-    return { ok: false, error: await responseError(response) };
+    let error = "";
+    let code = "";
+    try {
+      const body = await response.json();
+      error = body?.error || body?.message || `下载失败：${response.status}`;
+      code = body?.code || "";
+    } catch {
+      error = `下载失败：${response.status}`;
+    }
+    return { ok: false, error, membershipRequired: code === "MEMBERSHIP_REQUIRED" };
   }
 
   const blob = await response.blob();
@@ -103,7 +104,6 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
 }
 
 export async function downloadMaterialFile(material: Material): Promise<DownloadResult> {
-  if (material.member_only) return { ok: false, error: "该资料为会员专属，后续开放。" };
   if (!material.file_url) return { ok: false, error: "该资料暂未上传可下载文件。" };
   const result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title);
   if (result.ok) await rememberDownload(material);

@@ -17,9 +17,19 @@ const links = [
     description: "新增专题，或修改现有专题名称，并同步更新资料专题字段。"
   },
   {
+    href: "/admin/work-panorama",
+    title: "工作全景管理",
+    description: "新增、修改或删除工作层级和下级分类，并维护专题地图结构。"
+  },
+  {
     href: "/admin/questions",
     title: "问题管理",
     description: "查看前台收集的问题，填写小宣的回答，并决定是否在前台公开。"
+  },
+  {
+    href: "/admin/orders",
+    title: "订单管理",
+    description: "查看微信支付订单、支付状态和会员到期时间。"
   },
   {
     href: "/",

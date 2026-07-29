@@ -7,6 +7,7 @@ import { downloadMaterialFile } from "@/lib/download-file";
 import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites";
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
+import { WorkPanoramaHome } from "@/components/WorkPanoramaHome";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
@@ -46,6 +47,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
     () => [...materials].sort((a, b) => dateValue(b.updated_at || b.uploaded_at) - dateValue(a.updated_at || a.uploaded_at)),
     [materials]
   );
+  const displayMaterials = libraryOnly ? materials : sortedMaterials;
 
   const topicCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -94,19 +96,19 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
 
   const filteredMaterials = useMemo(() => {
     const query = submittedKeyword.trim().toLowerCase();
-    return sortedMaterials.filter((material) => {
+    return displayMaterials.filter((material) => {
       const materialTopic = material.topic || material.category;
       const searchableText = [material.title, material.description, material.summary, material.category, materialTopic, material.stage, material.file_type, material.file_name, ...(material.tags || [])]
         .join(" ")
         .toLowerCase();
       return (topic === topicAllOption || materialTopic === topic) && (!query || searchableText.includes(query));
     });
-  }, [submittedKeyword, sortedMaterials, topic]);
+  }, [displayMaterials, submittedKeyword, topic]);
 
   const searchResults = useMemo(() => {
     const query = submittedKeyword.trim().toLowerCase();
     if (!query) return [];
-    return sortedMaterials
+    return displayMaterials
       .filter((material) => {
         const searchableText = [
           material.title,
@@ -121,7 +123,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
           .toLowerCase();
         return searchableText.includes(query);
       });
-  }, [submittedKeyword, sortedMaterials]);
+  }, [displayMaterials, submittedKeyword]);
 
   const showSearchMode = !libraryOnly && Boolean(submittedKeyword.trim());
 
@@ -149,26 +151,20 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   }
 
   async function download(material: Material) {
-    if (material.member_only) {
-      setMemberOnlyMaterial(material);
-      setMessage("");
-      return;
-    }
     setMessage("正在准备下载...");
     const result = await downloadMaterialFile(material);
     if (!result.ok) {
+      if (result.membershipRequired) {
+        setMemberOnlyMaterial(material);
+        setMessage("");
+        return;
+      }
       setMessage(result.error || "下载失败。");
       if (result.needsLogin) window.setTimeout(() => router.push("/login"), 800);
       return;
     }
     updateMaterialCount(getArticleSlug(material), "download_count", material.download_count + 1);
     setMessage("文件下载已开始。");
-  }
-
-  function chooseTopic(name: string) {
-    setTopic(name);
-    setMemberOnlyMaterial(null);
-    document.querySelector("#latest-materials")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -224,7 +220,12 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
             <SectionHeader title="高频工作" />
             <div className="mt-4 grid grid-cols-3 gap-3 md:grid-cols-6">
               {frequentTopics.map(([name, count], index) => (
-                <button key={name} type="button" onClick={() => chooseTopic(name)} className="group rounded-2xl bg-white px-2 py-4 text-center shadow-sm ring-1 ring-[#ebe5dc] transition hover:-translate-y-0.5 hover:ring-[#caa8aa]">
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => router.push(`/library?topic=${encodeURIComponent(name)}`)}
+                  className="group rounded-2xl bg-white px-2 py-4 text-center shadow-sm ring-1 ring-[#ebe5dc] transition hover:-translate-y-0.5 hover:ring-[#caa8aa]"
+                >
                   <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4e9e8] text-base font-semibold text-[#9a4650]">{String(index + 1).padStart(2, "0")}</span>
                   <span className="mt-2 block text-sm font-medium text-brand-ink">{name}</span>
                   <span className="mt-1 block text-[11px] text-neutral-400">{count} 份资料</span>
@@ -233,6 +234,8 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
             </div>
           </section>
         ) : null}
+
+        {!libraryOnly ? <WorkPanoramaHome /> : null}
 
         <section id="latest-materials" className="scroll-mt-28">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -247,8 +250,11 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
             <div className="mt-5 rounded-3xl border-2 border-[#9a4650] bg-[#fff7f5] px-6 py-10 text-center shadow-sm">
               <span className="inline-flex rounded-full bg-[#9a4650] px-4 py-1.5 text-sm font-semibold text-white">会员专属资料</span>
               <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{memberOnlyMaterial.title}</h3>
-              <p className="mt-4 text-base font-medium text-[#9a4650]">该资料为会员专属，后续开放。</p>
-              <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="mt-6 rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">返回资料列表</button>
+              <p className="mt-4 text-base font-medium text-[#9a4650]">开通会员后即可下载，会员有效期为一年。</p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">返回资料列表</button>
+                <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#7d3540]">成为专属会员</Link>
+              </div>
             </div>
           ) : (
           <>

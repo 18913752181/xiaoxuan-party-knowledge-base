@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Material } from "@/lib/types";
+import { WorkClassificationFields } from "@/components/WorkClassificationFields";
 
 const statusOptions = [
   { value: "draft", label: "草稿" },
@@ -33,7 +34,10 @@ const emptyForm = {
   faq: "",
   note: "",
   previous: "",
-  next: ""
+  next: "",
+  organizationLevels: "",
+  workSections: "",
+  workItems: ""
 };
 
 const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
@@ -201,7 +205,16 @@ export default function AdminNewPage() {
           </label>
         </Section>
 
-        <Section title="三、知识说明内容">
+        <Section title="三、工作分类关联">
+          <WorkClassificationFields
+            organizationLevels={form.organizationLevels}
+            workSections={form.workSections}
+            workItems={form.workItems}
+            onChange={setField}
+          />
+        </Section>
+
+        <Section title="四、知识说明内容">
           {knowledgeFields.map((field) => (
             <div key={field.key}>
               <TextArea label={field.label} value={form[field.key]} onChange={(value) => setField(field.key, value)} />
@@ -214,7 +227,7 @@ export default function AdminNewPage() {
           ))}
         </Section>
 
-        <Section title="四、知识网络">
+        <Section title="五、知识网络">
           <p className="text-sm leading-6 text-[#6d746f]">按实际工作顺序关联上一步和下一步资料。未填写的关系不会在前台显示。</p>
           <div className="mt-2 grid gap-4 md:grid-cols-2">
             {networkFields.map((field) => (

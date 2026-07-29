@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-1epul8v",
     "2026-07-25-material-4wgack"
   ],
-  "updatedAt": "2026-07-26T08:18:15.772Z",
+  "updatedAt": "2026-07-28T11:22:51.443Z",
   "createdAt": "2026-07-25T15:17:22.767Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（十一（1））换届选举正式开会通知参考"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 11,
   "recommended": false,
   "hidden": false
 }

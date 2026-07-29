@@ -67,6 +67,9 @@ export type GenerateInput = {
   content?: string;
   author?: string;
   source?: string;
+  organizationLevels?: string[];
+  workSections?: string[];
+  workItems?: string[];
 };
 
 export type ContentUnitMeta = {
@@ -88,6 +91,10 @@ export type ContentUnitMeta = {
   fileType: string;
   tags: string[];
   summary: string;
+  organizationLevels: string[];
+  workSections: string[];
+  workItems: string[];
+  sortOrder?: number;
   recommended?: boolean;
   hidden?: boolean;
 };
@@ -241,6 +248,10 @@ const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnit
     fileType: meta.fileType || "知识单元",
     tags: Array.isArray(meta.tags) ? meta.tags : [],
     summary: meta.summary || "",
+    organizationLevels: normalizeList(meta.organizationLevels),
+    workSections: normalizeList(meta.workSections),
+    workItems: normalizeList(meta.workItems),
+    sortOrder: Number.isFinite(Number(meta.sortOrder)) ? Number(meta.sortOrder) : undefined,
     recommended: Boolean(meta.recommended),
     hidden: Boolean(meta.hidden || meta.status === "hidden"),
   };
@@ -325,7 +336,31 @@ export async function listContentUnits(options: ListOptions = {}) {
   const units = (await Promise.all(dirs.map(loadUnit))).filter(Boolean) as ContentUnit[];
   return units
     .filter((unit) => options.includeHidden || (!unit.meta.hidden && unit.meta.status !== "hidden"))
-    .sort((a, b) => new Date(b.meta.updatedAt).getTime() - new Date(a.meta.updatedAt).getTime());
+    .sort((a, b) => {
+      const aHasOrder = Number.isFinite(a.meta.sortOrder);
+      const bHasOrder = Number.isFinite(b.meta.sortOrder);
+      if (aHasOrder && bHasOrder) return Number(a.meta.sortOrder) - Number(b.meta.sortOrder);
+      if (aHasOrder !== bHasOrder) return aHasOrder ? 1 : -1;
+      return new Date(b.meta.updatedAt).getTime() - new Date(a.meta.updatedAt).getTime();
+    });
+}
+
+export async function updateContentUnitOrder(slugs: string[]) {
+  const uniqueSlugs = Array.from(new Set(slugs.map((slug) => String(slug || "").trim()).filter(Boolean)));
+  if (!uniqueSlugs.length) return [];
+
+  const units = await listContentUnits({ includeHidden: true });
+  const unitMap = new Map(units.map((unit) => [unit.slug, unit]));
+  const orderedUnits = uniqueSlugs.map((slug) => unitMap.get(slug)).filter(Boolean) as ContentUnit[];
+
+  await Promise.all(
+    orderedUnits.map(async (unit, index) => {
+      const meta = normalizeMeta({ ...unit.meta, sortOrder: index }, unit.dir);
+      await writeJson(path.join(unit.dir, "meta.json"), meta);
+    })
+  );
+
+  return listContentUnits({ includeHidden: true });
 }
 
 export async function getContentUnitBySlug(slug: string, options: ListOptions = {}) {
@@ -381,6 +416,9 @@ export async function createContentUnit(input: GenerateInput) {
     fileType: files[0]?.fileType || "文件",
     tags,
     summary,
+    organizationLevels: normalizeList(input.organizationLevels),
+    workSections: normalizeList(input.workSections),
+    workItems: normalizeList(input.workItems),
     hidden: input.status === "hidden",
   };
 
@@ -450,6 +488,9 @@ export async function updateContentUnit(slug: string, input: Partial<GenerateInp
     isVip: typeof input.isVip === "boolean" ? input.isVip : unit.meta.isVip,
     tags,
     summary: input.summary ?? unit.meta.summary,
+    organizationLevels: input.organizationLevels ?? unit.meta.organizationLevels,
+    workSections: input.workSections ?? unit.meta.workSections,
+    workItems: input.workItems ?? unit.meta.workItems,
     downloadable: Boolean(files.length),
     fileType: files[0]?.fileType || unit.meta.fileType,
     relatedArticles: [...relatedMap.previous, ...relatedMap.next, ...relatedMap.related],
@@ -545,6 +586,10 @@ export function contentUnitToMaterial(unit: ContentUnit): Material {
     favorite_count: unit.meta.favoriteCount,
     file_url: file?.downloadPath || (unit.hasTemplate ? `/api/content-units/${unit.slug}/download` : ""),
     tags: unit.tags,
+    organizationLevels: unit.meta.organizationLevels,
+    workSections: unit.meta.workSections,
+    workItems: unit.meta.workItems,
+    sort_order: unit.meta.sortOrder,
     article: unit.article,
     summary: unit.summary,
     introduction: unit.introduction,

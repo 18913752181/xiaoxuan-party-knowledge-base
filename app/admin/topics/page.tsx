@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { WorkLevel } from "@/lib/work-panorama";
+
+type Placement = { level: string; section: string };
 
 export default function AdminTopicsPage() {
   const [topics, setTopics] = useState<string[]>([]);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
+  const [topicPlacements, setTopicPlacements] = useState<Record<string, Placement[]>>({});
+  const [workLevels, setWorkLevels] = useState<WorkLevel[]>([]);
+  const [mappingTopic, setMappingTopic] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [editing, setEditing] = useState("");
   const [editingValue, setEditingValue] = useState("");
@@ -22,7 +28,41 @@ export default function AdminTopicsPage() {
     }
     setTopics(data.topics || []);
     setTopicCounts(data.topicCounts || {});
+    setTopicPlacements(data.topicPlacements || {});
+    setWorkLevels(data.workLevels || []);
     setMessage("");
+  }
+
+  function togglePlacement(topic: string, placement: Placement) {
+    setTopicPlacements((current) => {
+      const values = current[topic] || [];
+      const selected = values.some(
+        (item) => item.level === placement.level && item.section === placement.section
+      );
+      return {
+        ...current,
+        [topic]: selected
+          ? values.filter(
+              (item) => !(item.level === placement.level && item.section === placement.section)
+            )
+          : [...values, placement],
+      };
+    });
+  }
+
+  async function savePlacements(topic: string) {
+    setSaving(true);
+    const response = await fetch("/api/admin/topics", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: topic, placements: topicPlacements[topic] || [] }),
+    });
+    const data = await response.json();
+    setSaving(false);
+    if (!response.ok) return setMessage(data.error || "保存工作全景关联失败");
+    setTopicPlacements(data.topicPlacements || {});
+    setMappingTopic("");
+    setMessage(`“${topic}”的工作全景关联已保存。`);
   }
 
   useEffect(() => {
@@ -121,7 +161,8 @@ export default function AdminTopicsPage() {
           </div>
           <div className="mt-5 divide-y divide-[#eee7dc]">
             {topics.map((topic, index) => (
-              <div key={topic} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div key={topic} className="py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 {editing === topic ? (
                   <input
                     value={editingValue}
@@ -136,6 +177,9 @@ export default function AdminTopicsPage() {
                     <div className="min-w-0">
                       <span className="block truncate text-base font-medium text-[#2f3732]">{topic}</span>
                       <span className="mt-1 block text-xs text-[#8b918d]">{topicCounts[topic] || 0} 份资料</span>
+                      <span className="mt-1 block text-xs text-[#8f555b]">
+                        已关联 {(topicPlacements[topic] || []).length} 个工作模块
+                      </span>
                     </div>
                   </div>
                 )}
@@ -148,10 +192,69 @@ export default function AdminTopicsPage() {
                   ) : (
                     <>
                       <button type="button" onClick={() => { setEditing(topic); setEditingValue(topic); }} className="rounded-full border border-[#e4ded2] bg-white px-4 py-2 text-sm text-[#59635d]">修改名称</button>
+                      <button
+                        type="button"
+                        onClick={() => setMappingTopic(mappingTopic === topic ? "" : topic)}
+                        className="rounded-full border border-[#d8cfc5] bg-[#faf7f1] px-4 py-2 text-sm text-[#8f555b]"
+                      >
+                        关联工作全景
+                      </button>
                       <button type="button" onClick={() => remove(topic)} disabled={saving} className="rounded-full border border-[#ead6d3] bg-white px-4 py-2 text-sm text-[#a6404d] disabled:opacity-50">删除</button>
                     </>
                   )}
                 </div>
+                </div>
+                {mappingTopic === topic ? (
+                  <div className="mt-4 rounded-2xl border border-[#e4ded2] bg-[#faf8f3] p-5">
+                    <p className="text-sm leading-6 text-[#6d746f]">
+                      一个专题可以同时位于多个工作模块。这里只建立地图关系，不会复制专题或资料。
+                    </p>
+                    <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                      {workLevels.map((level) => (
+                        <fieldset key={level.slug} className="rounded-xl border border-[#e5ddd4] bg-white p-4">
+                          <legend className="px-1 text-sm font-semibold">{level.name}</legend>
+                          <div className="mt-2 space-y-3">
+                            {level.sections.map((section) => {
+                              const checked = (topicPlacements[topic] || []).some(
+                                (item) => item.level === level.slug && item.section === section.name
+                              );
+                              return (
+                                <label key={section.name} className="flex cursor-pointer items-start gap-2 text-sm leading-5">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() =>
+                                      togglePlacement(topic, { level: level.slug, section: section.name })
+                                    }
+                                    className="mt-1"
+                                  />
+                                  <span>{section.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </fieldset>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => savePlacements(topic)}
+                        disabled={saving}
+                        className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white disabled:opacity-60"
+                      >
+                        保存关联
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMappingTopic("")}
+                        className="rounded-full border border-[#e4ded2] bg-white px-5 py-2 text-sm"
+                      >
+                        收起
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

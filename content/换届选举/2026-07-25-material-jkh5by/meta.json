@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-ykryk4",
     "2026-07-25-material-f0t3c8"
   ],
-  "updatedAt": "2026-07-26T08:18:15.465Z",
+  "updatedAt": "2026-07-28T11:22:51.674Z",
   "createdAt": "2026-07-25T15:16:34.244Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（五）第二次请示前的候选人公示参考"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 5,
   "recommended": false,
   "hidden": false
 }

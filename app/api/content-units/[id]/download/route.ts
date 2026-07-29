@@ -3,6 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
+import { getMembership } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,17 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   const slug = decodeURIComponent(params.id).replace(/^content-/, "");
   const unit = await getContentUnitBySlug(slug);
   if (!unit) return NextResponse.json({ error: "没有找到资料。" }, { status: 404 });
+  if (unit.meta.isVip) {
+    const membership = await getMembership(session.user.id, session.accessToken);
+    if (!membership.active) {
+      const response = NextResponse.json(
+        { error: "该资料为会员专属，请先开通会员。", code: "MEMBERSHIP_REQUIRED" },
+        { status: 403 }
+      );
+      if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
+      return response;
+    }
+  }
 
   const result = await getContentUnitDownloadFilePath(slug);
   if (!result) return NextResponse.json({ error: "该资料暂未上传可下载文件。" }, { status: 404 });

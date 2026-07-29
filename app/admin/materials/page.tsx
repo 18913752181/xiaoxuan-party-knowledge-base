@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDisplayDate } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 
@@ -17,8 +17,21 @@ export default function AdminMaterialsPage() {
   const [deletingSlug, setDeletingSlug] = useState("");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [draggingSlug, setDraggingSlug] = useState("");
+  const [savingOrder, setSavingOrder] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [topic, setTopic] = useState("全部分类");
+  const dragInProgressRef = useRef(false);
+
+  function uniqueMaterials(rows: Material[]) {
+    const seen = new Set<string>();
+    return rows.filter((item) => {
+      const slug = item.slug || item.id;
+      if (!slug || seen.has(slug)) return false;
+      seen.add(slug);
+      return true;
+    });
+  }
 
   const topics = useMemo(
     () =>
@@ -52,7 +65,7 @@ export default function AdminMaterialsPage() {
       const response = await fetch("/api/admin/materials", { cache: "no-store" });
       if (!response.ok) throw new Error("资料读取失败");
       const rows = await response.json();
-      setMaterials(Array.isArray(rows) ? rows : []);
+      setMaterials(Array.isArray(rows) ? uniqueMaterials(rows) : []);
       setSelectedSlugs([]);
       setMessage("");
     } catch (error) {
@@ -129,6 +142,68 @@ export default function AdminMaterialsPage() {
     }
   }
 
+  async function saveOrder(nextMaterials: Material[]) {
+    const uniqueNextMaterials = uniqueMaterials(nextMaterials);
+    if (uniqueNextMaterials.length !== materials.length) {
+      setMessage("检测到重复资料，已自动刷新列表，请重新拖动排序。");
+      await loadMaterials();
+      return;
+    }
+
+    setSavingOrder(true);
+    setMessage("正在保存资料顺序...");
+    try {
+      const response = await fetch("/api/admin/materials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: uniqueNextMaterials.map((item) => item.slug || item.id) })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "顺序保存失败");
+      setMaterials(Array.isArray(data.materials) ? uniqueMaterials(data.materials) : uniqueNextMaterials);
+      setMessage("资料顺序已保存，前台展示顺序已同步更新。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "顺序保存失败");
+      await loadMaterials();
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  function moveVisibleMaterial(targetSlug: string, sourceSlug = draggingSlug) {
+    if (!sourceSlug || sourceSlug === targetSlug || savingOrder || dragInProgressRef.current) return;
+    dragInProgressRef.current = true;
+
+    const visibleSlugs = filteredMaterials.map((item) => item.slug || item.id);
+    const fromIndex = visibleSlugs.indexOf(sourceSlug);
+    const toIndex = visibleSlugs.indexOf(targetSlug);
+    if (fromIndex < 0 || toIndex < 0) {
+      dragInProgressRef.current = false;
+      return;
+    }
+
+    const reorderedVisible = [...visibleSlugs];
+    const [movedSlug] = reorderedVisible.splice(fromIndex, 1);
+    reorderedVisible.splice(toIndex, 0, movedSlug);
+
+    let visibleIndex = 0;
+    const visibleSet = new Set(visibleSlugs);
+    const materialMap = new Map(materials.map((item) => [item.slug || item.id, item]));
+    const nextMaterials = uniqueMaterials(
+      materials.map((item) => {
+        if (!visibleSet.has(item.slug || item.id)) return item;
+        const replacementSlug = reorderedVisible[visibleIndex++];
+        return materialMap.get(replacementSlug) || item;
+      })
+    );
+
+    setMaterials(nextMaterials);
+    setDraggingSlug("");
+    void saveOrder(nextMaterials).finally(() => {
+      dragInProgressRef.current = false;
+    });
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f4ed] px-6 py-10 text-[#2f3732]">
       <div className="mx-auto max-w-6xl">
@@ -141,6 +216,7 @@ export default function AdminMaterialsPage() {
                 ? `找到 ${filteredMaterials.length} 份资料，共 ${materials.length} 份`
                 : `共有 ${materials.length} 份资料`}
             </p>
+            <p className="mt-2 text-xs text-[#8b918d]">按住资料行左侧的拖动柄，即可调整前台展示顺序。</p>
           </div>
           <Link href="/admin/new" className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white">新增资料</Link>
         </div>
@@ -225,6 +301,7 @@ export default function AdminMaterialsPage() {
                     className="h-4 w-4 accent-[#6f8f7e]"
                   />
                 </th>
+                <th className="w-16 px-4 py-3">排序</th>
                 <th className="px-4 py-3">标题</th>
                 <th className="px-4 py-3">专题</th>
                 <th className="px-4 py-3">阶段</th>
@@ -239,7 +316,17 @@ export default function AdminMaterialsPage() {
               {filteredMaterials.map((item) => {
                 const slug = item.slug || item.id;
                 return (
-                  <tr key={item.id} className="border-t border-[#eee8dc]">
+                  <tr
+                    key={item.id}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                          const sourceSlug =
+                            event.dataTransfer.getData("text/plain") || draggingSlug;
+                      moveVisibleMaterial(slug, sourceSlug);
+                    }}
+                    className={`border-t border-[#eee8dc] transition-colors ${draggingSlug === slug ? "bg-[#f2eee5] opacity-60" : "hover:bg-[#fffdf9]"}`}
+                  >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
@@ -248,6 +335,24 @@ export default function AdminMaterialsPage() {
                         onChange={() => toggleSelected(slug)}
                         className="h-4 w-4 accent-[#6f8f7e]"
                       />
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        draggable={!savingOrder}
+                        aria-label={`拖动调整${item.title}的顺序`}
+                        title="按住拖动调整顺序"
+                        onDragStart={(event) => {
+                          setDraggingSlug(slug);
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/plain", slug);
+                        }}
+                        onDragEnd={() => setDraggingSlug("")}
+                        className="cursor-grab select-none rounded-lg border border-[#ddd6cc] bg-[#fbfaf6] px-2 py-1 text-base leading-none text-[#7c847f] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={savingOrder}
+                      >
+                        ⋮⋮
+                      </button>
                     </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.topic || item.category}</td>
@@ -274,7 +379,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={9} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={10} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>

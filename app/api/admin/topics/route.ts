@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { contentUnitToMaterial, listContentUnits } from "@/lib/content-units";
 import { addTopic, deleteTopic, listTopics, renameTopic } from "@/lib/topics";
+import {
+  deleteTopicPanoramaPlacements,
+  getTopicPanoramaMap,
+  renameTopicPanoramaPlacements,
+  setTopicPanoramaPlacements,
+  type TopicPanoramaPlacement,
+} from "@/lib/topic-panorama";
+import { getWorkLevels } from "@/lib/work-panorama-store";
 
 async function topicPayload() {
   const topics = await listTopics();
@@ -16,7 +24,9 @@ async function topicPayload() {
     topics: [...topics].sort(
       (a, b) => (topicCounts[b] || 0) - (topicCounts[a] || 0) || a.localeCompare(b, "zh-CN")
     ),
-    topicCounts
+    topicCounts,
+    topicPlacements: await getTopicPanoramaMap(),
+    workLevels: await getWorkLevels(),
   };
 }
 
@@ -42,9 +52,23 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const result = await renameTopic(String(body.oldName || ""), String(body.newName || ""));
+    await renameTopicPanoramaPlacements(String(body.oldName || "").trim(), String(body.newName || "").trim());
     return NextResponse.json({ ...result, ...(await topicPayload()) });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "修改专题失败" }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    await setTopicPanoramaPlacements(
+      String(body.name || ""),
+      Array.isArray(body.placements) ? (body.placements as TopicPanoramaPlacement[]) : []
+    );
+    return NextResponse.json(await topicPayload());
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "保存专题关联失败" }, { status: 400 });
   }
 }
 
@@ -65,6 +89,7 @@ export async function DELETE(request: Request) {
     }
 
     await deleteTopic(name);
+    await deleteTopicPanoramaPlacements(name);
     return NextResponse.json(await topicPayload());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "删除专题失败" }, { status: 400 });

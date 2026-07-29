@@ -7,14 +7,14 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-2",
     "2026-07-25-1",
     "2026-07-25-material-17jd8g7"
   ],
-  "updatedAt": "2026-07-26T08:18:15.899Z",
+  "updatedAt": "2026-07-28T11:22:51.365Z",
   "createdAt": "2026-07-25T15:17:49.736Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -24,6 +24,10 @@
     "【小宣资料库】换届选举材料（十二）正式开会换届选举的党员大会记录"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 13,
   "recommended": false,
   "hidden": false
 }

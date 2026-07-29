@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Material } from "@/lib/types";
+import { WorkClassificationFields } from "@/components/WorkClassificationFields";
 
 const statusOptions = [
   { value: "draft", label: "草稿" },
@@ -68,7 +69,10 @@ export default function AdminMaterialEditPage() {
           previous: joinList(row.relatedMap?.previous),
           next: joinList(row.relatedMap?.next),
           related: joinList(row.relatedMap?.related),
-          recommended: joinList(row.relatedMap?.recommended)
+          recommended: joinList(row.relatedMap?.recommended),
+          organizationLevels: joinList(row.organizationLevels),
+          workSections: joinList(row.workSections),
+          workItems: joinList(row.workItems)
         });
         setMessage("");
       })
@@ -208,6 +212,15 @@ export default function AdminMaterialEditPage() {
             <input type="checkbox" checked={isVip} onChange={(event) => setIsVip(event.target.checked)} />
             是否会员资料
           </label>
+        </Section>
+
+        <Section title="工作分类关联">
+          <WorkClassificationFields
+            organizationLevels={form.organizationLevels || ""}
+            workSections={form.workSections || ""}
+            workItems={form.workItems || ""}
+            onChange={setField}
+          />
         </Section>
 
         <Section title="知识说明内容">

@@ -1,0 +1,104 @@
+{
+  "主题党日": [
+    {
+      "level": "party-branch",
+      "section": "组织生活"
+    }
+  ],
+  "民主生活会": [
+    {
+      "level": "party-committee",
+      "section": "党的领导与政治建设"
+    },
+    {
+      "level": "party-committee",
+      "section": "全面从严治党"
+    }
+  ],
+  "发展党员": [
+    {
+      "level": "party-committee",
+      "section": "组织建设与干部人才"
+    },
+    {
+      "level": "party-branch",
+      "section": "党员队伍"
+    }
+  ],
+  "换届选举": [
+    {
+      "level": "party-branch",
+      "section": "支部建设"
+    },
+    {
+      "level": "party-committee",
+      "section": "组织建设与干部人才"
+    }
+  ],
+  "三会一课": [
+    {
+      "level": "party-branch",
+      "section": "组织生活"
+    }
+  ],
+  "党员培训": [
+    {
+      "level": "party-committee",
+      "section": "理论学习与思想建设"
+    },
+    {
+      "level": "general-party-branch",
+      "section": "党员教育管理"
+    },
+    {
+      "level": "party-branch",
+      "section": "党员队伍"
+    }
+  ],
+  "第一议题": [
+    {
+      "level": "party-committee",
+      "section": "党的领导与政治建设"
+    },
+    {
+      "level": "party-committee",
+      "section": "理论学习与思想建设"
+    }
+  ],
+  "中心组学习": [
+    {
+      "level": "party-committee",
+      "section": "理论学习与思想建设"
+    }
+  ],
+  "组织生活会": [
+    {
+      "level": "party-branch",
+      "section": "组织生活"
+    }
+  ],
+  "支部建设": [
+    {
+      "level": "general-party-branch",
+      "section": "指导所属党支部建设"
+    },
+    {
+      "level": "party-branch",
+      "section": "支部建设"
+    }
+  ],
+  "党员管理": [
+    {
+      "level": "party-committee",
+      "section": "组织建设与干部人才"
+    },
+    {
+      "level": "general-party-branch",
+      "section": "党员教育管理"
+    },
+    {
+      "level": "party-branch",
+      "section": "党员队伍"
+    }
+  ]
+}

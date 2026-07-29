@@ -62,5 +62,28 @@ function MobileNavItem({ href, label, active }: { href: string; label: string; a
       : "text-neutral-500 hover:bg-[#f7f4ee] hover:text-[#9a4650]"
   }`;
   const content = <span>{label}</span>;
-  return href.includes("#") ? <a href={href} className={className}>{content}</a> : <Link href={href} className={className}>{content}</Link>;
+  if (href.includes("#")) {
+    return (
+      <a
+        href={href}
+        className={className}
+        onClick={(event) => {
+          if (window.location.pathname !== "/") return;
+
+          const targetId = href.split("#")[1];
+          const target = document.getElementById(targetId);
+          if (!target) return;
+
+          event.preventDefault();
+          window.history.replaceState(null, "", href);
+          window.dispatchEvent(new Event("hashchange"));
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return <Link href={href} className={className}>{content}</Link>;
 }

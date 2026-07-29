@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-1epul8v",
     "2026-07-25-material-4wgack"
   ],
-  "updatedAt": "2026-07-26T08:18:15.831Z",
+  "updatedAt": "2026-07-28T11:22:51.407Z",
   "createdAt": "2026-07-25T15:17:35.282Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（十一（2））换届选举党员大会主持词参考"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 12,
   "recommended": false,
   "hidden": false
 }

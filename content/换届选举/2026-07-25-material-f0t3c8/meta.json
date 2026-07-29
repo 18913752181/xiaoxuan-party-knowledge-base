@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-jkh5by",
-    "2026-07-25-material-13iiu3q"
+    "2026-07-27-material-up3v8w"
   ],
-  "updatedAt": "2026-07-26T08:18:15.606Z",
+  "updatedAt": "2026-07-28T11:22:50.939Z",
   "createdAt": "2026-07-25T15:16:39.772Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（六）第二次请示前确定候选人名单的会议记录参考"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 6,
   "recommended": false,
   "hidden": false
 }

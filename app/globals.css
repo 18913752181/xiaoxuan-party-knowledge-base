@@ -4,15 +4,15 @@
 
 :root {
   color-scheme: light;
-  --xuan-paper: #f6f2eb;
-  --xuan-surface: #fffdf9;
-  --xuan-soft: #f1ece4;
-  --xuan-ink: #27332e;
-  --xuan-muted: #66716c;
-  --xuan-accent: #9a4650;
-  --xuan-accent-dark: #7d3540;
-  --xuan-sage: #63786d;
-  --xuan-line: #ddd6cc;
+  --xuan-paper: #f5f5f3;
+  --xuan-surface: #fffefa;
+  --xuan-soft: #f0efec;
+  --xuan-ink: #30312f;
+  --xuan-muted: #777873;
+  --xuan-accent: #a34f55;
+  --xuan-accent-dark: #884047;
+  --xuan-sage: #718b7f;
+  --xuan-line: #e4e2dd;
 }
 
 html {
@@ -21,20 +21,21 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 12% -4%, rgba(255, 255, 255, 0.98), transparent 30rem),
-    radial-gradient(circle at 88% 4%, rgba(154, 70, 80, 0.07), transparent 26rem),
-    linear-gradient(180deg, #faf7f2 0%, var(--xuan-paper) 58%, #f2ede6 100%);
+    radial-gradient(circle at 12% -4%, rgba(255, 255, 255, 0.98), transparent 32rem),
+    radial-gradient(circle at 92% 2%, rgba(216, 163, 93, 0.06), transparent 28rem),
+    linear-gradient(180deg, #fafaf8 0%, var(--xuan-paper) 64%, #f2f1ee 100%);
   color: var(--xuan-ink);
-  font-family: "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+  font-family: "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  letter-spacing: 0.005em;
 }
 
 h1,
 h2,
 h3 {
-  font-family: "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
-  letter-spacing: -0.025em;
+  font-family: "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
+  letter-spacing: -0.018em;
 }
 
 ::selection {

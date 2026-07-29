@@ -92,6 +92,7 @@ export default function MaterialDetailPage() {
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
 
   useEffect(() => {
     fetch(`/api/content-units/${encodeURIComponent(params.id)}`, { cache: "no-store" })
@@ -124,6 +125,11 @@ export default function MaterialDetailPage() {
     setMessage("正在准备下载...");
     const result = await downloadMaterialFile(material);
     if (!result.ok) {
+      if (result.membershipRequired) {
+        setMemberOnlyPrompt(true);
+        setMessage("");
+        return;
+      }
       setMessage(result.error || "下载失败。");
       if (result.needsLogin) window.setTimeout(() => router.push("/login"), 800);
       return;
@@ -167,7 +173,9 @@ export default function MaterialDetailPage() {
           </div>
 
           <h1 className="mt-6 max-w-4xl text-3xl font-semibold leading-tight tracking-tight text-brand-ink md:text-5xl">{material.title}</h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-neutral-600">{material.description}</p>
+          {hasKnowledgeContent(material.description) ? (
+            <p className="mt-5 max-w-3xl text-base leading-8 text-neutral-600">{material.description}</p>
+          ) : null}
 
           <div className="mt-7 flex flex-wrap gap-3">
             <button type="button" onClick={download} className="rounded-2xl bg-[#6f8b7b] px-7 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#49695c]">
@@ -179,6 +187,16 @@ export default function MaterialDetailPage() {
           </div>
 
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
+          {memberOnlyPrompt ? (
+            <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
+              <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
+              <p className="mt-2 text-sm text-neutral-600">开通会员后即可下载，会员有效期为一年。</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
+                <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">成为专属会员</Link>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-7 grid gap-3 rounded-[1.5rem] bg-white p-5 text-sm text-neutral-600 sm:grid-cols-2 lg:grid-cols-3">
             <p>文件名：{material.file_name || "暂无文件名"}</p>

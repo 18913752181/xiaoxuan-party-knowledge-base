@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-4wgack",
     "2026-07-25-material-1q7hclc"
   ],
-  "updatedAt": "2026-07-26T08:18:15.946Z",
+  "updatedAt": "2026-07-28T11:22:51.316Z",
   "createdAt": "2026-07-25T15:17:55.662Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（十四） 新一届党支部委员会全体会议主持词"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 14,
   "recommended": false,
   "hidden": false
 }

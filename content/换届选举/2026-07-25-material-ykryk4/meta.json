@@ -7,13 +7,13 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": false,
+  "isVip": true,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-01-xx",
     "2026-07-25-material-jkh5by"
   ],
-  "updatedAt": "2026-07-26T08:18:15.564Z",
+  "updatedAt": "2026-07-28T11:22:51.581Z",
   "createdAt": "2026-07-25T15:16:24.822Z",
   "downloadCount": 0,
   "favoriteCount": 0,
@@ -23,6 +23,10 @@
     "【小宣资料库】换届选举材料（四）第二次请示前开会讨论筹备事项的会议记录参考"
   ],
   "summary": "待补充",
+  "organizationLevels": [],
+  "workSections": [],
+  "workItems": [],
+  "sortOrder": 4,
   "recommended": false,
   "hidden": false
 }

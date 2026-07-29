@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta } from "@/lib/content-units";
+import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta, updateContentUnitOrder } from "@/lib/content-units";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,4 +30,30 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ ok: true, materials: updated });
+}
+
+export async function PUT(request: Request) {
+  const body = await request.json().catch(() => null);
+  const slugs = Array.isArray(body?.slugs)
+    ? body.slugs.map((slug: unknown) => String(slug || "").trim()).filter(Boolean)
+    : [];
+
+  if (!slugs.length) {
+    return NextResponse.json({ error: "请提供需要保存的资料顺序。" }, { status: 400 });
+  }
+
+  const existingUnits = await listContentUnits({ includeHidden: true });
+  const existingSlugs = new Set(existingUnits.map((unit) => unit.slug));
+  const requestedSlugs = Array.from(new Set<string>(slugs));
+
+  if (requestedSlugs.length !== slugs.length) {
+    return NextResponse.json({ error: "资料顺序中出现重复项，请刷新后重新排序。" }, { status: 400 });
+  }
+
+  if (requestedSlugs.length !== existingUnits.length || requestedSlugs.some((slug) => !existingSlugs.has(slug))) {
+    return NextResponse.json({ error: "资料列表已发生变化，请刷新后重新排序。" }, { status: 409 });
+  }
+
+  const units = await updateContentUnitOrder(requestedSlugs);
+  return NextResponse.json({ ok: true, materials: units.map(contentUnitToMaterial) });
 }
