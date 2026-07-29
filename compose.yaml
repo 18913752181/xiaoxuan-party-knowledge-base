@@ -20,6 +20,7 @@ services:
     volumes:
       - ${CONTENT_DIR:-/srv/xiaoxuan/shared/content}:/app/content
       - ${DATA_DIR:-/srv/xiaoxuan/shared/data}:/app/data
+      - ${WECHAT_PAY_CERT_DIR:-/srv/xiaoxuan/shared/wechat-pay}:/srv/xiaoxuan/shared/wechat-pay:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 15s
