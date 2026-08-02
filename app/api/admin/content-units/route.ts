@@ -1,11 +1,15 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createContentUnit } from "@/lib/content-units";
 import { listTopics } from "@/lib/topics";
+import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const payload = await request.json();
   const title = String(payload.title || "").trim();
   const topic = String(payload.topic || payload.category || "").trim();
@@ -32,5 +36,8 @@ export async function POST(request: Request) {
     status: "published"
   });
 
-  return NextResponse.json({ ok: true, meta: unit.meta, slug: unit.meta.slug, path: unit.dir });
+  return withAuthCookies(
+    check.session,
+    NextResponse.json({ ok: true, meta: unit.meta, slug: unit.meta.slug, path: unit.dir })
+  );
 }

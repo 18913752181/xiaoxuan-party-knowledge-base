@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDisplayDate } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 
@@ -10,6 +10,16 @@ const statusLabels: Record<string, string> = {
   draft: "草稿",
   hidden: "已隐藏"
 };
+
+function uniqueMaterials(rows: Material[]) {
+  const seen = new Set<string>();
+  return rows.filter((item) => {
+    const slug = item.slug || item.id;
+    if (!slug || seen.has(slug)) return false;
+    seen.add(slug);
+    return true;
+  });
+}
 
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -22,16 +32,6 @@ export default function AdminMaterialsPage() {
   const [keyword, setKeyword] = useState("");
   const [topic, setTopic] = useState("全部分类");
   const dragInProgressRef = useRef(false);
-
-  function uniqueMaterials(rows: Material[]) {
-    const seen = new Set<string>();
-    return rows.filter((item) => {
-      const slug = item.slug || item.id;
-      if (!slug || seen.has(slug)) return false;
-      seen.add(slug);
-      return true;
-    });
-  }
 
   const topics = useMemo(
     () =>
@@ -59,7 +59,7 @@ export default function AdminMaterialsPage() {
     });
   }, [keyword, materials, topic]);
 
-  async function loadMaterials() {
+  const loadMaterials = useCallback(async () => {
     setMessage("正在读取资料...");
     try {
       const response = await fetch("/api/admin/materials", { cache: "no-store" });
@@ -71,11 +71,11 @@ export default function AdminMaterialsPage() {
     } catch (error) {
       setMessage(error instanceof Error ? `读取失败：${error.message}` : "读取失败");
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadMaterials();
-  }, []);
+  }, [loadMaterials]);
 
   async function deleteMaterial(item: Material) {
     const slug = item.slug || item.id;

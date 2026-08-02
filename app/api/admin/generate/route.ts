@@ -1,6 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createContentUnit, fileTypeFromName } from "@/lib/content-units";
 import { listTopics } from "@/lib/topics";
+import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,9 @@ async function fileToBuffer(file: File) {
 }
 
 export async function POST(request: Request) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const formData = await request.formData();
   const title = String(formData.get("title") || "").trim();
   const topic = String(formData.get("topic") || "").trim();
@@ -65,7 +69,6 @@ export async function POST(request: Request) {
     previous: splitList(formData.get("previous")),
     next: splitList(formData.get("next")),
     related: splitList(formData.get("related")),
-    sameTopic: splitList(formData.get("related")),
     recommended: splitList(formData.get("recommended")),
     seoTitle: String(formData.get("seoTitle") || "").trim(),
     seoDescription: String(formData.get("seoDescription") || "").trim(),
@@ -78,5 +81,8 @@ export async function POST(request: Request) {
     }
   });
 
-  return NextResponse.json({ ok: true, slug: unit.slug, path: unit.dir, meta: unit.meta });
+  return withAuthCookies(
+    check.session,
+    NextResponse.json({ ok: true, slug: unit.slug, path: unit.dir, meta: unit.meta })
+  );
 }

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   contentUnitToMaterial,
   deleteContentUnit,
@@ -6,6 +6,7 @@ import {
   getContentUnitBySlug,
   updateContentUnit,
 } from "@/lib/content-units";
+import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +22,18 @@ async function fileToBuffer(file: File) {
 }
 
 export async function GET(_request: Request, { params }: { params: { slug: string } }) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const unit = await getContentUnitBySlug(params.slug, { includeHidden: true });
   if (!unit) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
-  return NextResponse.json(contentUnitToMaterial(unit));
+  return withAuthCookies(check.session, NextResponse.json(contentUnitToMaterial(unit)));
 }
 
 export async function PUT(request: Request, { params }: { params: { slug: string } }) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const formData = await request.formData();
   const file = formData.get("file");
   const payload = {
@@ -52,7 +59,6 @@ export async function PUT(request: Request, { params }: { params: { slug: string
     previous: splitList(formData.get("previous")),
     next: splitList(formData.get("next")),
     related: splitList(formData.get("related")),
-    sameTopic: splitList(formData.get("related")),
     recommended: splitList(formData.get("recommended")),
     seoTitle: String(formData.get("seoTitle") || "").trim(),
     seoDescription: String(formData.get("seoDescription") || "").trim(),
@@ -68,11 +74,14 @@ export async function PUT(request: Request, { params }: { params: { slug: string
   });
 
   if (!unit) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
-  return NextResponse.json({ ok: true, material: contentUnitToMaterial(unit) });
+  return withAuthCookies(check.session, NextResponse.json({ ok: true, material: contentUnitToMaterial(unit) }));
 }
 
 export async function DELETE(_request: Request, { params }: { params: { slug: string } }) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const deleted = await deleteContentUnit(params.slug);
   if (!deleted) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
-  return NextResponse.json({ ok: true });
+  return withAuthCookies(check.session, NextResponse.json({ ok: true }));
 }

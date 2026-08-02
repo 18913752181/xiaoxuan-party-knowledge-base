@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta, updateContentUnitOrder } from "@/lib/content-units";
+import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const units = await listContentUnits({ includeHidden: true });
-  return NextResponse.json(units.map(contentUnitToMaterial));
+  return withAuthCookies(check.session, NextResponse.json(units.map(contentUnitToMaterial)));
 }
 
 export async function PATCH(request: Request) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const body = await request.json().catch(() => null);
   const slugs: string[] = Array.isArray(body?.slugs)
     ? Array.from(new Set<string>(body.slugs.map((slug: unknown) => String(slug || "").trim()).filter(Boolean)))
@@ -29,10 +36,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "没有找到可修改的资料。" }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, materials: updated });
+  return withAuthCookies(check.session, NextResponse.json({ ok: true, materials: updated }));
 }
 
 export async function PUT(request: Request) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
   const body = await request.json().catch(() => null);
   const slugs = Array.isArray(body?.slugs)
     ? body.slugs.map((slug: unknown) => String(slug || "").trim()).filter(Boolean)
@@ -55,5 +65,5 @@ export async function PUT(request: Request) {
   }
 
   const units = await updateContentUnitOrder(requestedSlugs);
-  return NextResponse.json({ ok: true, materials: units.map(contentUnitToMaterial) });
+  return withAuthCookies(check.session, NextResponse.json({ ok: true, materials: units.map(contentUnitToMaterial) }));
 }

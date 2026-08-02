@@ -13,16 +13,17 @@ import {
   removePanoramaSection,
   renamePanoramaSection,
 } from "@/lib/topic-panorama";
+import { withAdmin } from "@/lib/admin-auth";
 
 async function payload() {
   return { levels: await getWorkLevels() };
 }
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   return NextResponse.json(await payload());
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     if (body.type === "section") await addWorkSection(String(body.level || ""), String(body.name || ""));
@@ -31,9 +32,9 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "新增失败" }, { status: 400 });
   }
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     if (body.type === "section") {
@@ -52,9 +53,9 @@ export async function PUT(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "修改失败" }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     if (body.type === "section") {
@@ -68,4 +69,4 @@ export async function DELETE(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "删除失败" }, { status: 400 });
   }
-}
+});

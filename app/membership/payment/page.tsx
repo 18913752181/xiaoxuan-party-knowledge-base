@@ -149,6 +149,7 @@ export default function MembershipPaymentPage() {
               {status === "creating" ? <p className="py-24 text-sm text-neutral-500">正在生成微信支付订单…</p> : null}
               {status === "paying" && qrCode ? (
                 <>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为接口动态生成的 data URL，next/image 无法优化 */}
                   <img src={qrCode} alt="微信支付二维码" className="mx-auto h-64 w-64 rounded-xl bg-white p-2" />
                   <p className="mt-4 text-sm font-medium">请使用微信扫一扫完成支付</p>
                   <p className="mt-2 break-all text-xs text-neutral-400">订单号：{orderNo}</p>

@@ -9,6 +9,7 @@ import {
   type TopicPanoramaPlacement,
 } from "@/lib/topic-panorama";
 import { getWorkLevels } from "@/lib/work-panorama-store";
+import { withAdmin } from "@/lib/admin-auth";
 
 async function topicPayload() {
   const topics = await listTopics();
@@ -30,15 +31,15 @@ async function topicPayload() {
   };
 }
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
     return NextResponse.json(await topicPayload());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "读取专题失败" }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     await addTopic(String(body.name || ""));
@@ -46,9 +47,9 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "新增专题失败" }, { status: 400 });
   }
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     const result = await renameTopic(String(body.oldName || ""), String(body.newName || ""));
@@ -57,9 +58,9 @@ export async function PUT(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "修改专题失败" }, { status: 400 });
   }
-}
+});
 
-export async function PATCH(request: Request) {
+export const PATCH = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     await setTopicPanoramaPlacements(
@@ -70,9 +71,9 @@ export async function PATCH(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "保存专题关联失败" }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withAdmin(async (request: Request) => {
   try {
     const body = await request.json();
     const name = String(body.name || "").trim();
@@ -94,4 +95,4 @@ export async function DELETE(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "删除专题失败" }, { status: 400 });
   }
-}
+});

@@ -99,7 +99,9 @@ export default function LoginForm() {
     }
 
     setCurrentUser(data.user?.email || verifiedEmail);
-    const redirectTo = searchParams.get("redirect") || "/user";
+    // 仅允许站内相对路径，防止开放重定向到外部站点。
+    const rawRedirect = searchParams.get("redirect") || "/user";
+    const redirectTo = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/user";
     router.push(redirectTo);
     router.refresh();
   }
