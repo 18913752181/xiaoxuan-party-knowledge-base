@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -89,16 +89,19 @@ export default function MaterialDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [material, setMaterial] = useState<Material | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true);
     fetch(`/api/content-units/${encodeURIComponent(params.id)}`, { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((row) => setMaterial(row))
-      .catch(() => setMaterial(null));
+      .catch(() => setMaterial(null))
+      .finally(() => setIsLoading(false));
 
     fetch("/api/content-units", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : []))
@@ -139,7 +142,38 @@ export default function MaterialDetailPage() {
     setMessage("文件下载已开始。");
   }
 
-  if (!material) return <section className="mx-auto max-w-4xl px-5 py-12 text-neutral-600">没有找到这份资料。</section>;
+  if (isLoading) {
+    return (
+      <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8" role="status" aria-label="正在加载资料">
+        <div className="animate-pulse">
+          <div className="h-4 w-24 rounded bg-[#e8e3dc]" />
+          <div className="mt-5 rounded-[2rem] border border-[#ebe5dc] bg-white p-6 md:p-8">
+            <div className="flex gap-2">
+              <div className="h-9 w-16 rounded-2xl bg-[#ece8e2]" />
+              <div className="h-9 w-24 rounded-2xl bg-[#ece8e2]" />
+            </div>
+            <div className="mt-6 h-9 w-3/4 rounded bg-[#ece8e2]" />
+            <div className="mt-4 h-4 w-full rounded bg-[#f1ede8]" />
+            <div className="mt-2 h-4 w-2/3 rounded bg-[#f1ede8]" />
+            <div className="mt-7 flex gap-3">
+              <div className="h-11 w-28 rounded-2xl bg-[#ece8e2]" />
+              <div className="h-11 w-28 rounded-2xl bg-[#ece8e2]" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!material) {
+    return (
+      <section className="mx-auto max-w-3xl px-5 py-20 text-center">
+        <h1 className="text-2xl font-semibold text-brand-ink">没有找到这份资料</h1>
+        <p className="mt-3 text-sm text-neutral-500">它可能已被移除或链接有误。</p>
+        <Link href="/library" className="mt-6 inline-flex rounded-xl bg-[#9a4650] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#7d3540]">返回资料库</Link>
+      </section>
+    );
+  }
 
   const articleSlug = getArticleSlug(material);
   const isFavorite = favoriteSlugs.includes(articleSlug);

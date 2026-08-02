@@ -25,6 +25,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   const [isLoading, setIsLoading] = useState(true);
   const [memberOnlyMaterial, setMemberOnlyMaterial] = useState<Material | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
 
   useEffect(() => {
     fetch("/api/content-units", { cache: "no-store" })
@@ -89,10 +90,10 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   }, [materials, sortedMaterials]);
 
   useEffect(() => {
-    if (slides.length < 2) return;
+    if (slides.length < 2 || carouselPaused) return;
     const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 5000);
     return () => window.clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, carouselPaused]);
 
   const filteredMaterials = useMemo(() => {
     const query = submittedKeyword.trim().toLowerCase();
@@ -168,7 +169,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   }
 
   return (
-    <div className="pb-20 lg:pb-0">
+    <div>
       <section className="border-b border-[#e9e6e1] bg-white">
         <div className="mx-auto max-w-6xl px-5 py-7 lg:px-8 lg:py-10">
           <p className="text-sm font-medium text-[#9a4650]">{libraryOnly ? "全部资料" : "小宣资料库"}</p>
@@ -213,7 +214,14 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
       </section>
 
       {showSearchMode ? null : <main className="mx-auto max-w-6xl space-y-10 px-5 py-7 lg:px-8 lg:py-10">
-        {!libraryOnly && slides.length ? <FeaturedCarousel slides={slides} active={Math.min(activeSlide, slides.length - 1)} onChange={setActiveSlide} /> : null}
+        {!libraryOnly && slides.length ? (
+          <FeaturedCarousel
+            slides={slides}
+            active={Math.min(activeSlide, slides.length - 1)}
+            onChange={setActiveSlide}
+            onHoverChange={setCarouselPaused}
+          />
+        ) : null}
 
         {!libraryOnly && frequentTopics.length ? (
           <section>
@@ -260,7 +268,16 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
           <>
           {message ? <div className="mt-4 rounded-xl border border-[#d9cab1] bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</div> : null}
           {isLoading ? (
-            <div className="mt-4 rounded-2xl bg-white p-10 text-center text-sm text-neutral-500 ring-1 ring-[#ebe5dc]">正在读取资料库…</div>
+            <div className="mt-4 space-y-3" role="status" aria-label="正在读取资料库">
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="animate-pulse rounded-2xl bg-white p-5 ring-1 ring-[#ebe5dc]">
+                  <div className="h-3 w-28 rounded bg-[#ece8e2]" />
+                  <div className="mt-3 h-5 w-2/3 rounded bg-[#ece8e2]" />
+                  <div className="mt-3 h-3 w-full rounded bg-[#f1ede8]" />
+                  <div className="mt-2 h-3 w-4/5 rounded bg-[#f1ede8]" />
+                </div>
+              ))}
+            </div>
           ) : (
           <div className="mt-4 divide-y divide-[#eeeae4] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#ebe5dc]">
             {filteredMaterials.slice(0, libraryOnly ? undefined : 3).map((material) => {
@@ -308,20 +325,48 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
   );
 }
 
-function FeaturedCarousel({ slides, active, onChange }: { slides: Array<{ label: string; material: Material }>; active: number; onChange: (index: number) => void }) {
+function FeaturedCarousel({ slides, active, onChange, onHoverChange }: { slides: Array<{ label: string; material: Material }>; active: number; onChange: (index: number) => void; onHoverChange: (hovered: boolean) => void }) {
   const current = slides[active];
   const slug = getArticleSlug(current.material);
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-[#e1d4cc] bg-[#eee4de] p-5 text-brand-ink shadow-sm md:p-7">
+    <section
+      className="relative overflow-hidden rounded-3xl border border-[#e1d4cc] bg-[#eee4de] p-5 text-brand-ink shadow-sm md:p-7"
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+    >
       <div className="absolute -right-14 -top-20 h-48 w-48 rounded-full bg-[#c98e94]/25 blur-2xl" />
       <div className="absolute bottom-0 right-16 h-24 w-40 rounded-full bg-white/55 blur-2xl" />
-      <div className="relative max-w-3xl">
+      <div key={`${current.label}-${slug}`} className="relative max-w-3xl animate-[carouselFade_0.45s_ease-out]">
         <p className="text-xs font-medium tracking-[0.18em] text-[#9a4650]">{current.label}</p>
         <h2 className="mt-3 line-clamp-2 text-xl font-semibold leading-snug md:text-2xl">{current.material.title}</h2>
         {meaningful(current.material.description || current.material.summary) ? <p className="mt-2 line-clamp-1 text-sm leading-6 text-neutral-600">{current.material.description || current.material.summary}</p> : null}
         <Link href={`/materials/${slug}`} className="mt-4 inline-flex rounded-xl border border-[#cbb8ad] bg-white/45 px-4 py-2 text-sm text-[#7d3540] transition hover:bg-white/70">查看资料</Link>
       </div>
-      {slides.length > 1 ? <div className="relative mt-5 flex gap-2">{slides.map((slide, index) => <button key={`${slide.label}-${getArticleSlug(slide.material)}`} type="button" onClick={() => onChange(index)} aria-label={`查看第${index + 1}张`} className={`h-1.5 rounded-full transition-all ${active === index ? "w-8 bg-[#9a4650]" : "w-3 bg-[#9a4650]/25"}`} />)}</div> : null}
+      {slides.length > 1 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => onChange((active - 1 + slides.length) % slides.length)}
+            aria-label="上一张"
+            className="absolute right-14 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8c3b8] bg-white/55 text-lg text-[#7d3540] transition hover:bg-white md:flex"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange((active + 1) % slides.length)}
+            aria-label="下一张"
+            className="absolute right-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8c3b8] bg-white/55 text-lg text-[#7d3540] transition hover:bg-white md:flex"
+          >
+            ›
+          </button>
+          <div className="relative mt-5 flex gap-2">
+            {slides.map((slide, index) => (
+              <button key={`${slide.label}-${getArticleSlug(slide.material)}`} type="button" onClick={() => onChange(index)} aria-label={`查看第${index + 1}张`} className={`h-1.5 rounded-full transition-all ${active === index ? "w-8 bg-[#9a4650]" : "w-3 bg-[#9a4650]/25 hover:bg-[#9a4650]/45"}`} />
+            ))}
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }

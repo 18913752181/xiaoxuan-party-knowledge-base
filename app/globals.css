@@ -114,3 +114,14 @@ h3 {
   margin-bottom: 0.5rem;
   line-height: 1.8;
 }
+
+@keyframes carouselFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

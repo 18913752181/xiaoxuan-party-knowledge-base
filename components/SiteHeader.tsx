@@ -11,15 +11,43 @@ const navItems = [
   { href: "/me", label: "我的" }
 ];
 
+function navItemActive(href: string, pathname: string, hash: string) {
+  if (href === "/") return pathname === "/" && hash !== "#submit-question";
+  if (href === "/#submit-question") return pathname === "/" && hash === "#submit-question";
+  if (href === "/library") return pathname === "/library" || pathname.startsWith("/materials/");
+  if (href === "/me") return pathname === "/me" || pathname.startsWith("/me/");
+  return pathname === href;
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
+  const [sessionEmail, setSessionEmail] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     const updateHash = () => setHash(window.location.hash);
     updateHash();
     window.addEventListener("hashchange", updateHash);
     return () => window.removeEventListener("hashchange", updateHash);
+  }, [pathname]);
+
+  // 感知登录状态：已登录用户显示账号入口而不是“登录”按钮。
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setSessionEmail(data?.user?.email || "");
+        setSessionChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
 
   return (
@@ -33,15 +61,40 @@ export function SiteHeader() {
             <span className="block text-[11px] text-[#6f746f]">小宣资料库</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-1 text-sm text-neutral-600 lg:flex" aria-label="主导航">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="relative rounded-xl px-3 py-2 transition hover:bg-white hover:text-[#8d2f32]">
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
+          {navItems.map((item) => {
+            const active = navItemActive(item.href, pathname, hash);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`relative rounded-xl px-3 py-2 transition ${
+                  active
+                    ? "bg-white font-semibold text-[#9a4650] shadow-sm"
+                    : "text-neutral-600 hover:bg-white hover:text-[#8d2f32]"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="rounded-xl bg-[#9a4650] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#7d3540]">登录</Link>
+          {sessionChecked && sessionEmail ? (
+            <Link
+              href="/me"
+              className="flex items-center gap-2 rounded-xl border border-[#e4ded5] bg-white py-1.5 pl-1.5 pr-4 text-sm font-medium text-brand-ink transition hover:border-[#c9a2a6] hover:text-[#8d2f32]"
+              title={sessionEmail}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#9a4650] text-xs font-semibold text-white">
+                {sessionEmail.slice(0, 1).toUpperCase()}
+              </span>
+              我的
+            </Link>
+          ) : (
+            <Link href="/login" className="rounded-xl bg-[#9a4650] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#7d3540]">登录</Link>
+          )}
         </div>
         </div>
       </header>
