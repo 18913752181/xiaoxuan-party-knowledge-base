@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Plan = { name: string; duration: string; amountTotal: number };
 
+const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
+const POLL_INTERVAL = 3000;
+const REDIRECT_DELAY = 2500;
+
 export default function MembershipPaymentPage() {
+  const router = useRouter();
   const { profile, loading, refreshProfile } = useAuth();
   const [plan, setPlan] = useState<Plan | null>(null);
   const [configured, setConfigured] = useState(false);
@@ -16,6 +22,7 @@ export default function MembershipPaymentPage() {
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "paid">("idle");
   const [message, setMessage] = useState("");
   const [expiry, setExpiry] = useState("");
+  const pollCountRef = useRef(0);
 
   useEffect(() => {
     fetch("/api/membership/config", { cache: "no-store" })
@@ -27,20 +34,61 @@ export default function MembershipPaymentPage() {
       .catch(() => setMessage("会员信息读取失败，请稍后重试。"));
   }, []);
 
+  // 支付成功后自动跳转到资料库
+  useEffect(() => {
+    if (status !== "paid") return;
+    const timer = window.setTimeout(() => {
+      router.push("/library");
+    }, REDIRECT_DELAY);
+    return () => window.clearTimeout(timer);
+  }, [status, router]);
+
+  // 轮询订单支付状态
   useEffect(() => {
     if (!orderNo || status !== "paying") return;
+    pollCountRef.current = 0;
+
     const timer = window.setInterval(async () => {
-      const response = await fetch(`/api/payments/orders/${encodeURIComponent(orderNo)}`, { cache: "no-store" });
-      if (!response.ok) return;
-      const data = await response.json();
-      if (data.order?.status === "paid") {
+      pollCountRef.current += 1;
+
+      if (pollCountRef.current > MAX_POLL_COUNT) {
         window.clearInterval(timer);
-        setStatus("paid");
-        setExpiry(data.order.member_expires_at || "");
-        setMessage("支付成功，会员权益已自动开通。");
-        await refreshProfile();
+        setMessage("支付确认超时，请刷新页面重试，或联系客服。");
+        return;
       }
-    }, 3000);
+
+      try {
+        const response = await fetch(
+          `/api/payments/orders/${encodeURIComponent(orderNo)}`,
+          { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.clearInterval(timer);
+            setMessage("登录状态已失效，请重新登录后查看订单。");
+          }
+          return;
+        }
+
+        const data = await response.json();
+        if (data.order?.status === "paid") {
+          window.clearInterval(timer);
+          setStatus("paid");
+          setExpiry(data.order.member_expires_at || "");
+          setMessage("支付成功，会员权益已自动开通。");
+          // refreshProfile 失败不应阻塞支付成功状态
+          try {
+            await refreshProfile();
+          } catch {
+            // 忽略刷新失败，支付成功状态已设置
+          }
+        }
+      } catch {
+        // 网络波动，继续轮询；超过 MAX_POLL_COUNT 会给出提示
+      }
+    }, POLL_INTERVAL);
+
     return () => window.clearInterval(timer);
   }, [orderNo, status, refreshProfile]);
 
@@ -112,7 +160,8 @@ export default function MembershipPaymentPage() {
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e3efe8] text-2xl text-[#4f7a64]">✓</div>
                   <p className="mt-5 text-lg font-semibold">会员已开通</p>
                   <p className="mt-2 text-sm text-neutral-500">有效期至 {expiry}</p>
-                  <Link href="/library" className="mt-6 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">去下载资料</Link>
+                  <p className="mt-3 text-xs text-neutral-400">{REDIRECT_DELAY / 1000} 秒后自动跳转…</p>
+                  <Link href="/library" className="mt-4 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">去下载资料</Link>
                 </div>
               ) : null}
               {message ? <p className="mt-4 text-sm leading-6 text-[#a64550]">{message}</p> : null}
