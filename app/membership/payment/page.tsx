@@ -144,6 +144,11 @@ export default function MembershipPaymentPage() {
                   <button disabled={!configured} onClick={createOrder} className="mt-8 w-full rounded-xl bg-[#a64550] px-5 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-neutral-300">
                     {configured ? "微信支付" : "支付功能待配置"}
                   </button>
+                  {!configured ? (
+                    <p className="mt-3 text-xs leading-5 text-neutral-400">
+                      微信支付配置尚未完成，暂无法在线开通会员，请稍后再试或联系站长。
+                    </p>
+                  ) : null}
                 </>
               ) : null}
               {status === "creating" ? <p className="py-24 text-sm text-neutral-500">正在生成微信支付订单…</p> : null}

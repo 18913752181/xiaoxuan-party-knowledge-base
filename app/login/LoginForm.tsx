@@ -2,10 +2,18 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+
+// 仅允许站内相对路径，防止开放重定向到外部站点。
+function safeRedirectPath(value: string | null) {
+  if (!value) return "";
+  return value.startsWith("/") && !value.startsWith("//") ? value : "";
+}
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshProfile } = useAuth();
   const [email, setEmail] = useState("");
   const [verifiedEmail, setVerifiedEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -20,10 +28,21 @@ export default function LoginForm() {
       const response = await fetch("/api/auth/session", { cache: "no-store" });
       if (!response.ok) return;
       const data = await response.json();
-      setCurrentUser(data.user?.email || "");
+      const loggedInEmail = data.user?.email || "";
+      setCurrentUser(loggedInEmail);
+
+      // 已登录用户带着 redirect 参数来到登录页（例如从支付页跳转），
+      // 直接送回目标页面，避免“支付页提示未登录 → 登录页提示已登录”的死循环。
+      const target = safeRedirectPath(searchParams.get("redirect"));
+      if (loggedInEmail && target) {
+        await refreshProfile();
+        router.push(target);
+        router.refresh();
+      }
     }
 
     refreshSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在进入登录页时执行一次
   }, []);
 
   useEffect(() => {
@@ -99,9 +118,9 @@ export default function LoginForm() {
     }
 
     setCurrentUser(data.user?.email || verifiedEmail);
-    // 仅允许站内相对路径，防止开放重定向到外部站点。
-    const rawRedirect = searchParams.get("redirect") || "/user";
-    const redirectTo = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/user";
+    // 登录成功后立即刷新全局登录状态，确保支付页等页面立刻识别已登录。
+    await refreshProfile();
+    const redirectTo = safeRedirectPath(searchParams.get("redirect")) || "/user";
     router.push(redirectTo);
     router.refresh();
   }

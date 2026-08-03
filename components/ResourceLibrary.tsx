@@ -167,7 +167,10 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
         return;
       }
       setMessage(result.error || "下载失败。");
-      if (result.needsLogin) window.setTimeout(() => router.push("/login"), 800);
+      if (result.needsLogin) {
+        const here = `${window.location.pathname}${window.location.search}`;
+        window.setTimeout(() => router.push(`/login?redirect=${encodeURIComponent(here)}`), 800);
+      }
       return;
     }
     updateMaterialCount(getArticleSlug(material), "download_count", material.download_count + 1);
