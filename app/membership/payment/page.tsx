@@ -19,6 +19,8 @@ export default function MembershipPaymentPage() {
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
   const [qrCode, setQrCode] = useState("");
+  // 微信"长按识别二维码"只对真实 http(s) 图片地址生效，优先使用服务端二维码图片接口，失败时回退到 data URL
+  const [qrSrc, setQrSrc] = useState("");
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "paid">("idle");
   const [message, setMessage] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -104,6 +106,7 @@ export default function MembershipPaymentPage() {
     }
     setOrderNo(data.outTradeNo);
     setQrCode(await QRCode.toDataURL(data.codeUrl, { width: 280, margin: 1, errorCorrectionLevel: "M" }));
+    setQrSrc(`/api/payments/wechat/qrcode?url=${encodeURIComponent(data.codeUrl)}`);
     setStatus("paying");
   }
 
@@ -152,11 +155,19 @@ export default function MembershipPaymentPage() {
                 </>
               ) : null}
               {status === "creating" ? <p className="py-24 text-sm text-neutral-500">正在生成微信支付订单…</p> : null}
-              {status === "paying" && qrCode ? (
+              {status === "paying" && qrSrc ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为接口动态生成的 data URL，next/image 无法优化 */}
-                  <img src={qrCode} alt="微信支付二维码" className="mx-auto h-64 w-64 rounded-xl bg-white p-2" />
+                  {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为动态生成内容，须用真实图片地址以支持微信长按识别，next/image 无法优化 */}
+                  <img
+                    src={qrSrc}
+                    onError={() => {
+                      if (qrSrc !== qrCode) setQrSrc(qrCode);
+                    }}
+                    alt="微信支付二维码"
+                    className="mx-auto h-64 w-64 rounded-xl bg-white p-2"
+                  />
                   <p className="mt-4 text-sm font-medium">请使用微信扫一扫完成支付</p>
+                  <p className="mt-1 text-xs text-neutral-500">在微信内打开可长按二维码识别支付</p>
                   <p className="mt-2 break-all text-xs text-neutral-400">订单号：{orderNo}</p>
                   <p className="mt-3 text-xs text-neutral-500">页面会自动确认支付结果，请勿关闭。</p>
                 </>
