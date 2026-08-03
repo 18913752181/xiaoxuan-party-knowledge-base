@@ -19,12 +19,22 @@ export default function MembershipPaymentPage() {
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
   const [qrCode, setQrCode] = useState("");
-  // 微信"长按识别二维码"只对真实 http(s) 图片地址生效，优先使用服务端二维码图片接口，失败时回退到 data URL
+  // 服务端二维码接口输出真实 PNG 图片地址（可长按保存/识别，兼容性优于 data URL），加载失败时回退到 data URL
   const [qrSrc, setQrSrc] = useState("");
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "paid">("idle");
   const [message, setMessage] = useState("");
   const [expiry, setExpiry] = useState("");
+  // 手机端（尤其微信内）无法直接扫描屏幕上的二维码，且微信已限制长按识别 weixin:// 支付链接，
+  // 需要在客户端识别设备类型后展示"截图 → 扫一扫相册识别"的指引
+  const [isMobile, setIsMobile] = useState(false);
+  const [inWechat, setInWechat] = useState(false);
   const pollCountRef = useRef(0);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsMobile(/Android|iPhone|iPad|Mobile/i.test(ua));
+    setInWechat(/MicroMessenger/i.test(ua));
+  }, []);
 
   useEffect(() => {
     fetch("/api/membership/config", { cache: "no-store" })
@@ -157,7 +167,7 @@ export default function MembershipPaymentPage() {
               {status === "creating" ? <p className="py-24 text-sm text-neutral-500">正在生成微信支付订单…</p> : null}
               {status === "paying" && qrSrc ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为动态生成内容，须用真实图片地址以支持微信长按识别，next/image 无法优化 */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为动态生成内容，next/image 无法优化 */}
                   <img
                     src={qrSrc}
                     onError={() => {
@@ -166,8 +176,23 @@ export default function MembershipPaymentPage() {
                     alt="微信支付二维码"
                     className="mx-auto h-64 w-64 rounded-xl bg-white p-2"
                   />
-                  <p className="mt-4 text-sm font-medium">请使用微信扫一扫完成支付</p>
-                  <p className="mt-1 text-xs text-neutral-500">在微信内打开可长按二维码识别支付</p>
+                  <p className="mt-4 text-sm font-medium">请使用微信「扫一扫」完成支付</p>
+                  {isMobile ? (
+                    <div className="mt-3 rounded-xl bg-[#fdf3f0] p-4 text-left text-xs leading-6 text-[#8a5340]">
+                      {inWechat ? (
+                        <p className="font-medium">微信已限制长按识别支付链接，请按以下步骤支付：</p>
+                      ) : (
+                        <p className="font-medium">手机端请按以下步骤支付：</p>
+                      )}
+                      <ol className="mt-2 list-decimal space-y-1 pl-4">
+                        <li>截取当前屏幕，保存本页二维码</li>
+                        <li>打开微信「扫一扫」，点击右下角「相册」</li>
+                        <li>选择刚截取的图片，识别后完成支付</li>
+                      </ol>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-neutral-500">用手机微信扫描上方二维码即可支付</p>
+                  )}
                   <p className="mt-2 break-all text-xs text-neutral-400">订单号：{orderNo}</p>
                   <p className="mt-3 text-xs text-neutral-500">页面会自动确认支付结果，请勿关闭。</p>
                 </>
