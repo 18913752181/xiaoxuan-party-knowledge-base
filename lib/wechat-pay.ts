@@ -170,3 +170,101 @@ export function decryptWechatResource(resource: {
 export function wechatMerchantIdentity() {
   return { mchid: env("WECHAT_PAY_MCH_ID"), appid: env("WECHAT_PAY_APP_ID") };
 }
+
+// ---------- JSAPI（公众号）支付：微信内置浏览器一键唤起收银台 ----------
+
+export function officialAppId() {
+  // 服务号 AppID；未单独配置时回退到支付 AppID（两者通常是同一个服务号）
+  return env("WECHAT_OFFICIAL_APP_ID") || env("WECHAT_PAY_APP_ID");
+}
+
+function officialAppSecret() {
+  return env("WECHAT_OFFICIAL_APP_SECRET");
+}
+
+export function wechatJsapiConfigured() {
+  return wechatPayConfigured() && Boolean(officialAppId() && officialAppSecret());
+}
+
+/** 支付回调可能携带 Native 或 JSAPI 下单时使用的任一 AppID，两者都应通过校验 */
+export function wechatAcceptedAppIds() {
+  return Array.from(new Set([env("WECHAT_PAY_APP_ID"), officialAppId()].filter(Boolean)));
+}
+
+function siteUrl() {
+  return (env("NEXT_PUBLIC_SITE_URL") || "https://xiaoxuanvip.com").replace(/\/$/, "");
+}
+
+export function wechatOauthUrl(state: string) {
+  const params = new URLSearchParams({
+    appid: officialAppId(),
+    redirect_uri: `${siteUrl()}/api/payments/wechat/oauth/callback`,
+    response_type: "code",
+    scope: "snsapi_base",
+    state
+  });
+  return `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
+}
+
+/** 用授权 code 换取用户在当前服务号下的 openid（snsapi_base 静默授权） */
+export async function fetchWechatOpenid(code: string) {
+  const params = new URLSearchParams({
+    appid: officialAppId(),
+    secret: officialAppSecret(),
+    code,
+    grant_type: "authorization_code"
+  });
+  const response = await fetch(`https://api.weixin.qq.com/sns/oauth2/access_token?${params.toString()}`, { cache: "no-store" });
+  const result = await response.json();
+  if (!response.ok || !result.openid) {
+    throw new Error(result.errmsg ? `微信授权失败：${result.errmsg}` : "微信授权失败。");
+  }
+  return result.openid as string;
+}
+
+export async function createJsapiOrder(input: {
+  outTradeNo: string;
+  description: string;
+  amountTotal: number;
+  openid: string;
+}) {
+  if (!wechatJsapiConfigured()) throw new Error("微信内支付尚未完成配置。");
+  const path = "/v3/pay/transactions/jsapi";
+  const body = JSON.stringify({
+    appid: officialAppId(),
+    mchid: env("WECHAT_PAY_MCH_ID"),
+    description: input.description,
+    out_trade_no: input.outTradeNo,
+    notify_url: env("WECHAT_PAY_NOTIFY_URL"),
+    amount: { total: input.amountTotal, currency: "CNY" },
+    payer: { openid: input.openid }
+  });
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: authorization("POST", path, body),
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "User-Agent": "xiaoxuan-material-library/1.0"
+    },
+    body,
+    cache: "no-store"
+  });
+  const result = await response.json();
+  if (!response.ok || !result.prepay_id) {
+    throw new Error(result.message || "微信支付下单失败。");
+  }
+  return result.prepay_id as string;
+}
+
+/** 生成前端 WeixinJSBridge 唤起收银台所需的参数（paySign 用商户私钥 RSA-SHA256 签名） */
+export function signJsapiPayParams(prepayId: string) {
+  const appId = officialAppId();
+  const timeStamp = Math.floor(Date.now() / 1000).toString();
+  const nonceStr = crypto.randomBytes(16).toString("hex");
+  const packageStr = `prepay_id=${prepayId}`;
+  const paySign = crypto
+    .sign("RSA-SHA256", Buffer.from(`${appId}\n${timeStamp}\n${nonceStr}\n${packageStr}\n`), privateKey())
+    .toString("base64");
+  return { appId, timeStamp, nonceStr, package: packageStr, signType: "RSA", paySign };
+}

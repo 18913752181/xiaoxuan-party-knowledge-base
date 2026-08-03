@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   decryptWechatResource,
   verifyWechatNotification,
+  wechatAcceptedAppIds,
   wechatMerchantIdentity
 } from "@/lib/wechat-pay";
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     if (
       transaction.trade_state !== "SUCCESS" ||
       transaction.mchid !== identity.mchid ||
-      transaction.appid !== identity.appid
+      !wechatAcceptedAppIds().includes(transaction.appid)
     ) return failure("支付结果无效。");
 
     const admin = getSupabaseAdmin();

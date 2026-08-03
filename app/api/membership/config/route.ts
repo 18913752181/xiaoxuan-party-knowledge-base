@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { annualPriceCents, wechatPayConfigured } from "@/lib/wechat-pay";
+import { annualPriceCents, wechatJsapiConfigured, wechatPayConfigured } from "@/lib/wechat-pay";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   return NextResponse.json({
     configured: wechatPayConfigured(),
+    jsapiConfigured: wechatJsapiConfigured(),
     plan: {
       code: "annual",
       name: "小宣资料库年度会员",

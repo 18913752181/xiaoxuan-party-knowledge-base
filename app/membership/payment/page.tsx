@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import QRCode from "qrcode";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -11,6 +11,25 @@ type Plan = { name: string; duration: string; amountTotal: number };
 const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
 const POLL_INTERVAL = 3000;
 const REDIRECT_DELAY = 2500;
+
+type BridgeResult = { err_msg?: string };
+type WechatBridge = {
+  invoke: (name: string, params: Record<string, string>, callback: (result: BridgeResult) => void) => void;
+};
+
+/** 调起微信内置收银台（仅微信内置浏览器可用） */
+function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMsg: string) => void) {
+  const run = () => {
+    const bridge = (window as unknown as { WeixinJSBridge?: WechatBridge }).WeixinJSBridge;
+    if (!bridge) {
+      onResult("unavailable");
+      return;
+    }
+    bridge.invoke("getBrandPayRequest", payParams, (result) => onResult(result?.err_msg || ""));
+  };
+  if ((window as unknown as { WeixinJSBridge?: unknown }).WeixinJSBridge) run();
+  else document.addEventListener("WeixinJSBridgeReady", run, { once: true });
+}
 
 export default function MembershipPaymentPage() {
   const router = useRouter();
@@ -28,7 +47,9 @@ export default function MembershipPaymentPage() {
   // 需要在客户端识别设备类型后展示"截图 → 扫一扫相册识别"的指引
   const [isMobile, setIsMobile] = useState(false);
   const [inWechat, setInWechat] = useState(false);
+  const [jsapiReady, setJsapiReady] = useState(false);
   const pollCountRef = useRef(0);
+  const autoPayRef = useRef(false);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -41,9 +62,23 @@ export default function MembershipPaymentPage() {
       .then((response) => response.json())
       .then((data) => {
         setConfigured(Boolean(data.configured));
+        setJsapiReady(Boolean(data.jsapiConfigured));
         setPlan(data.plan);
       })
       .catch(() => setMessage("会员信息读取失败，请稍后重试。"));
+  }, []);
+
+  // 微信授权回跳处理：jsapi=auto 自动唤起收银台；jsapi=error 展示失败原因
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const jsapi = params.get("jsapi");
+    if (!jsapi) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    if (jsapi === "error") {
+      setMessage(params.get("reason") || "微信授权失败，请重试。");
+    } else if (jsapi === "auto") {
+      autoPayRef.current = true;
+    }
   }, []);
 
   // 支付成功后自动跳转到资料库
@@ -120,6 +155,51 @@ export default function MembershipPaymentPage() {
     setStatus("paying");
   }
 
+  // 微信内 JSAPI 支付：静默授权获取 openid → 下单 → 唤起微信收银台
+  const startJsapiPay = useCallback(async () => {
+    setStatus("creating");
+    setMessage("");
+    try {
+      const response = await fetch("/api/payments/wechat/jsapi/orders", { method: "POST" });
+      const data = await response.json();
+      if (response.status === 401 && data.needOAuth) {
+        // 跳转微信静默授权，完成后携 jsapi=auto 回到本页自动唤起收银台
+        window.location.href = "/api/payments/wechat/oauth";
+        return;
+      }
+      if (!response.ok) {
+        setStatus("idle");
+        setMessage(data.error || "创建订单失败。");
+        return;
+      }
+      setOrderNo(data.outTradeNo);
+      invokeWechatCashier(data.payParams, (errMsg) => {
+        if (errMsg === "get_brand_pay_request:ok") {
+          setStatus("paying");
+          setMessage("正在确认支付结果…");
+        } else if (errMsg.includes("cancel")) {
+          setStatus("idle");
+          setMessage("已取消支付，如仍需开通会员请重新点击微信支付。");
+        } else {
+          setStatus("idle");
+          setMessage("收银台唤起失败，请重试。");
+        }
+      });
+    } catch {
+      setStatus("idle");
+      setMessage("网络异常，请稍后重试。");
+    }
+  }, []);
+
+  // 授权回跳后，等待登录态与支付配置就绪再自动唤起收银台
+  useEffect(() => {
+    if (!autoPayRef.current || loading || !profile || !jsapiReady) return;
+    autoPayRef.current = false;
+    void startJsapiPay();
+  }, [loading, profile, jsapiReady, startJsapiPay]);
+
+  const useJsapi = inWechat && jsapiReady;
+
   const price = plan ? (plan.amountTotal / 100).toFixed(2) : "--";
 
   return (
@@ -154,9 +234,19 @@ export default function MembershipPaymentPage() {
               {!loading && profile && status === "idle" ? (
                 <>
                   <p className="text-sm text-neutral-500">当前账号：{profile.email}</p>
-                  <button disabled={!configured} onClick={createOrder} className="mt-8 w-full rounded-xl bg-[#a64550] px-5 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-neutral-300">
+                  <button
+                    disabled={!configured}
+                    onClick={() => {
+                      if (useJsapi) void startJsapiPay();
+                      else void createOrder();
+                    }}
+                    className="mt-8 w-full rounded-xl bg-[#a64550] px-5 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-neutral-300"
+                  >
                     {configured ? "微信支付" : "支付功能待配置"}
                   </button>
+                  {configured && useJsapi ? (
+                    <p className="mt-3 text-xs leading-5 text-neutral-400">微信内直接唤起收银台，无需扫码</p>
+                  ) : null}
                   {!configured ? (
                     <p className="mt-3 text-xs leading-5 text-neutral-400">
                       微信支付配置尚未完成，暂无法在线开通会员，请稍后再试或联系站长。
@@ -165,6 +255,13 @@ export default function MembershipPaymentPage() {
                 </>
               ) : null}
               {status === "creating" ? <p className="py-24 text-sm text-neutral-500">正在生成微信支付订单…</p> : null}
+              {status === "paying" && !qrSrc ? (
+                <div className="py-20">
+                  <p className="text-sm font-medium">正在确认支付结果…</p>
+                  <p className="mt-2 text-xs text-neutral-500">如已在微信收银台完成支付，页面会自动开通会员，请勿关闭。</p>
+                  <p className="mt-2 break-all text-xs text-neutral-400">订单号：{orderNo}</p>
+                </div>
+              ) : null}
               {status === "paying" && qrSrc ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element -- 支付二维码为动态生成内容，next/image 无法优化 */}
