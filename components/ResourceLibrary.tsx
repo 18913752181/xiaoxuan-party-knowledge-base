@@ -8,6 +8,7 @@ import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import { WorkPanoramaHome } from "@/components/WorkPanoramaHome";
+import { FileTypeIcon } from "@/components/FileTypeIcon";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
@@ -58,6 +59,11 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
     });
     return counts;
   }, [materials]);
+
+  const totalDownloads = useMemo(
+    () => materials.reduce((sum, item) => sum + Number(item.download_count || 0), 0),
+    [materials]
+  );
 
   const frequentTopics = useMemo(() => {
     const eligible = Array.from(topicCounts.entries()).filter(([, count]) => count >= 2);
@@ -170,10 +176,24 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
 
   return (
     <div>
-      <section className="border-b border-[#e9e6e1] bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-7 lg:px-8 lg:py-10">
-          <p className="text-sm font-medium text-[#9a4650]">{libraryOnly ? "全部资料" : "小宣资料库"}</p>
-          <form onSubmit={submitSearch} className="mt-4 flex items-center rounded-2xl bg-[#f1f0ed] pl-4 shadow-inner ring-1 ring-[#ebe5dc] focus-within:ring-[#b77b80]">
+      <section className="relative overflow-hidden border-b border-[#e9e6e1] bg-white">
+        <div className="pointer-events-none absolute -left-24 -top-28 h-80 w-80 rounded-full bg-[#9a4650]/[0.06] blur-3xl" aria-hidden="true" />
+        <div className="pointer-events-none absolute -right-16 top-8 h-64 w-64 rounded-full bg-[#718b7f]/[0.09] blur-3xl" aria-hidden="true" />
+        <div className="relative mx-auto max-w-6xl px-5 py-8 lg:px-8 lg:py-12">
+          {libraryOnly ? (
+            <p className="text-sm font-medium text-[#9a4650]">全部资料</p>
+          ) : (
+            <div className="max-w-2xl">
+              <p className="text-sm font-medium tracking-[0.22em] text-[#9a4650]">小宣资料库</p>
+              <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-brand-ink md:text-4xl">
+                基层党建工作资料，<span className="text-[#9a4650]">一站找齐</span>
+              </h1>
+              <p className="mt-3 text-sm leading-7 text-neutral-500 md:text-base">
+                制度文件、会议记录、换届选举、主题党日……常用模板配上填写说明，拿来就能用。
+              </p>
+            </div>
+          )}
+          <form onSubmit={submitSearch} className={`${libraryOnly ? "mt-4" : "mt-7"} flex items-center rounded-2xl bg-[#f1f0ed] pl-4 shadow-inner ring-1 ring-[#ebe5dc] transition focus-within:bg-white focus-within:ring-2 focus-within:ring-[#b77b80]`}>
             <span className="mr-3 text-xl text-neutral-400" aria-hidden="true">⌕</span>
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、组织生活会、发展党员、党支部换届……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-400" />
             {submittedKeyword ? <button type="button" onClick={clearSearch} className="h-14 shrink-0 px-3 text-sm text-neutral-400">清除</button> : null}
@@ -210,6 +230,19 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
               )}
             </div>
           ) : null}
+          {!libraryOnly && !isLoading && materials.length ? (
+            <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm text-neutral-500">
+              <span>
+                <b className="text-lg font-semibold text-brand-ink">{materials.length}</b> 份资料
+              </span>
+              <span>
+                <b className="text-lg font-semibold text-brand-ink">{topicCounts.size}</b> 个专题
+              </span>
+              <span>
+                <b className="text-lg font-semibold text-brand-ink">{totalDownloads}</b> 次下载
+              </span>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -232,10 +265,20 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
                   key={name}
                   type="button"
                   onClick={() => router.push(`/library?topic=${encodeURIComponent(name)}`)}
-                  className="group rounded-2xl bg-white px-2 py-4 text-center shadow-sm ring-1 ring-[#ebe5dc] transition hover:-translate-y-0.5 hover:ring-[#caa8aa]"
+                  className="group rounded-2xl bg-white px-2 py-4 text-center shadow-sm ring-1 ring-[#ebe5dc] transition hover:-translate-y-1 hover:shadow-md hover:ring-[#caa8aa]"
                 >
-                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4e9e8] text-base font-semibold text-[#9a4650]">{String(index + 1).padStart(2, "0")}</span>
-                  <span className="mt-2 block text-sm font-medium text-brand-ink">{name}</span>
+                  <span
+                    className={`mx-auto flex h-11 w-11 items-center justify-center rounded-2xl text-base font-semibold text-white shadow-sm transition group-hover:scale-105 ${
+                      index % 3 === 0
+                        ? "bg-gradient-to-br from-[#a64950] to-[#7d3540]"
+                        : index % 3 === 1
+                          ? "bg-gradient-to-br from-[#6f8b7b] to-[#4f6f62]"
+                          : "bg-gradient-to-br from-[#a37d56] to-[#7d5f3f]"
+                    }`}
+                  >
+                    {name.slice(0, 1)}
+                  </span>
+                  <span className="mt-2 block text-sm font-medium text-brand-ink transition group-hover:text-[#8d2f32]">{name}</span>
                   <span className="mt-1 block text-[11px] text-neutral-400">{count} 份资料</span>
                 </button>
               ))}
@@ -285,17 +328,20 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
               const isFavorite = favoriteSlugs.includes(slug);
               return (
                 <article key={material.id} className="grid gap-4 p-5 transition hover:bg-[#fcfaf7] md:grid-cols-[1fr_128px] md:items-center">
-                  <div className="min-w-0">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <FileTypeIcon fileType={material.file_type} />
+                    <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                       <span>{material.topic || material.category}</span><span>·</span><span>{material.file_type}</span>
                       {material.member_only ? <span className="rounded-full bg-[#f5ece4] px-2 py-0.5 text-[#8a6b50]">会员专属</span> : null}
                     </div>
-                    <Link href={`/materials/${slug}`} className="mt-2 block text-lg font-semibold leading-7 text-brand-ink hover:text-[#8d2f32]">{material.title}</Link>
+                    <Link href={`/materials/${slug}`} className="mt-2 block text-lg font-semibold leading-7 text-brand-ink transition hover:text-[#8d2f32]">{material.title}</Link>
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
                       <span>{material.downloadable || material.file_url ? "可下载" : "仅查看"}</span>
                       <span>{hasFillingGuide(material) ? "有填写说明" : "暂无填写说明"}</span>
+                    </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 md:justify-end">
@@ -330,7 +376,7 @@ function FeaturedCarousel({ slides, active, onChange, onHoverChange }: { slides:
   const slug = getArticleSlug(current.material);
   return (
     <section
-      className="relative overflow-hidden rounded-3xl border border-[#e1d4cc] bg-[#eee4de] p-5 text-brand-ink shadow-sm md:p-7"
+      className="relative overflow-hidden rounded-3xl border border-[#e1d4cc] bg-gradient-to-br from-[#f4e8e3] via-[#eee0da] to-[#e5d3cb] p-5 text-brand-ink shadow-sm md:p-7"
       onMouseEnter={() => onHoverChange(true)}
       onMouseLeave={() => onHoverChange(false)}
     >
@@ -429,7 +475,15 @@ function QuestionEntry() {
 }
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return <div><h2 className="text-2xl font-semibold text-brand-ink">{title}</h2>{subtitle ? <p className="mt-1 text-sm text-neutral-400">{subtitle}</p> : null}</div>;
+  return (
+    <div>
+      <div className="flex items-center gap-2.5">
+        <span className="h-5 w-1.5 rounded-full bg-[#9a4650]" aria-hidden="true" />
+        <h2 className="text-2xl font-semibold text-brand-ink">{title}</h2>
+      </div>
+      {subtitle ? <p className="mt-1 pl-4 text-sm text-neutral-400">{subtitle}</p> : null}
+    </div>
+  );
 }
 
 function popularity(material: Material) {

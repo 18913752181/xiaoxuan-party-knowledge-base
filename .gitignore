@@ -13,3 +13,4 @@ dev-*.log
 .codex-dev-*.log
 
 .vercel
+ui-shots/

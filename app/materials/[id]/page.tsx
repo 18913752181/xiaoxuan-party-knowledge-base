@@ -195,7 +195,9 @@ export default function MaterialDetailPage() {
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
-      <Link href="/library" className="text-sm font-medium text-[#6f8b7b]">返回资料库</Link>
+      <Link href="/library" className="inline-flex items-center gap-1 text-sm font-medium text-[#6f8b7b] transition hover:text-[#49695c]">
+        <span aria-hidden="true">←</span> 返回资料库
+      </Link>
 
       <article className="mt-5 overflow-hidden rounded-[2rem] border border-[#ebe5dc] bg-white shadow-[0_18px_60px_rgba(68,57,45,0.08)]">
         <div className="bg-[#fbfaf6] p-6 md:p-8">
@@ -203,7 +205,7 @@ export default function MaterialDetailPage() {
             <span className="rounded-2xl bg-[#edf3ef] px-4 py-2 text-sm font-semibold text-[#4f6f62]">{material.file_type}</span>
             {material.member_only ? <span className="rounded-2xl bg-[#f4ede1] px-4 py-2 text-sm font-medium text-[#8a6b50]">会员专属</span> : null}
             <span className="rounded-2xl bg-white px-4 py-2 text-sm text-neutral-600">{material.topic || material.category}</span>
-            {material.stage ? <span className="rounded-2xl bg-white px-4 py-2 text-sm text-neutral-600">{material.stage}</span> : null}
+            {material.stage && material.stage !== (material.topic || material.category) ? <span className="rounded-2xl bg-white px-4 py-2 text-sm text-neutral-600">{material.stage}</span> : null}
           </div>
 
           <h1 className="mt-6 max-w-4xl text-3xl font-semibold leading-tight tracking-tight text-brand-ink md:text-5xl">{material.title}</h1>
@@ -212,7 +214,7 @@ export default function MaterialDetailPage() {
           ) : null}
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <button type="button" onClick={download} className="rounded-2xl bg-[#6f8b7b] px-7 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#49695c]">
+            <button type="button" onClick={download} className="rounded-2xl bg-[#9a4650] px-7 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#7d3540] hover:shadow-md">
               下载文件
             </button>
             <button type="button" onClick={onToggleFavorite} className={`rounded-2xl border px-6 py-3 text-sm ${isFavorite ? "border-[#c79b52] bg-[#fff8e8] text-[#8a6b50]" : "border-[#ebe5dc] bg-white text-neutral-600"}`}>
@@ -232,12 +234,27 @@ export default function MaterialDetailPage() {
             </div>
           ) : null}
 
-          <div className="mt-7 grid gap-3 rounded-[1.5rem] bg-white p-5 text-sm text-neutral-600 sm:grid-cols-2 lg:grid-cols-3">
-            <p>文件名：{material.file_name || "暂无文件名"}</p>
-            <p>更新：{formatDisplayDay(material.updated_at)}</p>
-            <p>专题：{material.topic || material.category}</p>
-            <p>下载数：{material.download_count}</p>
-            <p>收藏数：{material.favorite_count}</p>
+          <div className="mt-7 grid gap-x-6 gap-y-4 rounded-[1.5rem] bg-white p-5 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p className="text-xs text-neutral-400">文件名</p>
+              <p className="mt-1 break-all font-medium text-neutral-700">{material.file_name || "暂无文件名"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-400">更新时间</p>
+              <p className="mt-1 font-medium text-neutral-700">{formatDisplayDay(material.updated_at)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-400">所属专题</p>
+              <p className="mt-1 font-medium text-neutral-700">{material.topic || material.category}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-400">下载数</p>
+              <p className="mt-1 font-medium text-neutral-700">{material.download_count}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-400">收藏数</p>
+              <p className="mt-1 font-medium text-neutral-700">{material.favorite_count}</p>
+            </div>
           </div>
         </div>
 
@@ -262,7 +279,15 @@ export default function MaterialDetailPage() {
 }
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-5 md:p-6"><h2 className="text-base font-semibold text-brand-ink">{title}</h2><div className="mt-3 grid gap-3">{children}</div></section>;
+  return (
+    <section className="rounded-[1.75rem] border border-[#ebe5dc] bg-white p-5 md:p-6">
+      <h2 className="flex items-center gap-2 text-base font-semibold text-brand-ink">
+        <span className="h-4 w-1 rounded-full bg-[#9a4650]" aria-hidden="true" />
+        {title}
+      </h2>
+      <div className="mt-3 grid gap-3">{children}</div>
+    </section>
+  );
 }
 
 function NetworkList({ title, items }: { title: string; items: Material[] }) {
