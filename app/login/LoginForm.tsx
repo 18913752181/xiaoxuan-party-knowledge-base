@@ -126,8 +126,8 @@ export default function LoginForm() {
     <section className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
-          <p className="text-sm font-medium text-brand-sageDark">邮箱验证码登录</p>
-          <h1 className="mt-3 text-2xl font-semibold text-neutral-700">登录宣知网</h1>
+          <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">邮箱验证码登录</p>
+          <h1 className="mt-3 text-2xl font-semibold text-brand-ink">登录宣知网</h1>
           <p className="mt-5 text-base leading-8 text-neutral-600">
             输入邮箱并验证 6 位验证码即可登录。首次使用的新邮箱会自动创建账号，无需设置和记忆密码。
           </p>
@@ -142,7 +142,7 @@ export default function LoginForm() {
               type="button"
               onClick={logout}
               disabled={Boolean(loading)}
-              className="mt-6 h-12 w-full rounded-full border border-brand-line bg-white font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 h-12 w-full rounded-full border border-brand-line bg-white font-medium text-neutral-600 transition hover:text-[#8d2f32] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading === "logout" ? "正在退出..." : "退出登录"}
             </button>
@@ -164,14 +164,14 @@ export default function LoginForm() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="h-12 min-w-0 flex-1 rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
+                className="h-12 min-w-0 flex-1 rounded-xl border border-brand-line bg-white px-4 outline-none transition focus:border-[#b77b80] focus:ring-2 focus:ring-[#b77b80]/20"
                 placeholder="name@example.com"
               />
               <button
                 type="button"
                 onClick={sendCode}
                 disabled={Boolean(loading) || countdown > 0}
-                className="shrink-0 rounded-xl bg-brand-sage px-4 text-sm font-medium text-white transition hover:bg-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+                className="shrink-0 rounded-xl bg-[#9a4650] px-4 text-sm font-medium text-white transition hover:bg-[#7d3540] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading === "send" ? "发送中..." : countdown > 0 ? `${countdown} 秒` : "发送验证码"}
               </button>
@@ -188,7 +188,7 @@ export default function LoginForm() {
               maxLength={6}
               value={verificationCode}
               onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 tracking-normal outline-none focus:border-brand-sage"
+              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 tracking-normal outline-none transition focus:border-[#b77b80] focus:ring-2 focus:ring-[#b77b80]/20"
               placeholder="请输入6位验证码"
             />
           </label>
@@ -208,7 +208,7 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={Boolean(loading)}
-            className="mt-6 h-12 w-full rounded-full bg-brand-sage font-medium text-white transition hover:bg-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 h-12 w-full rounded-full bg-[#9a4650] font-medium text-white transition hover:bg-[#7d3540] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading === "verify" ? "正在验证..." : "验证并登录"}
           </button>
@@ -218,7 +218,7 @@ export default function LoginForm() {
               type="button"
               onClick={logout}
               disabled={Boolean(loading)}
-              className="mt-3 h-12 w-full rounded-full border border-brand-line bg-brand-gray font-medium text-neutral-600 transition hover:text-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-3 h-12 w-full rounded-full border border-brand-line bg-brand-gray font-medium text-neutral-600 transition hover:text-[#8d2f32] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading === "logout" ? "正在退出..." : "退出登录"}
             </button>

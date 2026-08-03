@@ -63,7 +63,7 @@ export default function AuthCallbackPage() {
   return (
     <section className="mx-auto max-w-3xl px-5 py-14 lg:px-8">
       <div className="rounded-2xl border border-brand-line bg-white p-8 shadow-soft">
-        <p className="text-sm font-medium text-brand-sageDark">重置密码</p>
+        <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">重置密码</p>
         <h1 className="mt-3 text-3xl font-semibold text-brand-ink">正在打开重置密码页面</h1>
         <p className="mt-4 leading-8 text-neutral-600">正在验证邮箱链接，请稍候。</p>
 
@@ -74,7 +74,7 @@ export default function AuthCallbackPage() {
         ) : null}
 
         {error ? (
-          <Link href="/forgot-password" className="mt-5 inline-flex text-sm text-brand-sageDark hover:underline">
+          <Link href="/forgot-password" className="mt-5 inline-flex text-sm text-[#9a4650] transition hover:text-[#8d2f32] hover:underline">
             重新发送重置邮件
           </Link>
         ) : null}

@@ -53,7 +53,7 @@ export default function UserPage() {
   return (
     <section className="mx-auto max-w-4xl px-5 py-14 lg:px-8">
       <div className="rounded-2xl border border-brand-line bg-white p-8 shadow-soft">
-        <p className="text-sm font-medium text-brand-sageDark">个人页</p>
+        <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">个人页</p>
         <h1 className="mt-3 text-3xl font-semibold text-brand-ink">当前登录状态</h1>
 
         {state === "loading" ? (
@@ -68,7 +68,7 @@ export default function UserPage() {
             </p>
             <Link
               href="/login"
-              className="mt-5 inline-flex rounded-full bg-brand-sage px-5 py-2 text-sm font-medium text-white hover:bg-brand-sageDark"
+              className="mt-5 inline-flex rounded-full bg-[#9a4650] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#7d3540]"
             >
               去登录
             </Link>
@@ -84,7 +84,7 @@ export default function UserPage() {
               <button
                 type="button"
                 onClick={signOut}
-                className="mt-5 rounded-full border border-brand-line bg-white px-5 py-2 text-sm text-neutral-600 hover:text-brand-sageDark"
+                className="mt-5 rounded-full border border-brand-line bg-white px-5 py-2 text-sm text-neutral-600 transition hover:text-[#8d2f32]"
               >
                 退出登录
               </button>

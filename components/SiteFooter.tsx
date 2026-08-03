@@ -31,7 +31,7 @@ export function SiteFooter() {
             rel="noreferrer"
             className="mt-3 block w-fit text-sm text-neutral-500 transition hover:text-[#9a4650]"
           >
-            苏ICP备2026050150号
+            苏ICP备2026052948号
           </a>
           <p className="mt-2 text-sm text-neutral-500">© 2026 【宣知网】 · 小宣同志资料库</p>
         </div>

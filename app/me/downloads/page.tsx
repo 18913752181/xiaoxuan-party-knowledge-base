@@ -15,11 +15,14 @@ export default function DownloadsPage() {
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
-      <h1 className="text-3xl font-semibold text-brand-ink">下载记录</h1>
+      <div className="flex items-center gap-2.5">
+        <span className="h-6 w-1.5 rounded-full bg-[#9a4650]" aria-hidden="true" />
+        <h1 className="text-3xl font-semibold text-brand-ink">下载记录</h1>
+      </div>
       <div className="mt-6 overflow-hidden rounded-2xl border border-brand-line bg-white shadow-soft">
         {records.map((record) => (
           <div key={record.article_slug} className="grid gap-2 border-b border-brand-line px-5 py-4 text-sm md:grid-cols-[1fr_180px]">
-            <Link href={`/materials/${record.article_slug}`} className="font-medium text-brand-ink hover:text-brand-sageDark">
+            <Link href={`/materials/${record.article_slug}`} className="font-medium text-brand-ink transition hover:text-[#8d2f32]">
               {record.title}
             </Link>
             <span className="text-neutral-500">{new Date(record.downloaded_at).toLocaleString("zh-CN")}</span>

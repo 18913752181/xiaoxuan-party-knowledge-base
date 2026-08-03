@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
   return (
     <section className="mx-auto max-w-3xl px-5 py-14 lg:px-8">
       <div className="rounded-2xl border border-brand-line bg-white p-8 shadow-soft">
-        <p className="text-sm font-medium text-brand-sageDark">重设密码</p>
+        <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">重设密码</p>
         <h1 className="mt-3 text-3xl font-semibold text-brand-ink">设置新密码</h1>
         <p className="mt-4 leading-8 text-neutral-600">
           请从邮箱中的重设密码链接打开本页，然后设置一个新密码。
@@ -154,7 +154,7 @@ export default function ResetPasswordPage() {
               pattern="(?=.*[A-Za-z])(?=.*\d).{8,}"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
+              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none transition focus:border-[#b77b80] focus:ring-2 focus:ring-[#b77b80]/20"
               placeholder="至少 8 位，包含字母和数字"
             />
           </label>
@@ -167,7 +167,7 @@ export default function ResetPasswordPage() {
               minLength={8}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none focus:border-brand-sage"
+              className="mt-2 h-12 w-full rounded-xl border border-brand-line bg-white px-4 outline-none transition focus:border-[#b77b80] focus:ring-2 focus:ring-[#b77b80]/20"
               placeholder="再次输入新密码"
             />
           </label>
@@ -187,17 +187,17 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading || checking || !hasSession}
-            className="mt-6 h-12 w-full rounded-full bg-brand-sage font-medium text-white transition hover:bg-brand-sageDark disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 h-12 w-full rounded-full bg-[#9a4650] font-medium text-white transition hover:bg-[#7d3540] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "正在重设..." : "重设密码"}
           </button>
         </form>
 
         <div className="mt-5 flex flex-wrap gap-4 text-sm">
-          <Link href="/forgot-password" className="text-brand-sageDark hover:underline">
+          <Link href="/forgot-password" className="text-[#9a4650] transition hover:text-[#8d2f32] hover:underline">
             重新发送邮件
           </Link>
-          <Link href="/login" className="text-neutral-500 hover:text-brand-sageDark">
+          <Link href="/login" className="text-neutral-500 transition hover:text-[#8d2f32]">
             返回登录
           </Link>
         </div>
