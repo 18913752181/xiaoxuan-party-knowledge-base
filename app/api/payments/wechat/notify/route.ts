@@ -16,7 +16,15 @@ function failure(message: string, status = 400) {
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
-  if (!(await verifyWechatNotification(request.headers, rawBody))) {
+  let verified = false;
+  try {
+    verified = await verifyWechatNotification(request.headers, rawBody);
+  } catch (error) {
+    // 验签依赖平台公钥/证书，获取失败时返回明确错误让微信稍后重试，而不是裸 500
+    console.error("WeChat notification verification failed", error);
+    return failure("回调验签暂时不可用。", 503);
+  }
+  if (!verified) {
     return failure("签名验证失败。", 401);
   }
 

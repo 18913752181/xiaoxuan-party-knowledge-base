@@ -57,6 +57,20 @@ function authorization(method: string, path: string, body: string) {
   return `WECHATPAY2-SHA256-RSA2048 mchid="${env("WECHAT_PAY_MCH_ID")}",nonce_str="${nonce}",signature="${signature}",timestamp="${timestamp}",serial_no="${env("WECHAT_PAY_SERIAL_NO")}"`;
 }
 
+/**
+ * Node 的 fetch 默认携带 "Accept-Language: *"，微信支付部分接口（如 /v3/certificates）
+ * 会因此返回 406「传入了不支持的Accept-Language」，必须显式指定。
+ */
+function wechatApiHeaders(method: string, path: string, body: string) {
+  return {
+    Authorization: authorization(method, path, body),
+    Accept: "application/json",
+    "Accept-Language": "zh-CN",
+    "Content-Type": "application/json",
+    "User-Agent": "xiaoxuan-material-library/1.0"
+  };
+}
+
 export async function createNativeOrder(input: {
   outTradeNo: string;
   description: string;
@@ -74,12 +88,7 @@ export async function createNativeOrder(input: {
   });
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: {
-      Authorization: authorization("POST", path, body),
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "xiaoxuan-material-library/1.0"
-    },
+    headers: wechatApiHeaders("POST", path, body),
     body,
     cache: "no-store"
   });
@@ -98,11 +107,7 @@ async function platformCertificates(): Promise<PlatformCertificate[]> {
 
   const path = "/v3/certificates";
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      Authorization: authorization("GET", path, ""),
-      Accept: "application/json",
-      "User-Agent": "xiaoxuan-material-library/1.0"
-    },
+    headers: wechatApiHeaders("GET", path, ""),
     cache: "no-store"
   });
   const result = await response.json();
@@ -241,12 +246,7 @@ export async function createJsapiOrder(input: {
   });
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: {
-      Authorization: authorization("POST", path, body),
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "xiaoxuan-material-library/1.0"
-    },
+    headers: wechatApiHeaders("POST", path, body),
     body,
     cache: "no-store"
   });
