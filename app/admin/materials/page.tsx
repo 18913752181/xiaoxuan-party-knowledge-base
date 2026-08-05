@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { formatDisplayDate } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 
@@ -25,6 +26,7 @@ export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [message, setMessage] = useState("正在读取资料...");
   const [deletingSlug, setDeletingSlug] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<Material | null>(null);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [draggingSlug, setDraggingSlug] = useState("");
@@ -77,10 +79,15 @@ export default function AdminMaterialsPage() {
     loadMaterials();
   }, [loadMaterials]);
 
-  async function deleteMaterial(item: Material) {
+  // 手机浏览器会拦截 window.confirm，改为自绘对话框：先记录待删除项，确认后执行
+  function requestDelete(item: Material) {
+    setPendingDelete(item);
+  }
+
+  async function confirmDeleteMaterial() {
+    const item = pendingDelete;
+    if (!item) return;
     const slug = item.slug || item.id;
-    const confirmed = window.confirm(`确定删除「${item.title}」吗？该操作会删除 content 中对应资料文件夹，前台也将不再显示。`);
-    if (!confirmed) return;
 
     setDeletingSlug(slug);
     setMessage("");
@@ -91,6 +98,7 @@ export default function AdminMaterialsPage() {
       setMaterials((current) => current.filter((row) => (row.slug || row.id) !== slug));
       setSelectedSlugs((current) => current.filter((selectedSlug) => selectedSlug !== slug));
       setMessage(`已删除：${item.title}`);
+      setPendingDelete(null);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "删除失败");
     } finally {
@@ -309,7 +317,7 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">状态</th>
                 <th className="px-4 py-3">是否会员专属</th>
                 <th className="px-4 py-3">更新时间</th>
-                <th className="px-4 py-3">操作</th>
+                <th className="sticky right-0 bg-[#fbfaf6] px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -365,11 +373,11 @@ export default function AdminMaterialsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">{formatDisplayDate(item.updated_at)}</td>
-                    <td className="px-4 py-3">
+                    <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
                         <Link href={`/materials/${slug}`} className="text-[#6f8f7e]">预览</Link>
-                        <button type="button" onClick={() => deleteMaterial(item)} disabled={deletingSlug === slug} className="text-[#a35c4f] disabled:opacity-50">
+                        <button type="button" onClick={() => requestDelete(item)} disabled={deletingSlug === slug} className="text-[#a35c4f] disabled:opacity-50">
                           {deletingSlug === slug ? "删除中" : "删除"}
                         </button>
                       </div>
@@ -388,6 +396,14 @@ export default function AdminMaterialsPage() {
           </table>
         </div>
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={`确定删除「${pendingDelete?.title || ""}」吗？`}
+        description="该操作会删除 content 中对应资料文件夹，前台也将不再显示。"
+        busy={Boolean(pendingDelete) && deletingSlug === (pendingDelete?.slug || pendingDelete?.id)}
+        onConfirm={() => void confirmDeleteMaterial()}
+        onCancel={() => setPendingDelete(null)}
+      />
     </main>
   );
 }

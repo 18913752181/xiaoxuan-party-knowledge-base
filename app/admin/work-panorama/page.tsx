@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import type { WorkLevel, WorkSection } from "@/lib/work-panorama";
 
 const splitList = (value: string) => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
@@ -16,6 +17,8 @@ export default function AdminWorkPanoramaPage() {
   const [sectionDraft, setSectionDraft] = useState({ name: "", items: "", keywords: "" });
   const [message, setMessage] = useState("正在读取工作全景...");
   const [saving, setSaving] = useState(false);
+  // 手机浏览器会拦截 window.confirm，删除确认统一走自绘对话框
+  const [confirmState, setConfirmState] = useState<{ title: string; description?: string; action: () => void } | null>(null);
 
   async function load() {
     const response = await fetch("/api/admin/work-panorama", { cache: "no-store" });
@@ -103,7 +106,7 @@ export default function AdminWorkPanoramaPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => startLevel(level)} className="rounded-full border px-4 py-2 text-sm">修改</button>
-                    <button onClick={() => window.confirm(`确定删除“${level.name}”吗？专题和资料不会删除，但相关地图关联会解除。`) && request("DELETE", { slug: level.slug }, "工作层级已删除。")} className="rounded-full border border-[#ead6d3] px-4 py-2 text-sm text-[#a6404d]">删除</button>
+                    <button onClick={() => setConfirmState({ title: `确定删除“${level.name}”吗？`, description: "专题和资料不会删除，但相关地图关联会解除。", action: () => void request("DELETE", { slug: level.slug }, "工作层级已删除。") })} className="rounded-full border border-[#ead6d3] px-4 py-2 text-sm text-[#a6404d]">删除</button>
                   </div>
                 </div>
               )}
@@ -131,7 +134,7 @@ export default function AdminWorkPanoramaPage() {
                           </div>
                           <div className="flex shrink-0 gap-2">
                             <button onClick={() => startSection(level, section)} className="text-sm text-[#6f8f7e]">修改</button>
-                            <button onClick={() => window.confirm(`确定删除分类“${section.name}”吗？`) && request("DELETE", { type: "section", level: level.slug, name: section.name }, "分类已删除，相关专题关联已解除。")} className="text-sm text-[#a6404d]">删除</button>
+                            <button onClick={() => setConfirmState({ title: `确定删除分类“${section.name}”吗？`, action: () => void request("DELETE", { type: "section", level: level.slug, name: section.name }, "分类已删除，相关专题关联已解除。") })} className="text-sm text-[#a6404d]">删除</button>
                           </div>
                         </div>
                       )}
@@ -153,6 +156,18 @@ export default function AdminWorkPanoramaPage() {
         </div>
         {message ? <p className="mt-5 text-sm text-[#6d746f]">{message}</p> : null}
       </div>
+      <ConfirmDialog
+        open={Boolean(confirmState)}
+        title={confirmState?.title || ""}
+        description={confirmState?.description}
+        busy={saving}
+        onConfirm={() => {
+          const action = confirmState?.action;
+          setConfirmState(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmState(null)}
+      />
     </main>
   );
 }

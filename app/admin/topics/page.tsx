@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import type { WorkLevel } from "@/lib/work-panorama";
 
 type Placement = { level: string; section: string };
@@ -17,6 +18,7 @@ export default function AdminTopicsPage() {
   const [editingValue, setEditingValue] = useState("");
   const [message, setMessage] = useState("正在读取专题...");
   const [saving, setSaving] = useState(false);
+  const [pendingDeleteTopic, setPendingDeleteTopic] = useState("");
 
   async function loadTopics() {
     setMessage("正在读取专题...");
@@ -104,13 +106,19 @@ export default function AdminTopicsPage() {
     setMessage(`专题已修改，同步更新 ${data.updatedMaterials || 0} 份资料。`);
   }
 
-  async function remove(topic: string) {
+  // 手机浏览器会拦截 window.confirm，改为自绘对话框：先做资料数量校验，确认后执行删除
+  function requestRemove(topic: string) {
     const count = topicCounts[topic] || 0;
     if (count) {
       setMessage(`“${topic}”下还有 ${count} 份资料，请先修改这些资料的所属专题后再删除。`);
       return;
     }
-    if (!window.confirm(`确定删除专题“${topic}”吗？`)) return;
+    setPendingDeleteTopic(topic);
+  }
+
+  async function confirmRemove() {
+    const topic = pendingDeleteTopic;
+    if (!topic) return;
 
     setSaving(true);
     const response = await fetch("/api/admin/topics", {
@@ -123,6 +131,7 @@ export default function AdminTopicsPage() {
     if (!response.ok) return setMessage(data.error || "删除专题失败");
     setTopics(data.topics || []);
     setTopicCounts(data.topicCounts || {});
+    setPendingDeleteTopic("");
     setMessage("专题已删除。");
   }
 
@@ -199,7 +208,7 @@ export default function AdminTopicsPage() {
                       >
                         关联工作全景
                       </button>
-                      <button type="button" onClick={() => remove(topic)} disabled={saving} className="rounded-full border border-[#ead6d3] bg-white px-4 py-2 text-sm text-[#a6404d] disabled:opacity-50">删除</button>
+                      <button type="button" onClick={() => requestRemove(topic)} disabled={saving} className="rounded-full border border-[#ead6d3] bg-white px-4 py-2 text-sm text-[#a6404d] disabled:opacity-50">删除</button>
                     </>
                   )}
                 </div>
@@ -262,6 +271,13 @@ export default function AdminTopicsPage() {
 
         {message ? <p className="mt-4 text-sm text-[#6d746f]">{message}</p> : null}
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteTopic)}
+        title={`确定删除专题“${pendingDeleteTopic}”吗？`}
+        busy={saving}
+        onConfirm={() => void confirmRemove()}
+        onCancel={() => setPendingDeleteTopic("")}
+      />
     </main>
   );
 }
