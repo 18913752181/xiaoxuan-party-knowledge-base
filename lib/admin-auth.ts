@@ -26,7 +26,9 @@ export async function requireAdmin(): Promise<AdminCheck> {
   }
 
   try {
-    const profile = await getMembership(session.user.id);
+    // 用当前会话令牌读取用户自己的 profiles 记录，避免把后台登录
+    // 错误地绑定到仅生产环境才需要的 SUPABASE_SERVICE_ROLE_KEY。
+    const profile = await getMembership(session.user.id, session.accessToken);
     if (!profile.is_admin) {
       return {
         ok: false,

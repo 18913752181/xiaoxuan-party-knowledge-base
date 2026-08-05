@@ -64,8 +64,15 @@ export function applyAuthCookies(response: NextResponse, tokens: AuthTokens) {
 }
 
 export function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(ACCESS_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
-  response.cookies.set(REFRESH_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  const shared = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 0
+  };
+  response.cookies.set(ACCESS_COOKIE, "", shared);
+  response.cookies.set(REFRESH_COOKIE, "", shared);
 }
 
 async function getUser(accessToken: string) {
@@ -86,6 +93,20 @@ export async function getServerSession() {
 
   if (accessToken) {
     const user = await getUser(accessToken);
+    if (user && refreshToken) {
+      // Re-issue both HttpOnly cookies after an authenticated request. This gives
+      // the refresh cookie a rolling 30-day lifetime without exposing either
+      // token to browser JavaScript.
+      return {
+        user,
+        accessToken,
+        refreshedTokens: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          user
+        } as AuthTokens
+      };
+    }
     if (user) return { user, accessToken, refreshedTokens: null as AuthTokens | null };
   }
 
@@ -106,4 +127,3 @@ export async function getServerSession() {
     refreshedTokens: tokens
   };
 }
-
