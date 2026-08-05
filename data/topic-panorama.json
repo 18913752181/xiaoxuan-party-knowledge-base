@@ -1,8 +1,24 @@
 {
   "主题党日": [
     {
+      "level": "party-committee",
+      "section": "组织建设与干部人才"
+    },
+    {
+      "level": "general-party-branch",
+      "section": "党员教育管理"
+    },
+    {
+      "level": "general-party-branch",
+      "section": "组织生活与主题活动"
+    },
+    {
       "level": "party-branch",
       "section": "组织生活"
+    },
+    {
+      "level": "party-branch",
+      "section": "党员队伍"
     }
   ],
   "民主生活会": [
@@ -27,15 +43,23 @@
   ],
   "换届选举": [
     {
-      "level": "party-branch",
-      "section": "支部建设"
-    },
-    {
       "level": "party-committee",
       "section": "组织建设与干部人才"
+    },
+    {
+      "level": "general-party-branch",
+      "section": "指导所属党支部建设"
+    },
+    {
+      "level": "party-branch",
+      "section": "支部建设"
     }
   ],
   "三会一课": [
+    {
+      "level": "general-party-branch",
+      "section": "组织生活与主题活动"
+    },
     {
       "level": "party-branch",
       "section": "组织生活"
@@ -73,6 +97,10 @@
   ],
   "组织生活会": [
     {
+      "level": "general-party-branch",
+      "section": "组织生活与主题活动"
+    },
+    {
       "level": "party-branch",
       "section": "组织生活"
     }
@@ -85,20 +113,6 @@
     {
       "level": "party-branch",
       "section": "支部建设"
-    }
-  ],
-  "党员管理": [
-    {
-      "level": "party-committee",
-      "section": "组织建设与干部人才"
-    },
-    {
-      "level": "general-party-branch",
-      "section": "党员教育管理"
-    },
-    {
-      "level": "party-branch",
-      "section": "党员队伍"
     }
   ]
 }
