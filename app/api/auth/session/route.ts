@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { applyAuthCookies, clearAuthCookies, getServerSession } from "@/lib/server-auth";
+import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await getServerSession();
   if (!session) {
-    const response = NextResponse.json({ user: null }, { status: 401 });
-    clearAuthCookies(response);
-    return response;
+    // Do NOT clear the cookies here: a transient Supabase error or a refresh
+    // race with a parallel request must not destroy an otherwise valid login.
+    // Cookies are only cleared by the explicit logout route.
+    return NextResponse.json({ user: null }, { status: 401 });
   }
 
   const response = NextResponse.json({

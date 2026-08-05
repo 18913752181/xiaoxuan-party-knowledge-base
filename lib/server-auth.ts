@@ -84,6 +84,60 @@ async function getUser(accessToken: string) {
   return response.json() as Promise<{ id: string; email?: string }>;
 }
 
+// Refresh-token single-flight + rotation grace cache.
+//
+// A page load fires several API routes concurrently; when the access cookie has
+// expired they all race to redeem the same refresh token. Supabase rotates
+// refresh tokens, so only the first call can win — the losers used to receive
+// 401 and the session route then wiped the cookies, logging the user out.
+// Keying the in-flight refresh by token makes every concurrent caller share one
+// redemption, and the grace cache hands the rotated tokens to any straggler
+// that still presents the previous refresh token (e.g. a second browser tab).
+const ROTATION_GRACE_MS = 60_000;
+const refreshInflight = new Map<string, Promise<AuthTokens | null>>();
+const rotatedFromToken = new Map<string, { tokens: AuthTokens; at: number }>();
+
+function sweepRotationCache() {
+  const now = Date.now();
+  rotatedFromToken.forEach((entry, token) => {
+    if (now - entry.at > ROTATION_GRACE_MS) rotatedFromToken.delete(token);
+  });
+}
+
+async function redeemRefreshToken(refreshToken: string): Promise<AuthTokens | null> {
+  const rotated = rotatedFromToken.get(refreshToken);
+  if (rotated && Date.now() - rotated.at <= ROTATION_GRACE_MS) return rotated.tokens;
+
+  const inflight = refreshInflight.get(refreshToken);
+  if (inflight) return inflight;
+
+  const task = (async () => {
+    try {
+      const refreshResponse = await authFetch("/token?grant_type=refresh_token", {
+        method: "POST",
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      if (!refreshResponse.ok) return null;
+
+      const tokens = (await refreshResponse.json()) as AuthTokens;
+      if (!tokens.access_token || !tokens.refresh_token || !tokens.user) return null;
+
+      sweepRotationCache();
+      rotatedFromToken.set(refreshToken, { tokens, at: Date.now() });
+      return tokens;
+    } catch {
+      return null;
+    }
+  })();
+
+  refreshInflight.set(refreshToken, task);
+  try {
+    return await task;
+  } finally {
+    if (refreshInflight.get(refreshToken) === task) refreshInflight.delete(refreshToken);
+  }
+}
+
 export async function getServerSession() {
   if (!authIsConfigured()) return null;
 
@@ -112,17 +166,11 @@ export async function getServerSession() {
 
   if (!refreshToken) return null;
 
-  const refreshResponse = await authFetch("/token?grant_type=refresh_token", {
-    method: "POST",
-    body: JSON.stringify({ refresh_token: refreshToken })
-  });
-  if (!refreshResponse.ok) return null;
-
-  const tokens = (await refreshResponse.json()) as AuthTokens;
-  if (!tokens.access_token || !tokens.refresh_token || !tokens.user) return null;
+  const tokens = await redeemRefreshToken(refreshToken);
+  if (!tokens) return null;
 
   return {
-    user: tokens.user,
+    user: tokens.user!,
     accessToken: tokens.access_token,
     refreshedTokens: tokens
   };

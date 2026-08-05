@@ -28,6 +28,42 @@ export function listRecordedDownloads(userId: string) {
   }
 }
 
+export async function listServerDownloads(): Promise<RecordedDownload[]> {
+  try {
+    const response = await fetch("/api/downloads", { cache: "no-store" });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return ((data.rows || []) as Array<{
+      article_slug: string;
+      title: string;
+      category: string;
+      file_type: string;
+      created_at: string;
+    }>).map((row) => ({
+      article_slug: row.article_slug,
+      title: row.title,
+      category: row.category,
+      file_type: row.file_type,
+      downloaded_at: row.created_at
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function rememberDownloadLocally(userId: string, material: Material) {
+  const articleSlug = material.slug || material.id;
+  const current = listRecordedDownloads(userId).filter((item) => item.article_slug !== articleSlug);
+  const next: RecordedDownload[] = [{
+    article_slug: articleSlug,
+    title: material.title,
+    category: material.topic || material.category,
+    file_type: material.file_type,
+    downloaded_at: new Date().toISOString()
+  }, ...current].slice(0, 100);
+  window.localStorage.setItem(`${DOWNLOADS_KEY}_${userId}`, JSON.stringify(next));
+}
+
 async function rememberDownload(material: Material) {
   try {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
@@ -35,16 +71,21 @@ async function rememberDownload(material: Material) {
     const session = await sessionResponse.json();
     const userId = String(session.user?.id || "");
     if (!userId) return;
+
+    // 记录跟随账号保存在服务端，换设备/换浏览器也还在；
+    // 服务端不可用时回退到浏览器本地，保证“能看到记录”。
     const articleSlug = material.slug || material.id;
-    const current = listRecordedDownloads(userId).filter((item) => item.article_slug !== articleSlug);
-    const next: RecordedDownload[] = [{
-      article_slug: articleSlug,
-      title: material.title,
-      category: material.topic || material.category,
-      file_type: material.file_type,
-      downloaded_at: new Date().toISOString()
-    }, ...current].slice(0, 100);
-    window.localStorage.setItem(`${DOWNLOADS_KEY}_${userId}`, JSON.stringify(next));
+    const response = await fetch("/api/downloads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        articleSlug,
+        title: material.title,
+        category: material.topic || material.category,
+        fileType: material.file_type
+      })
+    });
+    if (!response.ok) rememberDownloadLocally(userId, material);
   } catch {
     // 下载成功优先，记录失败不影响用户取得文件。
   }

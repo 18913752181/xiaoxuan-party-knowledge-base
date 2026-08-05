@@ -3,14 +3,30 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { listRecordedDownloads, type RecordedDownload } from "@/lib/download-file";
+import { listRecordedDownloads, listServerDownloads, type RecordedDownload } from "@/lib/download-file";
 
 export default function DownloadsPage() {
   const { profile } = useAuth();
   const [records, setRecords] = useState<RecordedDownload[]>([]);
 
   useEffect(() => {
-    setRecords(profile?.id ? listRecordedDownloads(profile.id) : []);
+    let cancelled = false;
+    const local = profile?.id ? listRecordedDownloads(profile.id) : [];
+    listServerDownloads().then((server) => {
+      if (cancelled) return;
+      if (server.length === 0) {
+        setRecords(local);
+        return;
+      }
+      // 合并浏览器里遗留的本地记录，去重后按时间倒序。
+      const seen = new Set(server.map((item) => item.article_slug));
+      const merged = [...server, ...local.filter((item) => !seen.has(item.article_slug))];
+      merged.sort((a, b) => b.downloaded_at.localeCompare(a.downloaded_at));
+      setRecords(merged);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [profile?.id]);
 
   return (
