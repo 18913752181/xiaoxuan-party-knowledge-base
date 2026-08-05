@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: "请先登录。" }, { status: 401 });
-  const profile = await getMembership(session.user.id);
+  const profile = await getMembership(session.user.id, session.accessToken);
   if (!profile.is_admin) return NextResponse.json({ error: "无权查看订单。" }, { status: 403 });
   const { data, error } = await getSupabaseAdmin()
     .from("membership_orders")

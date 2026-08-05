@@ -15,7 +15,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const session = await getServerSession();
   if (!session) redirect("/login?redirect=/admin");
 
-  const profile = await getMembership(session.user.id).catch(() => null);
+  // 后台页面应使用当前登录用户的 access token 查询其自身权限。
+  // 这样本地开发环境未配置服务端密钥时，管理员仍可正常进入后台；
+  // 服务端 API 仍会在各自的 requireAdmin 守卫中再次校验权限。
+  const profile = await getMembership(session.user.id, session.accessToken).catch(() => null);
   if (!profile?.is_admin) redirect("/");
 
   return <>{children}</>;

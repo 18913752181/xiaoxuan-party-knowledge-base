@@ -7,15 +7,15 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": true,
+  "isVip": false,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-01-xx",
     "2026-07-25-material-jkh5by"
   ],
-  "updatedAt": "2026-07-28T11:22:51.581Z",
+  "updatedAt": "2026-08-04T07:25:33.094Z",
   "createdAt": "2026-07-25T15:16:24.822Z",
-  "downloadCount": 0,
+  "downloadCount": 3,
   "favoriteCount": 0,
   "fileType": "Word",
   "tags": [

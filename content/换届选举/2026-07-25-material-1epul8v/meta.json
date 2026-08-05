@@ -7,16 +7,16 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": true,
+  "isVip": false,
   "downloadable": true,
   "relatedArticles": [
     "2026-07-25-material-8i85x2",
     "2026-07-25-1",
     "2026-07-25-2"
   ],
-  "updatedAt": "2026-07-28T11:22:51.493Z",
+  "updatedAt": "2026-08-04T07:26:08.999Z",
   "createdAt": "2026-07-25T15:17:04.825Z",
-  "downloadCount": 0,
+  "downloadCount": 4,
   "favoriteCount": 0,
   "fileType": "Word",
   "tags": [

@@ -7,12 +7,12 @@
   "status": "published",
   "author": "小宣同志",
   "source": "后台录入",
-  "isVip": true,
+  "isVip": false,
   "downloadable": true,
   "relatedArticles": [],
-  "updatedAt": "2026-07-30T04:44:05.366Z",
+  "updatedAt": "2026-08-04T09:12:41.586Z",
   "createdAt": "2026-07-30T04:44:05.366Z",
-  "downloadCount": 0,
+  "downloadCount": 4,
   "favoriteCount": 0,
   "fileType": "Word",
   "tags": [
@@ -24,5 +24,6 @@
   "organizationLevels": [],
   "workSections": [],
   "workItems": [],
+  "recommended": false,
   "hidden": false
 }

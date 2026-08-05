@@ -15,17 +15,19 @@ test -f "$ENV_FILE" || { echo "Missing $ENV_FILE"; exit 1; }
 export APP_UID="${APP_UID:-$(id -u)}"
 export APP_GID="${APP_GID:-$(id -g)}"
 
-# Keep production materials identical to the repository. The local repository
-# is the source of truth: additions, edits, and deletions are all mirrored.
+# Seed production content from the repository ONLY when the content directory
+# is empty (first deployment). Afterwards, production is the source of truth:
+# admin-panel edits live in shared/content and deployments must NOT wipe them.
+# To sync production content back into the repository, commit it manually.
 mkdir -p "$CONTENT_DIR"
-if [ -d "$APP_DIR/content" ]; then
+if [ -d "$APP_DIR/content" ] && [ -z "$(ls -A "$CONTENT_DIR" 2>/dev/null)" ]; then
   case "$CONTENT_DIR" in
     /srv/xiaoxuan/shared/content|/srv/xiaoxuan/shared/content/)
-      find "$CONTENT_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
       cp -a "$APP_DIR/content/." "$CONTENT_DIR/"
+      echo "Seeded empty content directory from repository."
       ;;
     *)
-      echo "Refusing to replace unexpected content directory: $CONTENT_DIR"
+      echo "Refusing to seed unexpected content directory: $CONTENT_DIR"
       exit 1
       ;;
   esac
