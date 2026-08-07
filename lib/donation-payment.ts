@@ -1,38 +1,45 @@
 import "server-only";
 
+import crypto from "crypto";
+import { createNativeOrder, wechatPayConfigured } from "@/lib/wechat-pay";
+
 /**
- * 赞赏支付配置模块（占位实现）。
+ * 赞赏支付通道模块。
  *
- * 现阶段赞赏为自愿功能，正式支付通道尚未接入。
- * 后续接入企业微信支付/公司商户号时：
- *   1. 在环境变量中设置 DONATION_PAYMENT_PROVIDER=wechat
- *   2. 在下方 createDonationPayment 中复用 lib/wechat-pay.ts 的下单逻辑
- *   3. 在回调里把 public.donations 的 status 置为 paid
- * 不需要改动任何页面组件。
+ * 当前实现：微信支付 Native（扫码），复用会员支付的商户配置。
+ * 开关：环境变量 DONATION_PAYMENT_PROVIDER=wechat。
+ * 回调入口：/api/donations/notify（独立于会员回调）。
+ * 后续若要换企业微信支付/其他商户号，只需改这一个文件。
  */
 
 export type DonationPaymentResult =
   | { configured: false }
-  | { configured: true; outTradeNo: string; paymentParams: Record<string, unknown> };
+  | { configured: true; outTradeNo: string; codeUrl: string };
 
 export function donationPaymentProvider() {
   return (process.env.DONATION_PAYMENT_PROVIDER || "").trim();
 }
 
 export function donationPaymentConfigured() {
-  return donationPaymentProvider().length > 0;
+  return donationPaymentProvider() === "wechat" && wechatPayConfigured();
+}
+
+export function newDonationOutTradeNo() {
+  return `DON${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`.slice(0, 32);
 }
 
 export async function createDonationPayment(input: {
-  donationId: string;
+  outTradeNo: string;
   amountCents: number;
-  userId: string;
-  openId?: string;
 }): Promise<DonationPaymentResult> {
-  void input;
   if (!donationPaymentConfigured()) return { configured: false };
 
-  // TODO: 接入正式支付通道后在这里创建支付单并返回拉起支付的参数。
-  // 会员支付的实现（lib/wechat-pay.ts + app/api/payments/wechat/*）可直接复用。
-  return { configured: false };
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
+  const codeUrl = await createNativeOrder({
+    outTradeNo: input.outTradeNo,
+    description: "支持小宣自愿赞赏",
+    amountTotal: input.amountCents,
+    notifyUrl: siteUrl ? `${siteUrl}/api/donations/notify` : undefined
+  });
+  return { configured: true, outTradeNo: input.outTradeNo, codeUrl };
 }

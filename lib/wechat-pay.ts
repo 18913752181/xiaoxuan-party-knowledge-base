@@ -75,6 +75,7 @@ export async function createNativeOrder(input: {
   outTradeNo: string;
   description: string;
   amountTotal: number;
+  notifyUrl?: string;
 }) {
   if (!wechatPayConfigured()) throw new Error("微信支付尚未完成配置。");
   const path = "/v3/pay/transactions/native";
@@ -83,7 +84,7 @@ export async function createNativeOrder(input: {
     mchid: env("WECHAT_PAY_MCH_ID"),
     description: input.description,
     out_trade_no: input.outTradeNo,
-    notify_url: env("WECHAT_PAY_NOTIFY_URL"),
+    notify_url: input.notifyUrl || env("WECHAT_PAY_NOTIFY_URL"),
     amount: { total: input.amountTotal, currency: "CNY" }
   });
   const response = await fetch(`${API_BASE}${path}`, {
@@ -97,6 +98,25 @@ export async function createNativeOrder(input: {
     throw new Error(result.message || "微信支付下单失败。");
   }
   return result.code_url as string;
+}
+
+export type WechatOrderState = {
+  trade_state?: string;
+  transaction_id?: string;
+  success_time?: string;
+  amount?: { total?: number };
+};
+
+/** 主动向微信查询订单支付状态（回调之外的自愈通道）。 */
+export async function queryNativeOrder(outTradeNo: string): Promise<WechatOrderState | null> {
+  if (!wechatPayConfigured()) return null;
+  const path = `/v3/pay/transactions/out-trade-no/${encodeURIComponent(outTradeNo)}?mchid=${encodeURIComponent(env("WECHAT_PAY_MCH_ID"))}`;
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: wechatApiHeaders("GET", path, ""),
+    cache: "no-store"
+  });
+  if (!response.ok) return null;
+  return (await response.json()) as WechatOrderState;
 }
 
 type PlatformCertificate = { serialNo: string; certificate: string };

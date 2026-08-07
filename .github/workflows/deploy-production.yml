@@ -34,4 +34,4 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            'cd /srv/xiaoxuan/app && git fetch --prune origin master && git reset --hard origin/master && bash deploy/deploy.sh'
+            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4; do git fetch --prune origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 8s..."; sleep 8; done; [ "$ok" = 1 ] || { echo "git fetch failed after 4 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh'

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const PRESET_AMOUNTS = [3, 6, 10, 20];
+
+type QrState = { codeUrl: string; outTradeNo: string; amountCents: number };
 
 function SupportPageInner() {
   const router = useRouter();
@@ -16,9 +18,26 @@ function SupportPageInner() {
   const [customAmount, setCustomAmount] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<"pending" | "unconfigured" | null>(null);
+  const [unconfigured, setUnconfigured] = useState(false);
+  const [qr, setQr] = useState<QrState | null>(null);
+  const [paid, setPaid] = useState(false);
 
   const amount = customAmount ? Number(customAmount) : selected;
+
+  // 扫码后轮询支付状态（服务端会主动向微信查单，付完即时生效）
+  useEffect(() => {
+    if (!qr || paid) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const response = await fetch(`/api/donations/status?outTradeNo=${encodeURIComponent(qr.outTradeNo)}`, { cache: "no-store" });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.status === "paid") setPaid(true);
+      } catch {
+        // 下一次轮询再试
+      }
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [qr, paid]);
 
   async function submit() {
     if (!amount || !Number.isFinite(amount) || amount < 1 || amount > 2000) {
@@ -47,11 +66,10 @@ function SupportPageInner() {
         return;
       }
       if (data.configured === false) {
-        setDone("unconfigured");
+        setUnconfigured(true);
         return;
       }
-      // 支付通道配置完成后，这里会拉起支付（占位）。
-      setDone("pending");
+      setQr({ codeUrl: data.codeUrl, outTradeNo: data.outTradeNo, amountCents: data.amountCents });
     } catch {
       setMessage("网络异常，请稍后再试。");
     } finally {
@@ -71,12 +89,39 @@ function SupportPageInner() {
           <p className="mt-2 text-xs text-neutral-400">来自资料：{sourceTitle}</p>
         ) : null}
 
-        {done === "unconfigured" ? (
+        {paid ? (
+          <div className="mt-6 rounded-2xl bg-[#fdf9f2] px-5 py-6 text-center">
+            <p className="text-base font-medium text-[#7a5c3a]">已收到你的支持，谢谢你 ❤️</p>
+            <p className="mt-2 text-sm leading-6 text-neutral-500">小宣会继续整理更多实用内容。</p>
+            <Link href="/" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
+              返回首页
+            </Link>
+          </div>
+        ) : qr ? (
+          <div className="mt-6 text-center">
+            <p className="text-base font-medium text-[#7a5c3a]">微信扫一扫，完成 {(qr.amountCents / 100).toFixed(2)} 元自愿赞赏</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/payments/wechat/qrcode?url=${encodeURIComponent(qr.codeUrl)}`}
+              alt="微信支付二维码"
+              className="mx-auto mt-4 h-56 w-56 rounded-2xl border border-[#ead9c2]"
+            />
+            <p className="mt-3 text-xs leading-6 text-neutral-400">
+              手机上可长按二维码识别支付；支付成功后页面会自动确认。
+            </p>
+            <button
+              type="button"
+              onClick={() => setQr(null)}
+              className="mt-4 rounded-xl px-4 py-2 text-sm text-[#a08d72] transition hover:bg-[#f3ece0]"
+            >
+              返回修改金额
+            </button>
+          </div>
+        ) : unconfigured ? (
           <div className="mt-6 rounded-2xl bg-[#fdf9f2] px-5 py-6 text-center">
             <p className="text-base font-medium text-[#7a5c3a]">心意收到啦，谢谢你的支持 ❤️</p>
             <p className="mt-2 text-sm leading-6 text-neutral-500">
-                              赞赏支付通道正在配置中，本次未产生任何费用。
-              等通道开放后再来也不迟～
+              赞赏支付通道正在配置中，本次未产生任何费用。等通道开放后再来也不迟～
             </p>
             <Link href="/" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
               返回首页
@@ -125,7 +170,7 @@ function SupportPageInner() {
               disabled={submitting}
               className="mt-5 w-full rounded-2xl bg-[#c98a4b] py-3 text-base font-medium text-white transition hover:bg-[#b67a3e] disabled:opacity-60"
             >
-              {submitting ? "正在提交…" : `自愿支持 ${amount || ""} 元`}
+              {submitting ? "正在生成支付二维码…" : `自愿支持 ${amount || ""} 元`}
             </button>
           </>
         )}

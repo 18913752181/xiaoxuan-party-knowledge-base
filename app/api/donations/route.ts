@@ -1,8 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
-import { createDonationPayment, donationPaymentConfigured } from "@/lib/donation-payment";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  createDonationPayment,
+  donationPaymentConfigured,
+  newDonationOutTradeNo
+} from "@/lib/donation-payment";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -47,19 +53,17 @@ export async function POST(request: Request) {
     return sessionResponse(session, { ok: false, configured: false, error: "支付通道正在配置中，本次未产生任何费用。" });
   }
 
+  const outTradeNo = newDonationOutTradeNo();
   const supabase = client(session.accessToken);
-  const { data, error } = await supabase
-    .from("donations")
-    .insert({
-      user_id: session.user.id,
-      amount_cents: amountCents,
-      source_slug: sourceSlug,
-      source_title: sourceTitle,
-      status: "pending",
-      provider: process.env.DONATION_PAYMENT_PROVIDER || ""
-    })
-    .select("id")
-    .single();
+  const { error } = await supabase.from("donations").insert({
+    user_id: session.user.id,
+    amount_cents: amountCents,
+    source_slug: sourceSlug,
+    source_title: sourceTitle,
+    status: "pending",
+    provider: "wechat",
+    out_trade_no: outTradeNo
+  });
 
   if (error) {
     if (tableMissing(error.message)) {
@@ -68,14 +72,33 @@ export async function POST(request: Request) {
     return sessionResponse(session, { error: error.message }, 500);
   }
 
-  const payment = await createDonationPayment({
-    donationId: data.id,
-    amountCents,
-    userId: session.user.id
-  });
-  if (!payment.configured) {
-    return sessionResponse(session, { ok: false, configured: false, error: "支付通道正在配置中，本次未产生任何费用。" });
+  try {
+    const payment = await createDonationPayment({ outTradeNo, amountCents });
+    if (!payment.configured) {
+      return sessionResponse(session, { ok: false, configured: false, error: "支付通道正在配置中，本次未产生任何费用。" });
+    }
+    return sessionResponse(session, {
+      ok: true,
+      configured: true,
+      outTradeNo: payment.outTradeNo,
+      codeUrl: payment.codeUrl,
+      amountCents
+    });
+  } catch (err) {
+    // 微信下单失败：作废刚创建的记录，避免统计页出现无效待支付单。
+    try {
+      await getSupabaseAdmin()
+        .from("donations")
+        .update({ status: "cancelled" })
+        .eq("out_trade_no", outTradeNo)
+        .eq("status", "pending");
+    } catch {
+      // 忽略清理失败
+    }
+    return sessionResponse(
+      session,
+      { error: err instanceof Error ? err.message : "微信支付下单失败，请稍后再试。" },
+      502
+    );
   }
-
-  return sessionResponse(session, { ok: true, configured: true, outTradeNo: payment.outTradeNo, paymentParams: payment.paymentParams });
 }
