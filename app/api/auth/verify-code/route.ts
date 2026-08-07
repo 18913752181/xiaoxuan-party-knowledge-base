@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { applyAuthCookies, authFetch, authIsConfigured } from "@/lib/server-auth";
+import { applyAuthCookies, authFetch, authIsConfigured, recordLoginEvent } from "@/lib/server-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
   }
 
   const tokens = await authResponse.json();
+  if (tokens.user?.id && tokens.access_token) {
+    await recordLoginEvent(tokens.access_token, tokens.user.id);
+  }
   const response = NextResponse.json({
     ok: true,
     user: { id: tokens.user?.id, email: tokens.user?.email }

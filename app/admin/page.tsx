@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 const links = [
   {
@@ -30,6 +30,11 @@ const links = [
     href: "/admin/orders",
     title: "订单管理",
     description: "查看微信支付订单、支付状态和会员到期时间。"
+  },
+  {
+    href: "/admin/stats",
+    title: "数据统计",
+    description: "下载、收藏、登录、会员与赞赏数据汇总，附明细表和资料排行 TOP10。"
   },
   {
     href: "/",

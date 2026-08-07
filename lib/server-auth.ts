@@ -33,6 +33,30 @@ export function authIsConfigured() {
   return Boolean(supabaseUrl && supabaseAnonKey);
 }
 
+/**
+ * 记录一次登录事件到 public.logins（数据统计用）。
+ * 用用户自己的 access token 写入，RLS 校验 auth.uid() = user_id。
+ * 失败静默忽略，绝不影响登录主流程。
+ */
+export async function recordLoginEvent(accessToken: string, userId: string) {
+  try {
+    if (!supabaseUrl || !supabaseAnonKey || !accessToken || !userId) return;
+    await fetch(`${supabaseUrl}/rest/v1/logins`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({ user_id: userId }),
+      cache: "no-store"
+    });
+  } catch {
+    // 统计写入失败不影响登录。
+  }
+}
+
 export async function authFetch(path: string, init: RequestInit = {}) {
   return fetch(`${supabaseUrl}/auth/v1${path}`, {
     ...init,

@@ -7,6 +7,7 @@ import { downloadMaterialFile } from "@/lib/download-file";
 import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites";
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
+import SupportCard, { supportCardDismissed } from "@/components/SupportCard";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -94,6 +95,7 @@ export default function MaterialDetailPage() {
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -143,6 +145,7 @@ export default function MaterialDetailPage() {
 
     setMaterial((current) => current ? { ...current, download_count: current.download_count + 1 } : current);
     setMessage("文件下载已开始。");
+    if (!supportCardDismissed()) setShowSupport(true);
   }
 
   if (isLoading) {
@@ -226,6 +229,7 @@ export default function MaterialDetailPage() {
           </div>
 
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
+          {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
           {memberOnlyPrompt ? (
             <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
               <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
