@@ -2,11 +2,27 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 const PRESET_AMOUNTS = [3, 6, 10, 20];
+const INTENT_KEY = "xiaoxuan_donate_intent";
 
 type QrState = { codeUrl: string; outTradeNo: string; amountCents: number };
+type PayParams = Record<string, string>;
+
+type DonateIntent = { amountCents: number; sourceSlug: string; sourceTitle: string };
+
+function invokeWechatBridge(payParams: PayParams, onSuccess: () => void, onCancel: () => void) {
+  const win = window as unknown as { WeixinJSBridge?: { invoke: (name: string, params: PayParams, cb: (res: { err_msg?: string }) => void) => void } };
+  const run = () => {
+    win.WeixinJSBridge?.invoke("getBrandWCPayRequest", payParams, (res) => {
+      if (res.err_msg === "get_brand_wcpay_request:ok") onSuccess();
+      else onCancel();
+    });
+  };
+  if (win.WeixinJSBridge) run();
+  else document.addEventListener("WeixinJSBridgeReady", run, { once: true });
+}
 
 function SupportPageInner() {
   const router = useRouter();
@@ -21,8 +37,21 @@ function SupportPageInner() {
   const [unconfigured, setUnconfigured] = useState(false);
   const [qr, setQr] = useState<QrState | null>(null);
   const [paid, setPaid] = useState(false);
+  const [inWechat, setInWechat] = useState(false);
 
   const amount = customAmount ? Number(customAmount) : selected;
+
+  useEffect(() => {
+    setInWechat(/MicroMessenger/i.test(window.navigator.userAgent));
+  }, []);
+
+  // 授权回跳错误提示
+  useEffect(() => {
+    if (searchParams.get("jsapi") === "error") {
+      setMessage(searchParams.get("reason") || "微信授权失败，请重试。");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 扫码后轮询支付状态（服务端会主动向微信查单，付完即时生效）
   useEffect(() => {
@@ -39,22 +68,93 @@ function SupportPageInner() {
     return () => window.clearInterval(timer);
   }, [qr, paid]);
 
+  const startJsapiPay = useCallback(
+    async (intent: DonateIntent, auto = false) => {
+      setSubmitting(true);
+      if (!auto) setMessage("");
+      try {
+        const response = await fetch("/api/donations/jsapi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(intent)
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.status === 401 && data.needOAuth) {
+          // 记录支付意图，授权回跳后自动继续
+          window.sessionStorage.setItem(INTENT_KEY, JSON.stringify(intent));
+          const query = window.location.search;
+          window.location.href = `/api/payments/wechat/oauth?return=${encodeURIComponent(`/support${query}`)}`;
+          return true;
+        }
+        if (response.status === 401) {
+          router.push(`/login?redirect=${encodeURIComponent(`/support?from=${intent.sourceSlug}&title=${intent.sourceTitle}`)}`);
+          return true;
+        }
+        if (response.status === 503) return false; // JSAPI 未配置，回退扫码
+        if (!response.ok) {
+          setMessage(data.error || "提交失败，请稍后再试。");
+          return true;
+        }
+
+        invokeWechatBridge(
+          data.payParams,
+          () => setPaid(true),
+          () => setMessage("支付未完成，可以重新发起。")
+        );
+        return true;
+      } catch {
+        setMessage("网络异常，请稍后再试。");
+        return true;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [router]
+  );
+
+  // 微信授权回跳：取出授权前保存的支付意图，自动唤起收银台
+  useEffect(() => {
+    if (searchParams.get("jsapi") !== "auto" || !inWechat) return;
+    try {
+      const raw = window.sessionStorage.getItem(INTENT_KEY);
+      if (!raw) return;
+      window.sessionStorage.removeItem(INTENT_KEY);
+      const intent = JSON.parse(raw) as DonateIntent;
+      if (intent.amountCents > 0) {
+        setSelected(Math.round(intent.amountCents / 100));
+        startJsapiPay(intent, true);
+      }
+    } catch {
+      // 意图丢失时让用户手动再点一次
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inWechat, startJsapiPay]);
+
   async function submit() {
     if (!amount || !Number.isFinite(amount) || amount < 1 || amount > 2000) {
       setMessage("请选择或输入 1-2000 元之间的金额。");
       return;
     }
+    const intent: DonateIntent = {
+      amountCents: Math.round(amount * 100),
+      sourceSlug,
+      sourceTitle
+    };
+
+    // 微信内优先 JSAPI（直接唤起收银台）；未配置时自动回退扫码支付。
+    if (inWechat) {
+      const handled = await startJsapiPay(intent);
+      if (handled) return;
+    }
+
     setSubmitting(true);
     setMessage("");
     try {
       const response = await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amountCents: Math.round(amount * 100),
-          sourceSlug,
-          sourceTitle
-        })
+        body: JSON.stringify(intent)
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401) {
@@ -107,7 +207,7 @@ function SupportPageInner() {
               className="mx-auto mt-4 h-56 w-56 rounded-2xl border border-[#ead9c2]"
             />
             <p className="mt-3 text-xs leading-6 text-neutral-400">
-              手机上可长按二维码识别支付；支付成功后页面会自动确认。
+              请用另一台设备的微信「扫一扫」支付；支付成功后页面会自动确认。
             </p>
             <button
               type="button"
@@ -170,7 +270,7 @@ function SupportPageInner() {
               disabled={submitting}
               className="mt-5 w-full rounded-2xl bg-[#c98a4b] py-3 text-base font-medium text-white transition hover:bg-[#b67a3e] disabled:opacity-60"
             >
-              {submitting ? "正在生成支付二维码…" : `自愿支持 ${amount || ""} 元`}
+              {submitting ? "正在准备支付…" : `自愿支持 ${amount || ""} 元`}
             </button>
           </>
         )}

@@ -252,6 +252,7 @@ export async function createJsapiOrder(input: {
   description: string;
   amountTotal: number;
   openid: string;
+  notifyUrl?: string;
 }) {
   if (!wechatJsapiConfigured()) throw new Error("微信内支付尚未完成配置。");
   const path = "/v3/pay/transactions/jsapi";
@@ -260,7 +261,7 @@ export async function createJsapiOrder(input: {
     mchid: env("WECHAT_PAY_MCH_ID"),
     description: input.description,
     out_trade_no: input.outTradeNo,
-    notify_url: env("WECHAT_PAY_NOTIFY_URL"),
+    notify_url: input.notifyUrl || env("WECHAT_PAY_NOTIFY_URL"),
     amount: { total: input.amountTotal, currency: "CNY" },
     payer: { openid: input.openid }
   });
