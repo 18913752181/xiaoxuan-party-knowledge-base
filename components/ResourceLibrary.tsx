@@ -9,7 +9,7 @@ import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import { WorkPanoramaHome } from "@/components/WorkPanoramaHome";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
-import SupportCard, { supportCardDismissed } from "@/components/SupportCard";
+import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
@@ -177,7 +177,7 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
     }
     updateMaterialCount(getArticleSlug(material), "download_count", material.download_count + 1);
     setMessage("文件下载已开始。");
-    if (!supportCardDismissed()) setSupportMaterial(material);
+    if (shouldShowSupportCard()) setSupportMaterial(material);
   }
 
   return (

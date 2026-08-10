@@ -233,6 +233,14 @@ export default function MembershipPaymentPage() {
               ) : null}
               {!loading && profile && status === "idle" ? (
                 <>
+                  {profile.member_status === "member" &&
+                  profile.member_expires_at &&
+                  profile.member_expires_at >= new Date().toISOString().slice(0, 10) ? (
+                    <div className="mb-4 rounded-xl bg-[#c79b52]/10 px-4 py-3 text-center ring-1 ring-[#c79b52]/40">
+                      <p className="text-sm font-semibold text-[#8a6b50]">★ 当前已是会员</p>
+                      <p className="mt-1 text-xs text-[#a08d72]">有效期至 {profile.member_expires_at}，再次支付将顺延一年</p>
+                    </div>
+                  ) : null}
                   <p className="text-sm text-neutral-500">当前账号：{profile.email}</p>
                   <button
                     disabled={!configured}

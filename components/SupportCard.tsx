@@ -6,10 +6,31 @@ import type { Material } from "@/lib/types";
 import { getArticleSlug } from "@/lib/favorites";
 
 const DISMISS_KEY = "xiaoxuan_support_dismissed_v1";
+const LAST_SHOWN_KEY = "xiaoxuan_support_last_shown";
+const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7 天内最多提示 1 次
 
 export function supportCardDismissed() {
   if (typeof window === "undefined") return true;
   return window.localStorage.getItem(DISMISS_KEY) === "1";
+}
+
+/**
+ * 频率控制：点过「暂时不用」的用户永不提示；其余用户 7 天内最多看到 1 次。
+ * 会员与非会员一视同仁，均可自愿赞赏。
+ */
+export function shouldShowSupportCard() {
+  if (typeof window === "undefined") return false;
+  if (supportCardDismissed()) return false;
+  const lastShown = Number(window.localStorage.getItem(LAST_SHOWN_KEY) || 0);
+  return Date.now() - lastShown > SNOOZE_MS;
+}
+
+function markSupportCardShown() {
+  try {
+    window.localStorage.setItem(LAST_SHOWN_KEY, String(Date.now()));
+  } catch {
+    // 忽略存储失败
+  }
 }
 
 /**
@@ -21,14 +42,11 @@ export default function SupportCard({ material, onClose }: { material: Material;
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // 入场动画 + 双保险：已关闭过的用户不再展示。
-    if (supportCardDismissed()) {
-      onClose();
-      return;
-    }
+    // 入场动画 + 记录展示时间（7 天频率控制生效点）。
+    markSupportCardShown();
     const timer = window.setTimeout(() => setVisible(true), 50);
     return () => window.clearTimeout(timer);
-  }, [onClose]);
+  }, []);
 
   function dismiss() {
     try {

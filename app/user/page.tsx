@@ -12,6 +12,11 @@ export default function UserPage() {
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
   const [favorites, setFavorites] = useState<FavoriteRow[]>([]);
+  const [memberStatus, setMemberStatus] = useState("free");
+  const [memberExpiresAt, setMemberExpiresAt] = useState<string | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const memberActive = memberStatus === "member" && Boolean(memberExpiresAt && memberExpiresAt >= today);
 
   useEffect(() => {
     async function loadSession() {
@@ -30,6 +35,17 @@ export default function UserPage() {
       setEmail(data.user.email || "匿名用户");
       setUserId(data.user.id);
       setState("ready");
+
+      // 读取会员状态用于展示会员标识（失败不影响页面其他内容）
+      fetch("/api/auth/profile", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((profileData) => {
+          if (profileData?.profile) {
+            setMemberStatus(profileData.profile.member_status || "free");
+            setMemberExpiresAt(profileData.profile.member_expires_at || null);
+          }
+        })
+        .catch(() => undefined);
 
       const favoriteResult = await listMyFavorites();
       if (favoriteResult.error && favoriteResult.error !== "登录后可收藏") {
@@ -79,7 +95,22 @@ export default function UserPage() {
           <>
             <div className="mt-6 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-5 py-4">
               <p className="text-sm text-neutral-600">当前用户</p>
-              <p className="mt-2 text-xl font-semibold text-brand-ink">{email}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <p className="text-xl font-semibold text-brand-ink">{email}</p>
+                {memberActive ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#c79b52]/15 px-3 py-1 text-xs font-semibold text-[#8a6b50] ring-1 ring-[#c79b52]/40">
+                    ★ 会员
+                    <span className="font-normal">有效期至 {memberExpiresAt}</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 ring-1 ring-neutral-200">
+                    免费用户
+                    <Link href="/membership/payment" className="font-medium text-[#9a4650] hover:underline">
+                      开通会员
+                    </Link>
+                  </span>
+                )}
+              </div>
               <p className="mt-2 break-all text-xs text-neutral-500">User ID：{userId}</p>
               <button
                 type="button"

@@ -7,7 +7,7 @@ import { downloadMaterialFile } from "@/lib/download-file";
 import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites";
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
-import SupportCard, { supportCardDismissed } from "@/components/SupportCard";
+import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -145,7 +145,7 @@ export default function MaterialDetailPage() {
 
     setMaterial((current) => current ? { ...current, download_count: current.download_count + 1 } : current);
     setMessage("文件下载已开始。");
-    if (!supportCardDismissed()) setShowSupport(true);
+    if (shouldShowSupportCard()) setShowSupport(true);
   }
 
   if (isLoading) {
