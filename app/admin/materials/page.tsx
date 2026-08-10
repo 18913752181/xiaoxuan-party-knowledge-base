@@ -212,6 +212,17 @@ export default function AdminMaterialsPage() {
     });
   }
 
+  /** 将资料移动到可见列表的最前/最后（复用拖动排序的保存逻辑）。 */
+  function moveVisibleMaterialToEdge(sourceSlug: string, edge: "front" | "back") {
+    if (!sourceSlug || savingOrder || dragInProgressRef.current) return;
+    const visibleSlugs = filteredMaterials.map((item) => item.slug || item.id);
+    const fromIndex = visibleSlugs.indexOf(sourceSlug);
+    if (fromIndex < 0) return;
+    const targetIndex = edge === "front" ? 0 : visibleSlugs.length - 1;
+    if (fromIndex === targetIndex) return;
+    moveVisibleMaterial(visibleSlugs[targetIndex], sourceSlug);
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f4ed] px-6 py-10 text-[#2f3732]">
       <div className="mx-auto max-w-6xl">
@@ -224,7 +235,7 @@ export default function AdminMaterialsPage() {
                 ? `找到 ${filteredMaterials.length} 份资料，共 ${materials.length} 份`
                 : `共有 ${materials.length} 份资料`}
             </p>
-            <p className="mt-2 text-xs text-[#8b918d]">按住资料行左侧的拖动柄，即可调整前台展示顺序。</p>
+            <p className="mt-2 text-xs text-[#8b918d]">按住资料行左侧的拖动柄即可调整顺序，也可点「最前 / 最后」快速归位。</p>
           </div>
           <Link href="/admin/new" className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white">新增资料</Link>
         </div>
@@ -309,7 +320,7 @@ export default function AdminMaterialsPage() {
                     className="h-4 w-4 accent-[#6f8f7e]"
                   />
                 </th>
-                <th className="w-16 px-4 py-3">排序</th>
+                <th className="w-24 px-4 py-3">排序</th>
                 <th className="px-4 py-3">标题</th>
                 <th className="px-4 py-3">专题</th>
                 <th className="px-4 py-3">阶段</th>
@@ -345,22 +356,44 @@ export default function AdminMaterialsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        draggable={!savingOrder}
-                        aria-label={`拖动调整${item.title}的顺序`}
-                        title="按住拖动调整顺序"
-                        onDragStart={(event) => {
-                          setDraggingSlug(slug);
-                          event.dataTransfer.effectAllowed = "move";
-                          event.dataTransfer.setData("text/plain", slug);
-                        }}
-                        onDragEnd={() => setDraggingSlug("")}
-                        className="cursor-grab select-none rounded-lg border border-[#ddd6cc] bg-[#fbfaf6] px-2 py-1 text-base leading-none text-[#7c847f] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={savingOrder}
-                      >
-                        ⋮⋮
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          draggable={!savingOrder}
+                          aria-label={`拖动调整${item.title}的顺序`}
+                          title="按住拖动调整顺序"
+                          onDragStart={(event) => {
+                            setDraggingSlug(slug);
+                            event.dataTransfer.effectAllowed = "move";
+                            event.dataTransfer.setData("text/plain", slug);
+                          }}
+                          onDragEnd={() => setDraggingSlug("")}
+                          className="cursor-grab select-none rounded-lg border border-[#ddd6cc] bg-[#fbfaf6] px-2 py-1 text-base leading-none text-[#7c847f] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={savingOrder}
+                        >
+                          ⋮⋮
+                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => moveVisibleMaterialToEdge(slug, "front")}
+                            disabled={savingOrder}
+                            title="移到最前"
+                            className="rounded-md border border-[#ddd6cc] bg-white px-1.5 py-0.5 text-xs leading-none text-[#6f8f7e] transition hover:bg-[#eef4f0] disabled:opacity-50"
+                          >
+                            最前
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveVisibleMaterialToEdge(slug, "back")}
+                            disabled={savingOrder}
+                            title="移到最后"
+                            className="rounded-md border border-[#ddd6cc] bg-white px-1.5 py-0.5 text-xs leading-none text-[#6f8f7e] transition hover:bg-[#eef4f0] disabled:opacity-50"
+                          >
+                            最后
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.topic || item.category}</td>
