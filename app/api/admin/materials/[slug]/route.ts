@@ -85,3 +85,26 @@ export async function DELETE(_request: Request, { params }: { params: { slug: st
   if (!deleted) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
   return withAuthCookies(check.session, NextResponse.json({ ok: true }));
 }
+
+/** 列表页内联编辑：局部修改阶段、上一步工作、下一步工作。 */
+export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "请求格式不正确。" }, { status: 400 });
+  }
+
+  const updates: { stage?: string; previous?: string[]; next?: string[] } = {};
+  if (typeof body.stage === "string") updates.stage = body.stage.trim();
+  if (Array.isArray(body.previous)) updates.previous = body.previous.map((v: unknown) => String(v || "").trim()).filter(Boolean);
+  if (Array.isArray(body.next)) updates.next = body.next.map((v: unknown) => String(v || "").trim()).filter(Boolean);
+  if (!Object.keys(updates).length) {
+    return NextResponse.json({ error: "没有需要修改的内容。" }, { status: 400 });
+  }
+
+  const unit = await updateContentUnit(params.slug, updates);
+  if (!unit) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
+  return withAuthCookies(check.session, NextResponse.json({ ok: true, material: contentUnitToMaterial(unit) }));
+}

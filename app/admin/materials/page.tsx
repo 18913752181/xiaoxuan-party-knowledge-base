@@ -1,16 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
-import { formatDisplayDate } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
-
-const statusLabels: Record<string, string> = {
-  published: "已发布",
-  draft: "草稿",
-  hidden: "已隐藏"
-};
 
 function uniqueMaterials(rows: Material[]) {
   const seen = new Set<string>();
@@ -223,6 +216,98 @@ export default function AdminMaterialsPage() {
     moveVisibleMaterial(visibleSlugs[targetIndex], sourceSlug);
   }
 
+  // ---- 内联编辑（双击单元格直接修改） ----
+  type EditableField = "stage" | "previous" | "next";
+  const [editingCell, setEditingCell] = useState<{ slug: string; field: EditableField } | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [savingCell, setSavingCell] = useState(false);
+
+  function startCellEdit(slug: string, field: EditableField, current: string) {
+    if (savingCell) return;
+    setEditingCell({ slug, field });
+    setEditingValue(current);
+  }
+
+  async function saveCellEdit(item: Material) {
+    if (!editingCell) return;
+    const slug = item.slug || item.id;
+    const field = editingCell.field;
+    setSavingCell(true);
+    try {
+      const body: Record<string, unknown> =
+        field === "stage"
+          ? { stage: editingValue.trim() }
+          : { [field]: editingValue ? [editingValue] : [] };
+      const response = await fetch(`/api/admin/materials/${encodeURIComponent(slug)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "保存失败");
+      if (data.material) {
+        setMaterials((current) =>
+          current.map((row) => ((row.slug || row.id) === slug ? data.material : row))
+        );
+      }
+      setMessage("已保存。");
+      setEditingCell(null);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "保存失败");
+    } finally {
+      setSavingCell(false);
+    }
+  }
+
+  function cellEditKeyDown(event: KeyboardEvent, item: Material) {
+    if (event.key === "Enter") void saveCellEdit(item);
+    if (event.key === "Escape") setEditingCell(null);
+  }
+
+  /** 可编辑单元格：阶段为文本输入；上一步/下一步为资料标题下拉选择（可选「无」）。 */
+  function renderEditableCell(item: Material, field: EditableField, display: string, relationOptions?: string[]) {
+    const slug = item.slug || item.id;
+    const isEditing = editingCell?.slug === slug && editingCell.field === field;
+    return (
+      <td
+        className="cursor-text px-4 py-3"
+        title="双击直接修改"
+        onDoubleClick={() => startCellEdit(slug, field, display === "-" ? "" : display)}
+      >
+        {isEditing ? (
+          relationOptions ? (
+            <select
+              autoFocus
+              value={editingValue}
+              onChange={(event) => setEditingValue(event.target.value)}
+              onBlur={() => void saveCellEdit(item)}
+              onKeyDown={(event) => cellEditKeyDown(event, item)}
+              disabled={savingCell}
+              className="w-full min-w-[140px] rounded-lg border border-[#6f8f7e] bg-white px-2 py-1 text-sm outline-none"
+            >
+              <option value="">（无）</option>
+              {relationOptions.map((title) => (
+                <option key={title} value={title}>{title}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              autoFocus
+              value={editingValue}
+              onChange={(event) => setEditingValue(event.target.value)}
+              onBlur={() => void saveCellEdit(item)}
+              onKeyDown={(event) => cellEditKeyDown(event, item)}
+              disabled={savingCell}
+              className="w-full min-w-[120px] rounded-lg border border-[#6f8f7e] bg-white px-2 py-1 text-sm outline-none"
+            />
+          )
+        ) : (
+          display
+        )}
+      </td>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f4ed] px-6 py-10 text-[#2f3732]">
       <div className="mx-auto max-w-6xl">
@@ -235,7 +320,7 @@ export default function AdminMaterialsPage() {
                 ? `找到 ${filteredMaterials.length} 份资料，共 ${materials.length} 份`
                 : `共有 ${materials.length} 份资料`}
             </p>
-            <p className="mt-2 text-xs text-[#8b918d]">按住资料行左侧的拖动柄即可调整顺序，也可点「最前 / 最后」快速归位。</p>
+            <p className="mt-2 text-xs text-[#8b918d]">拖动柄调整顺序或点「最前 / 最后」快速归位；阶段、上一步工作、下一步工作可双击直接修改。</p>
           </div>
           <Link href="/admin/new" className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white">新增资料</Link>
         </div>
@@ -324,10 +409,9 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">标题</th>
                 <th className="px-4 py-3">专题</th>
                 <th className="px-4 py-3">阶段</th>
-                <th className="px-4 py-3">文件类型</th>
-                <th className="px-4 py-3">状态</th>
+                <th className="px-4 py-3">上一步工作</th>
+                <th className="px-4 py-3">下一步工作</th>
                 <th className="px-4 py-3">是否会员专属</th>
-                <th className="px-4 py-3">更新时间</th>
                 <th className="sticky right-0 bg-[#fbfaf6] px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">操作</th>
               </tr>
             </thead>
@@ -397,15 +481,24 @@ export default function AdminMaterialsPage() {
                     </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.topic || item.category}</td>
-                    <td className="px-4 py-3">{item.stage || "-"}</td>
-                    <td className="px-4 py-3">{item.file_type}</td>
-                    <td className="px-4 py-3">{statusLabels[item.status || "published"] || item.status || "已发布"}</td>
+                    {renderEditableCell(item, "stage", item.stage || "-")}
+                    {renderEditableCell(
+                      item,
+                      "previous",
+                      (item.relatedMap?.previous || []).join("、") || "-",
+                      Array.from(new Set(materials.filter((row) => (row.slug || row.id) !== slug).map((row) => row.title)))
+                    )}
+                    {renderEditableCell(
+                      item,
+                      "next",
+                      (item.relatedMap?.next || []).join("、") || "-",
+                      Array.from(new Set(materials.filter((row) => (row.slug || row.id) !== slug).map((row) => row.title)))
+                    )}
                     <td className="px-4 py-3">
                       <span className={item.member_only ? "font-medium text-[#9b744f]" : "text-[#6d746f]"}>
                         {item.member_only ? "是" : "否"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{formatDisplayDate(item.updated_at)}</td>
                     <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
@@ -420,7 +513,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={10} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={9} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>
