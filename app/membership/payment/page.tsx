@@ -25,7 +25,7 @@ function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMs
       onResult("unavailable");
       return;
     }
-    bridge.invoke("getBrandPayRequest", payParams, (result) => onResult(result?.err_msg || ""));
+    bridge.invoke("getBrandWCPayRequest", payParams, (result) => onResult(result?.err_msg || ""));
   };
   if ((window as unknown as { WeixinJSBridge?: unknown }).WeixinJSBridge) run();
   else document.addEventListener("WeixinJSBridgeReady", run, { once: true });
@@ -174,7 +174,7 @@ export default function MembershipPaymentPage() {
       }
       setOrderNo(data.outTradeNo);
       invokeWechatCashier(data.payParams, (errMsg) => {
-        if (errMsg === "get_brand_pay_request:ok") {
+        if (errMsg === "get_brand_wcpay_request:ok") {
           setStatus("paying");
           setMessage("正在确认支付结果…");
         } else if (errMsg.includes("cancel")) {
