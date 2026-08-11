@@ -21,10 +21,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "验证码请求太频繁，请稍后再试。" }, { status: 429 });
   }
 
-  const authResponse = await authFetch("/otp", {
-    method: "POST",
-    body: JSON.stringify({ email, create_user: true })
-  });
+  let authResponse: Response;
+  try {
+    authResponse = await authFetch("/otp", {
+      method: "POST",
+      body: JSON.stringify({ email, create_user: true })
+    });
+  } catch {
+    // 邮件服务超时或网络异常（authFetch 15 秒超时），给前端明确错误而不是无限“发送中”
+    return NextResponse.json(
+      { error: "邮件服务响应超时，请稍后重试。" },
+      { status: 503 }
+    );
+  }
 
   if (!authResponse.ok) {
     const error = await authResponse.json().catch(() => ({}));

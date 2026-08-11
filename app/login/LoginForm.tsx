@@ -64,11 +64,20 @@ export default function LoginForm() {
     }
 
     setLoading("send");
-    const response = await fetch("/api/auth/send-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: normalizedEmail })
-    });
+    let response: Response;
+    try {
+      // 25 秒前端兜底超时：任何网络挂起都不能让按钮永远停在“发送中”
+      response = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+        signal: AbortSignal.timeout(25000)
+      });
+    } catch {
+      setLoading("");
+      setError("发送超时，请检查网络后重试。");
+      return;
+    }
     setLoading("");
 
     if (!response.ok) {

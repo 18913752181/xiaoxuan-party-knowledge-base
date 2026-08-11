@@ -58,13 +58,15 @@ export async function recordLoginEvent(accessToken: string, userId: string) {
 }
 
 export async function authFetch(path: string, init: RequestInit = {}) {
+  // 15 秒超时：邮件服务（SMTP）偶发慢响应，绝不能让请求无限挂起
   return fetch(`${supabaseUrl}/auth/v1${path}`, {
     ...init,
     headers: {
       ...authHeaders(),
       ...(init.headers || {})
     },
-    cache: "no-store"
+    cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(15000)
   });
 }
 
