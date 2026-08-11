@@ -182,7 +182,8 @@ export default function MembershipPaymentPage() {
           setMessage("已取消支付，如仍需开通会员请重新点击微信支付。");
         } else {
           setStatus("idle");
-          setMessage("收银台唤起失败，请重试。");
+          // 临时透出微信返回的原始错误，便于定位唤起失败原因
+          setMessage(`收银台唤起失败，请重试。（${errMsg || "无错误详情"}）`);
         }
       });
     } catch {
