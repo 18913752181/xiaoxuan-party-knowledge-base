@@ -14,6 +14,14 @@ import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
 
+/** 数量按量级展示，不暴露精确值：9 → 9+，67 → 60+，934 → 900+ */
+function magnitudeLabel(value: number) {
+  if (value <= 0) return "0";
+  if (value < 10) return `${value}+`;
+  const step = 10 ** Math.floor(Math.log10(value));
+  return `${Math.floor(value / step) * step}+`;
+}
+
 export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { initialTopic?: string; libraryOnly?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -192,10 +200,10 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
             <div className="max-w-2xl">
               <p className="text-sm font-medium tracking-[0.22em] text-[#9a4650]">小宣资料库</p>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-brand-ink md:text-4xl">
-                基层党建工作资料，<span className="text-[#9a4650]">一站找齐</span>
+                工作资料，<span className="text-[#9a4650]">一站找齐</span>
               </h1>
               <p className="mt-3 text-sm leading-7 text-neutral-500 md:text-base">
-                制度文件、会议记录、换届选举、主题党日……常用模板配上填写说明，拿来就能用。
+                会议记录、换届选举、主题党日……常用模板配上填写说明，拿来就能用。
               </p>
             </div>
           )}
@@ -239,13 +247,13 @@ export function ResourceLibrary({ initialTopic = "", libraryOnly = false }: { in
           {!libraryOnly && !isLoading && materials.length ? (
             <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm text-neutral-500">
               <span>
-                <b className="text-lg font-semibold text-brand-ink">{materials.length}</b> 份资料
+                <b className="text-lg font-semibold text-brand-ink">{magnitudeLabel(materials.length)}</b> 精选资料
               </span>
               <span>
-                <b className="text-lg font-semibold text-brand-ink">{topicCounts.size}</b> 个专题
+                <b className="text-lg font-semibold text-brand-ink">{magnitudeLabel(topicCounts.size)}</b> 专题体系
               </span>
               <span>
-                <b className="text-lg font-semibold text-brand-ink">{totalDownloads}</b> 次下载
+                <b className="text-lg font-semibold text-brand-ink">{magnitudeLabel(totalDownloads)}</b> 累计下载
               </span>
             </div>
           ) : null}
