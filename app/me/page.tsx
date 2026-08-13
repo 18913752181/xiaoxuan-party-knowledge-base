@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { maskAccountEmail } from "@/lib/display";
 
 export default function MePage() {
   const { profile, loading } = useAuth();
@@ -36,7 +37,7 @@ export default function MePage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#9a4650] text-2xl font-semibold text-white">宣</div>
           <div>
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
-            <p className="mt-2 text-sm text-neutral-500">{profile.email || "已登录"}</p>
+            <p className="mt-2 text-sm text-neutral-500">{maskAccountEmail(profile.email) || "已登录"}</p>
           </div>
         </div>
       </div>

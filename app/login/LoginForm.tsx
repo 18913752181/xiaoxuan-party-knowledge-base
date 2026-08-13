@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { maskAccountEmail } from "@/lib/display";
 
 // 仅允许站内相对路径，防止开放重定向到外部站点。
 function safeRedirectPath(value: string | null) {
@@ -18,12 +19,19 @@ export default function LoginForm() {
   const [verifiedEmail, setVerifiedEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
+  const [inWechat, setInWechat] = useState(false);
   const [loading, setLoading] = useState<"send" | "verify" | "logout" | "">("");
   const [countdown, setCountdown] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // 微信内展示“微信一键登录”；带回的错误参数直接提示
+    setInWechat(/MicroMessenger/i.test(window.navigator.userAgent));
+    if (searchParams.get("wxlogin") === "error") {
+      setError(searchParams.get("reason") || "微信登录失败，请重试或使用邮箱登录。");
+    }
+
     async function refreshSession() {
       const response = await fetch("/api/auth/session", { cache: "no-store" });
       if (!response.ok) return;
@@ -150,21 +158,27 @@ export default function LoginForm() {
     setMessage("已退出登录。");
   }
 
+  function startWechatLogin() {
+    const target = safeRedirectPath(searchParams.get("redirect")) || "/user";
+    window.location.href = `/api/auth/wechat?return=${encodeURIComponent(target)}`;
+  }
+
   return (
     <section className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
-          <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">邮箱验证码登录</p>
+          <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">登录 / 注册</p>
           <h1 className="mt-3 text-2xl font-semibold text-brand-ink">登录宣知网</h1>
           <p className="mt-5 text-base leading-8 text-neutral-600">
-            输入邮箱并验证 6 位验证码即可登录。首次使用的新邮箱会自动创建账号，无需设置和记忆密码。
+            微信内可直接使用微信一键登录；也可以输入邮箱并验证 6 位验证码登录。
+            新用户首次登录会自动创建账号，无需设置和记忆密码；已有邮箱账号的会员权益不受影响。
           </p>
         </div>
 
         {currentUser ? (
           <section className="rounded-2xl border border-[#cfe4d5] bg-[#f1f8f3] p-6 shadow-soft">
             <p className="text-sm text-brand-sageDark">当前已登录</p>
-            <p className="mt-2 break-all text-base font-medium text-neutral-700">{currentUser}</p>
+            <p className="mt-2 break-all text-base font-medium text-neutral-700">{maskAccountEmail(currentUser)}</p>
             <p className="mt-3 text-sm leading-7 text-neutral-600">登录状态将自动保留，下次进入无需再次验证。</p>
             <button
               type="button"
@@ -180,8 +194,28 @@ export default function LoginForm() {
         <form onSubmit={verifyCode} className={`rounded-2xl border border-brand-line bg-white p-6 shadow-soft ${currentUser ? "hidden" : ""}`}>
           {currentUser ? (
             <div className="mb-5 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-4 py-3 text-sm text-brand-sageDark">
-              当前已登录：{currentUser}
+              当前已登录：{maskAccountEmail(currentUser)}
             </div>
+          ) : null}
+
+          {inWechat ? (
+            <>
+              <button
+                type="button"
+                onClick={startWechatLogin}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#07c160] font-medium text-white transition hover:bg-[#06a854]"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+                  <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
+                </svg>
+                微信一键登录
+              </button>
+              <div className="my-5 flex items-center gap-3 text-xs text-neutral-400">
+                <span className="h-px flex-1 bg-brand-line" />
+                或使用邮箱验证码
+                <span className="h-px flex-1 bg-brand-line" />
+              </div>
+            </>
           ) : null}
 
           <label className="block text-sm text-neutral-600">
@@ -240,6 +274,12 @@ export default function LoginForm() {
           >
             {loading === "verify" ? "正在验证..." : "验证并登录"}
           </button>
+
+          {!inWechat ? (
+            <p className="mt-4 text-center text-xs leading-6 text-neutral-400">
+              在微信中打开本站，还可以使用微信一键登录。
+            </p>
+          ) : null}
 
           {currentUser ? (
             <button

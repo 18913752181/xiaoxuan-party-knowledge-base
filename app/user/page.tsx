@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listMyFavorites, type FavoriteRow } from "@/lib/favorites";
+import { maskAccountEmail, WECHAT_EMAIL_SUFFIX } from "@/lib/display";
 
 type PageState = "loading" | "guest" | "ready" | "error";
 
@@ -14,12 +15,27 @@ export default function UserPage() {
   const [favorites, setFavorites] = useState<FavoriteRow[]>([]);
   const [memberStatus, setMemberStatus] = useState("free");
   const [memberExpiresAt, setMemberExpiresAt] = useState<string | null>(null);
+  const [wechatBound, setWechatBound] = useState(false);
+  const [inWechat, setInWechat] = useState(false);
+  const [wechatMessage, setWechatMessage] = useState("");
+  const [unbinding, setUnbinding] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const memberActive = memberStatus === "member" && Boolean(memberExpiresAt && memberExpiresAt >= today);
+  const isWechatOnlyAccount = email.endsWith(WECHAT_EMAIL_SUFFIX);
 
   useEffect(() => {
     async function loadSession() {
+      setInWechat(/MicroMessenger/i.test(window.navigator.userAgent));
+
+      // 绑定微信回调带回来的结果提示
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("wxbind") === "ok") {
+        setWechatMessage("微信绑定成功，之后可在微信内一键登录本账号。");
+      } else if (params.get("wxbind") === "error") {
+        setWechatMessage(params.get("reason") || "微信绑定失败，请重试。");
+      }
+
       const response = await fetch("/api/auth/session", { cache: "no-store" });
       if (!response.ok) {
         setState("guest");
@@ -43,6 +59,7 @@ export default function UserPage() {
           if (profileData?.profile) {
             setMemberStatus(profileData.profile.member_status || "free");
             setMemberExpiresAt(profileData.profile.member_expires_at || null);
+            setWechatBound(Boolean(profileData.profile.wechat_bound));
           }
         })
         .catch(() => undefined);
@@ -64,6 +81,21 @@ export default function UserPage() {
     setUserId("");
     setFavorites([]);
     setState("guest");
+  }
+
+  async function unbindWechat() {
+    setWechatMessage("");
+    setUnbinding(true);
+    const response = await fetch("/api/auth/wechat/unbind", { method: "POST" });
+    setUnbinding(false);
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setWechatMessage(data.error || "解绑失败，请稍后重试。");
+      return;
+    }
+    setWechatBound(false);
+    setWechatMessage("已解绑微信。");
   }
 
   return (
@@ -96,7 +128,7 @@ export default function UserPage() {
             <div className="mt-6 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-5 py-4">
               <p className="text-sm text-neutral-600">当前用户</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <p className="text-xl font-semibold text-brand-ink">{email}</p>
+                <p className="text-xl font-semibold text-brand-ink">{maskAccountEmail(email)}</p>
                 {memberActive ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#c79b52]/15 px-3 py-1 text-xs font-semibold text-[#8a6b50] ring-1 ring-[#c79b52]/40">
                     ★ 会员
@@ -119,6 +151,49 @@ export default function UserPage() {
               >
                 退出登录
               </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-brand-line bg-brand-gray px-5 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-brand-ink">微信登录</p>
+                  <p className="mt-1 text-sm leading-6 text-neutral-600">
+                    {isWechatOnlyAccount
+                      ? "当前账号由微信一键登录创建，微信即本账号的登录方式。"
+                      : wechatBound
+                        ? "已绑定微信，可在微信内一键登录本账号。"
+                        : "绑定微信后，可在微信内一键登录本账号，会员与收藏保持不变。"}
+                  </p>
+                </div>
+                {isWechatOnlyAccount ? (
+                  <span className="inline-flex items-center rounded-full bg-[#07c160]/10 px-3 py-1 text-xs font-medium text-[#0a8a48] ring-1 ring-[#07c160]/30">
+                    微信账号
+                  </span>
+                ) : wechatBound ? (
+                  <button
+                    type="button"
+                    onClick={unbindWechat}
+                    disabled={unbinding}
+                    className="rounded-full border border-brand-line bg-white px-4 py-2 text-sm text-neutral-600 transition hover:text-[#8d2f32] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {unbinding ? "正在解绑..." : "解绑微信"}
+                  </button>
+                ) : inWechat ? (
+                  <a
+                    href="/api/auth/wechat/bind"
+                    className="rounded-full bg-[#07c160] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#06a854]"
+                  >
+                    绑定微信
+                  </a>
+                ) : (
+                  <span className="text-xs leading-6 text-neutral-400">在微信中打开本站可绑定</span>
+                )}
+              </div>
+              {wechatMessage ? (
+                <p className="mt-3 rounded-lg border border-brand-line bg-white px-3 py-2 text-sm text-neutral-600">
+                  {wechatMessage}
+                </p>
+              ) : null}
             </div>
 
             <section className="mt-8">

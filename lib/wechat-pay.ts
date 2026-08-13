@@ -211,6 +211,11 @@ export function wechatJsapiConfigured() {
   return wechatPayConfigured() && Boolean(officialAppId() && officialAppSecret());
 }
 
+/** 微信登录/绑定只需要服务号 AppID + AppSecret，不要求支付商户号已配置 */
+export function wechatOauthConfigured() {
+  return Boolean(officialAppId() && officialAppSecret());
+}
+
 /** 支付回调可能携带 Native 或 JSAPI 下单时使用的任一 AppID，两者都应通过校验 */
 export function wechatAcceptedAppIds() {
   return Array.from(new Set([env("WECHAT_PAY_APP_ID"), officialAppId()].filter(Boolean)));
@@ -220,10 +225,10 @@ function siteUrl() {
   return (env("NEXT_PUBLIC_SITE_URL") || "https://xiaoxuanvip.com").replace(/\/$/, "");
 }
 
-export function wechatOauthUrl(state: string) {
+export function wechatOauthUrl(state: string, redirectPath = "/api/payments/wechat/oauth/callback") {
   const params = new URLSearchParams({
     appid: officialAppId(),
-    redirect_uri: `${siteUrl()}/api/payments/wechat/oauth/callback`,
+    redirect_uri: `${siteUrl()}${redirectPath}`,
     response_type: "code",
     scope: "snsapi_base",
     state

@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { maskAccountEmail } from "@/lib/display";
 
 type Plan = { name: string; duration: string; amountTotal: number };
 
@@ -242,7 +243,7 @@ export default function MembershipPaymentPage() {
                       <p className="mt-1 text-xs text-[#a08d72]">有效期至 {profile.member_expires_at}，再次支付将顺延一年</p>
                     </div>
                   ) : null}
-                  <p className="text-sm text-neutral-500">当前账号：{profile.email}</p>
+                  <p className="text-sm text-neutral-500">当前账号：{maskAccountEmail(profile.email)}</p>
                   <button
                     disabled={!configured}
                     onClick={() => {

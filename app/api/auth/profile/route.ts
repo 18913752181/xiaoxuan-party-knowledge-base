@@ -30,10 +30,16 @@ export async function GET() {
       nickname: session.user.email?.split("@")[0] || "小宣用户",
       member_status: "free",
       member_expires_at: null,
-      is_admin: false
+      is_admin: false,
+      wechat_openid: null
     } as const);
 
-  const response = NextResponse.json({ profile, error: error?.message || "" });
+  // openid 属于敏感标识，只向前端暴露“是否已绑定微信”
+  const { wechat_openid, ...publicProfile } = profile as Record<string, unknown>;
+  const response = NextResponse.json({
+    profile: { ...publicProfile, wechat_bound: Boolean(wechat_openid) },
+    error: error?.message || ""
+  });
   if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
   return response;
 }

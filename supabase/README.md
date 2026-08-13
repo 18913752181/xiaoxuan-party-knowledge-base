@@ -7,6 +7,7 @@
 - `schema.sql`：早期完整演示数据库脚本，包含 profiles、materials、favorites、downloads 等旧结构。当前资料内容已改为本地 `content/` 文件夹读取，不建议继续用它作为新增功能的唯一依据。
 - `favorites.sql`：早期收藏表脚本，保留用于历史参考。
 - `002_favorites.sql`：当前收藏功能使用的收藏表脚本。收藏只保存本地文章的 `article_slug`、标题和分类，不把文章正文迁移到 Supabase。
+- `007_wechat_binding.sql`：微信登录/绑定支持。为 `profiles` 增加 `wechat_openid` 字段（部分唯一索引），用于微信一键登录与邮箱账号绑定微信。
 
 ## 如何执行 SQL
 
