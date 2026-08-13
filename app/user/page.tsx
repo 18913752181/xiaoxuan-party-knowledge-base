@@ -18,6 +18,7 @@ export default function UserPage() {
   const [wechatBound, setWechatBound] = useState(false);
   const [inWechat, setInWechat] = useState(false);
   const [wechatMessage, setWechatMessage] = useState("");
+  const [wechatMessageKind, setWechatMessageKind] = useState<"ok" | "error">("ok");
   const [unbinding, setUnbinding] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -31,8 +32,10 @@ export default function UserPage() {
       // 绑定微信回调带回来的结果提示
       const params = new URLSearchParams(window.location.search);
       if (params.get("wxbind") === "ok") {
+        setWechatMessageKind("ok");
         setWechatMessage("微信绑定成功，之后可在微信内一键登录本账号。");
       } else if (params.get("wxbind") === "error") {
+        setWechatMessageKind("error");
         setWechatMessage(params.get("reason") || "微信绑定失败，请重试。");
       }
 
@@ -91,10 +94,12 @@ export default function UserPage() {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      setWechatMessageKind("error");
       setWechatMessage(data.error || "解绑失败，请稍后重试。");
       return;
     }
     setWechatBound(false);
+    setWechatMessageKind("ok");
     setWechatMessage("已解绑微信。");
   }
 
@@ -155,15 +160,35 @@ export default function UserPage() {
 
             <div className="mt-4 rounded-xl border border-brand-line bg-brand-gray px-5 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-brand-ink">微信登录</p>
-                  <p className="mt-1 text-sm leading-6 text-neutral-600">
-                    {isWechatOnlyAccount
-                      ? "当前账号由微信一键登录创建，微信即本账号的登录方式。"
-                      : wechatBound
-                        ? "已绑定微信，可在微信内一键登录本账号。"
-                        : "绑定微信后，可在微信内一键登录本账号，会员与收藏保持不变。"}
-                  </p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#07c160]/10 text-[#0a8a48] ring-1 ring-[#07c160]/25">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                      <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-brand-ink">微信登录</p>
+                      {isWechatOnlyAccount || wechatBound ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#07c160]/10 px-2 py-0.5 text-[11px] font-medium text-[#0a8a48]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#07c160]" />
+                          已绑定
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-200/60 px-2 py-0.5 text-[11px] text-neutral-500">
+                          <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                          未绑定
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm leading-6 text-neutral-600">
+                      {isWechatOnlyAccount
+                        ? "当前账号由微信一键登录创建，微信即本账号的登录方式。"
+                        : wechatBound
+                          ? "已绑定微信，可在微信内一键登录本账号。"
+                          : "绑定微信后，可在微信内一键登录本账号，会员与收藏保持不变。"}
+                    </p>
+                  </div>
                 </div>
                 {isWechatOnlyAccount ? (
                   <span className="inline-flex items-center rounded-full bg-[#07c160]/10 px-3 py-1 text-xs font-medium text-[#0a8a48] ring-1 ring-[#07c160]/30">
@@ -174,23 +199,36 @@ export default function UserPage() {
                     type="button"
                     onClick={unbindWechat}
                     disabled={unbinding}
-                    className="rounded-full border border-brand-line bg-white px-4 py-2 text-sm text-neutral-600 transition hover:text-[#8d2f32] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="shrink-0 rounded-full border border-brand-line bg-white px-4 py-2 text-sm text-neutral-600 transition hover:text-[#8d2f32] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {unbinding ? "正在解绑..." : "解绑微信"}
                   </button>
                 ) : inWechat ? (
                   <a
                     href="/api/auth/wechat/bind"
-                    className="rounded-full bg-[#07c160] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#06a854]"
+                    className="shrink-0 rounded-full bg-[#07c160] px-4 py-2 text-sm font-medium text-white shadow-[0_6px_14px_rgba(7,193,96,0.25)] transition hover:bg-[#06ad56] active:scale-[0.98]"
                   >
                     绑定微信
                   </a>
                 ) : (
-                  <span className="text-xs leading-6 text-neutral-400">在微信中打开本站可绑定</span>
+                  <span className="shrink-0 text-xs leading-6 text-neutral-400">在微信中打开本站可绑定</span>
                 )}
               </div>
               {wechatMessage ? (
-                <p className="mt-3 rounded-lg border border-brand-line bg-white px-3 py-2 text-sm text-neutral-600">
+                <p
+                  className={`mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                    wechatMessageKind === "ok"
+                      ? "border-[#cfe4d5] bg-[#f1f8f3] text-brand-sageDark"
+                      : "border-[#ead5d0] bg-[#fff5f2] text-[#9a5245]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${
+                      wechatMessageKind === "ok" ? "bg-[#07c160]" : "bg-[#c0604f]"
+                    }`}
+                  >
+                    {wechatMessageKind === "ok" ? "✓" : "!"}
+                  </span>
                   {wechatMessage}
                 </p>
               ) : null}

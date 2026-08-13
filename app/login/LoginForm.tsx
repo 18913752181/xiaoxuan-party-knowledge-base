@@ -203,17 +203,22 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={startWechatLogin}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#07c160] font-medium text-white transition hover:bg-[#06a854]"
+                className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#07c160] font-medium text-white shadow-[0_8px_20px_rgba(7,193,96,0.28)] transition hover:bg-[#06ad56] active:scale-[0.99]"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                  <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
-                </svg>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                    <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
+                  </svg>
+                </span>
                 微信一键登录
               </button>
-              <div className="my-5 flex items-center gap-3 text-xs text-neutral-400">
-                <span className="h-px flex-1 bg-brand-line" />
+              <p className="mt-2.5 text-center text-xs leading-6 text-neutral-400">
+                无需输入邮箱，授权后自动登录 / 注册
+              </p>
+              <div className="my-6 flex items-center gap-4 text-[11px] tracking-[0.2em] text-neutral-300">
+                <span className="h-px flex-1 bg-[#eee9e0]" />
                 或使用邮箱验证码
-                <span className="h-px flex-1 bg-brand-line" />
+                <span className="h-px flex-1 bg-[#eee9e0]" />
               </div>
             </>
           ) : null}
@@ -270,13 +275,20 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={Boolean(loading)}
-            className="mt-6 h-12 w-full rounded-full bg-[#9a4650] font-medium text-white transition hover:bg-[#7d3540] disabled:cursor-not-allowed disabled:opacity-60"
+            className={`mt-6 h-12 w-full rounded-full font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+              inWechat
+                ? "border border-[#9a4650]/45 bg-white text-[#9a4650] hover:bg-[#faf5f4]"
+                : "bg-[#9a4650] text-white hover:bg-[#7d3540]"
+            }`}
           >
             {loading === "verify" ? "正在验证..." : "验证并登录"}
           </button>
 
           {!inWechat ? (
-            <p className="mt-4 text-center text-xs leading-6 text-neutral-400">
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs leading-6 text-neutral-400">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-[#07c160]/70" aria-hidden="true">
+                <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
+              </svg>
               在微信中打开本站，还可以使用微信一键登录。
             </p>
           ) : null}
