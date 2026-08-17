@@ -1,4 +1,23 @@
-﻿.topic-item:active,
-.card:active {
-  opacity: 0.82;
-}
+.home-page { padding-top: 38rpx; }
+.brand-mark { display: inline-flex; padding: 10rpx 18rpx; border-radius: 999rpx; background: #e8eee9; color: #547565; font-size: 22rpx; font-weight: 600; }
+.hero { padding: 54rpx 6rpx 42rpx; }
+.hero-title { margin-top: 20rpx; color: #202d26; font-size: 58rpx; font-weight: 750; line-height: 1.26; letter-spacing: -1rpx; }
+.hero-copy { margin-top: 24rpx; max-width: 640rpx; color: #66716b; font-size: 28rpx; line-height: 1.8; }
+.tool-card { padding: 34rpx; }
+.tool-card:active { border-color: #bdcbc3; transform: scale(.995); }
+.tool-topline, .tool-action { display: flex; align-items: center; justify-content: space-between; }
+.tool-icon { display: flex; align-items: center; justify-content: center; width: 74rpx; height: 74rpx; border-radius: 22rpx; background: #547565; color: #fff; font-size: 29rpx; font-weight: 700; }
+.tool-status { padding: 8rpx 16rpx; border-radius: 999rpx; background: #eef5ef; color: #5d7b68; font-size: 22rpx; }
+.tool-title { margin-top: 30rpx; font-size: 38rpx; font-weight: 700; }
+.tool-description { margin-top: 14rpx; color: #6a756f; font-size: 26rpx; line-height: 1.7; }
+.tool-action { margin-top: 30rpx; padding-top: 24rpx; border-top: 1rpx solid #edf0ed; color: #4e7160; font-size: 28rpx; font-weight: 600; }
+.arrow { font-size: 36rpx; font-weight: 400; }
+.feature-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; margin-top: 24rpx; }
+.feature-item { min-height: 176rpx; padding: 24rpx 18rpx; border-radius: 22rpx; background: #edf0ec; }
+.feature-dot { width: 12rpx; height: 12rpx; border-radius: 50%; background: #6d8a7b; }
+.feature-title { margin-top: 20rpx; font-size: 25rpx; font-weight: 650; }
+.feature-copy { margin-top: 8rpx; color: #78817c; font-size: 21rpx; line-height: 1.5; }
+.privacy-note { margin-top: 30rpx; padding: 26rpx 28rpx; border-left: 6rpx solid #a8b9af; border-radius: 0 18rpx 18rpx 0; background: #ecefeb; }
+.privacy-title { font-size: 25rpx; font-weight: 650; }
+.privacy-copy { margin-top: 8rpx; color: #717a75; font-size: 23rpx; line-height: 1.6; }
+.version-note { padding: 34rpx 0 8rpx; color: #919893; font-size: 21rpx; text-align: center; }

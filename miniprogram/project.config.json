@@ -1,0 +1,54 @@
+{
+  "description": "党员发展时间助手第一版",
+  "compileType": "miniprogram",
+  "libVersion": "3.17.0",
+  "miniprogramRoot": "./",
+  "projectname": "党员发展时间助手",
+  "appid": "wxfa7b15cdbb16a761",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "pages/materials"
+      },
+      {
+        "type": "folder",
+        "value": "pages/detail"
+      },
+      {
+        "type": "folder",
+        "value": "pages/me"
+      },
+      {
+        "type": "folder",
+        "value": "data"
+      },
+      {
+        "type": "file",
+        "value": "utils/data.js"
+      },
+      {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "useCompilerPlugins": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true,
+    "checkInvalidKey": true,
+    "checkSiteMap": true,
+    "uploadWithSourceMap": true
+  },
+  "simulatorType": "wechat",
+  "condition": {}
+}

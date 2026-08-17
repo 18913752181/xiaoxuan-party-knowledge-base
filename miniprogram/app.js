@@ -1,5 +1,5 @@
 ﻿App({
   globalData: {
-    appName: "小宣同志资料库"
+    appName: "党员发展时间助手"
   }
 });

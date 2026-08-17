@@ -1,0 +1,2 @@
+<web-view wx:if="{{url}}" src="{{url}}"></web-view>
+<view wx:else class="error-page">链接暂不可用，请稍后再试。</view>

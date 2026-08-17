@@ -1,33 +1,30 @@
-﻿<view class="container">
-  <view class="hero-title">小宣同志资料库</view>
-  <view class="hero-subtitle">把常用资料整理好，方便你在微信里随时查找和下载。</view>
-
-  <input class="search-box" value="{{keyword}}" bindinput="onKeywordInput" confirm-type="search" bindconfirm="search" placeholder="搜索资料标题、专题、文件类型" />
-
-  <view class="section-head">
-    <view class="section-title">专题入口</view>
-  </view>
-  <view class="topic-grid">
-    <view class="topic-item" wx:for="{{topics}}" wx:key="*this" data-topic="{{item}}" bindtap="openTopic">{{item}}</view>
+<view class="page-shell home-page">
+  <view class="brand-mark">党务工作助手</view>
+  <view class="hero">
+    <view class="eyebrow">党员发展时间助手</view>
+    <view class="hero-title">核对发展时间，<br />看清下一步工作</view>
+    <view class="hero-copy">输入已经发生的阶段日期，帮助你判断当前阶段、核对时间关系，并获得下一步办理提醒。</view>
   </view>
 
-  <view class="section-head">
-    <view class="section-title">热门资料</view>
-    <view class="section-more" bindtap="search">查看全部</view>
-  </view>
-
-  <view wx:if="{{hotMaterials.length === 0}}" class="empty">暂无资料，请先生成 materials.json</view>
-  <view wx:for="{{hotMaterials}}" wx:key="id" class="card">
-    <view class="meta-row">
-      <text class="badge">{{item.fileType}}</text>
-      <text class="badge badge-soft">{{item.topic}}</text>
+  <view class="tool-card surface" bindtap="startCalculation">
+    <view class="tool-topline">
+      <view class="tool-icon">时</view>
+      <view class="tool-status">已可使用</view>
     </view>
-    <view class="card-title" data-id="{{item.id}}" bindtap="openDetail">{{item.title}}</view>
-    <view class="card-desc">{{item.description}}</view>
-    <view class="card-desc">更新 {{item.updatedDate}}</view>
-    <view class="action-row">
-      <view class="primary-btn" data-id="{{item.id}}" bindtap="download">下载文件</view>
-      <view class="secondary-btn" data-id="{{item.id}}" bindtap="openDetail">查看详情</view>
-    </view>
+    <view class="tool-title">入党时间核算</view>
+    <view class="tool-description">支持申请入党、积极分子、发展对象、预备党员和转正五个关键节点。</view>
+    <view class="tool-action"><text>开始核算</text><text class="arrow">→</text></view>
   </view>
+
+  <view class="feature-row">
+    <view class="feature-item"><view class="feature-dot"></view><view class="feature-title">核对时间</view><view class="feature-copy">发现倒序和明显冲突</view></view>
+    <view class="feature-item"><view class="feature-dot"></view><view class="feature-title">判断阶段</view><view class="feature-copy">根据已完成节点识别</view></view>
+    <view class="feature-item"><view class="feature-dot"></view><view class="feature-title">提醒下一步</view><view class="feature-copy">给出事项和参考时间</view></view>
+  </view>
+
+  <view class="privacy-note">
+    <view class="privacy-title">日期仅保存在你的设备中</view>
+    <view class="privacy-copy">第一版无需登录，不会把填写的个人时间数据上传到服务器。</view>
+  </view>
+  <view class="version-note">规则版本 {{version}} · 结果仅供工作参考</view>
 </view>
