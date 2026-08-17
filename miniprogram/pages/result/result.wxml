@@ -61,6 +61,10 @@
   <view class="section-card resources-card">
     <view class="section-heading"><view class="section-index">04</view><view class="section-title">相关资料</view></view>
     <view class="resource-intro">完整制度依据、流程说明、模板和常见问题由网站统一维护。</view>
+    <view class="flow-resource" bindtap="openFlow">
+      <view class="resource-main"><view class="resource-title">发展党员全流程</view><view class="resource-copy">查看 Excel 对应的 51 个办理节点，并从任一已知日期推算后续参考时间</view></view>
+      <view class="resource-arrow">→</view>
+    </view>
     <view wx:for="{{resources}}" wx:key="id" class="resource-row" data-id="{{item.id}}" bindtap="openResource">
       <view class="resource-main"><view class="resource-title">{{item.title}}</view><view class="resource-copy">{{item.description}}</view></view>
       <view class="resource-arrow">→</view>

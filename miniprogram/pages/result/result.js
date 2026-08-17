@@ -44,6 +44,10 @@ Page({
     wx.navigateBack();
   },
 
+  openFlow() {
+    wx.navigateTo({ url: "/pages/flow/flow" });
+  },
+
   openResource(event) {
     const resource = this.data.resources.find((item) => item.id === event.currentTarget.dataset.id);
     if (!resource) return;

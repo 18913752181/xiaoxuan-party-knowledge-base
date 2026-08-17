@@ -1,0 +1,102 @@
+<view class="page-shell flow-page">
+  <view class="eyebrow">发展党员全流程</view>
+  <view class="page-title">从一个已知日期，看清后续工作</view>
+  <view class="page-subtitle">完整保留 Excel 的 51 个流程节点。选择任一已完成节点并填写日期，系统会展示后续节点的最早、截止或条件参考时间。</view>
+
+  <view class="input-card surface">
+    <view class="input-label">已知流程节点</view>
+    <picker mode="selector" range="{{nodeOptions}}" value="{{selectedNodeIndex}}" bindchange="selectNode">
+      <view class="selector-value"><text class="selector-order">{{selectedNodeIndex + 1}}</text><text class="selector-text">{{selectedNodeTitle}}</text><text class="selector-arrow">⌄</text></view>
+    </picker>
+    <view class="input-label date-label">该节点实际日期</view>
+    <picker mode="date" value="{{selectedDate}}" end="{{maxDate}}" bindchange="selectDate">
+      <view class="date-value {{selectedDate ? 'selected' : ''}}">{{selectedDate || '请选择日期'}}</view>
+    </picker>
+    <button class="calculate-button" bindtap="calculate">推算后续节点参考时间</button>
+    <view class="input-tip">只需填写一个你确定的日期。无法仅凭日期判断的节点会标为“待确认”，不会擅自补充规则。</view>
+  </view>
+
+  <view wx:if="{{hasCalculated}}" class="summary-card">
+    <view class="summary-kicker">本次推算</view>
+    <view class="summary-title">从“{{calculationSummary.selectedTitle}}”向后参考</view>
+    <view class="summary-date">已知日期 {{calculationSummary.selectedDate}}</view>
+    <view class="summary-stats">
+      <view class="summary-stat"><text class="stat-value">{{calculationSummary.total}}</text><text class="stat-label">后续及当前节点</text></view>
+      <view class="summary-stat"><text class="stat-value">{{calculationSummary.calculable}}</text><text class="stat-label">有日期或条件参考</text></view>
+      <view class="summary-stat"><text class="stat-value">{{calculationSummary.pending}}</text><text class="stat-label">需人工确认</text></view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view><view class="section-index">01</view><view class="section-title">完整发展阶段</view></view>
+    <view class="full-toggle" bindtap="toggleFull">{{showFull ? '收起完整流程' : '查看完整流程'}}</view>
+  </view>
+
+  <scroll-view class="stage-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="stage-track">
+      <view wx:for="{{stages}}" wx:key="id" class="stage-item {{activeStageId === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectStage">
+        <view class="stage-number">{{item.order}}</view>
+        <view class="stage-name">{{item.shortName}}</view>
+        <view class="stage-count">{{item.count}}步</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="section-head timeline-head">
+    <view><view class="section-index">02</view><view class="section-title">{{showFull ? '完整流程时间轴' : '当前阶段详细步骤'}}</view></view>
+  </view>
+
+  <view wx:for="{{visibleGroups}}" wx:key="id" class="stage-group">
+    <view wx:if="{{showFull}}" class="group-title"><text>{{item.name}}</text><text>{{item.nodes.length}} 个节点</text></view>
+    <view class="timeline">
+      <view wx:for="{{item.nodes}}" wx:for-item="node" wx:key="id" class="timeline-row" data-id="{{node.id}}" bindtap="openDetail">
+        <view class="timeline-rail"><view class="timeline-dot {{node.schedule ? 'status-' + node.schedule.status : ''}}">{{node.orderText}}</view><view wx:if="{{index < item.nodes.length - 1}}" class="timeline-line"></view></view>
+        <view class="node-card">
+          <view class="node-top"><view class="node-title">{{node.title}}</view><view class="detail-arrow">›</view></view>
+          <view class="node-meta"><text class="time-chip">{{node.timeRequirement}}</text><text>{{node.partyText}}</text></view>
+          <view wx:if="{{node.schedule}}" class="schedule schedule-{{node.schedule.status}}">
+            <view class="schedule-top"><text class="schedule-label">{{node.schedule.statusLabel}}</text><text class="schedule-date">{{node.schedule.dateText}}</text></view>
+            <view class="schedule-summary">{{node.schedule.summary}}</view>
+          </view>
+          <view class="material-hint">{{node.materialCount ? '关联 ' + node.materialCount + ' 项材料' : '材料信息待确认'}} · 点击查看详情</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="notice-card">
+    <view class="notice-title">时间推算说明</view>
+    <view class="notice-line">“最早参考”只表示达到 Excel 或已确认规则中的时间条件，不代表前置程序已经完成。</view>
+    <view class="notice-line">“条件参考”表示只能判断先后关系，党委会、公示无异议、组织研究等实际日期仍需人工确定。</view>
+    <view class="notice-line">五个工作日仅按周一至周五演算，法定节假日和调休必须另行核对。</view>
+    <view class="disclaimer">{{disclaimer}}</view>
+  </view>
+
+  <view class="website-card" bindtap="openWebsite">
+    <view><view class="website-kicker">网站统一维护</view><view class="website-title">查看发展党员专题资料</view><view class="website-copy">打开指定资料页，查看模板、流程说明和相关内容</view></view>
+    <view class="website-arrow">→</view>
+  </view>
+  <view class="source-note">数据版本 {{sourceVersion}} · 来源 {{sourceTitle}}</view>
+</view>
+
+<view wx:if="{{detailVisible}}" class="drawer-mask" catchtap="closeDetail">
+  <view class="detail-drawer" catchtap="preventClose">
+    <view class="drawer-handle"></view>
+    <view class="drawer-head"><view><view class="drawer-kicker">步骤 {{detail.orderText}}</view><view class="drawer-title">{{detail.title}}</view></view><view class="drawer-close" bindtap="closeDetail">×</view></view>
+    <scroll-view class="drawer-scroll" scroll-y>
+      <view wx:if="{{detail.schedule}}" class="detail-schedule schedule-{{detail.schedule.status}}">
+        <view class="schedule-top"><text class="schedule-label">{{detail.schedule.statusLabel}}</text><text class="schedule-date">{{detail.schedule.dateText}}</text></view>
+        <view class="schedule-summary">{{detail.schedule.summary}}</view>
+      </view>
+      <view class="detail-block"><view class="detail-label">这一步做什么</view><view class="detail-value">{{detail.action}}</view></view>
+      <view class="detail-grid">
+        <view class="detail-block"><view class="detail-label">谁负责</view><view class="detail-value">{{detail.partyText}}</view></view>
+        <view class="detail-block"><view class="detail-label">什么时候做</view><view class="detail-value">{{detail.timeRequirement}}</view></view>
+      </view>
+      <view class="detail-block"><view class="detail-label">前置条件</view><view class="detail-value">{{detail.prerequisite}}</view></view>
+      <view class="detail-block"><view class="detail-label">所需 / 形成材料</view><view class="material-warning">{{detail.materialClassification}}</view><view wx:for="{{detail.materialText}}" wx:key="*this" class="material-item">{{item}}</view></view>
+      <view class="detail-block"><view class="detail-label">注意事项</view><view wx:for="{{detail.noteList}}" wx:key="*this" class="note-item">{{item}}</view></view>
+      <view class="detail-nav"><view><text class="detail-label">上一步</text><text class="nav-text">{{detail.previousText}}</text></view><view><text class="detail-label">下一步</text><text class="nav-text">{{detail.nextText}}</text></view></view>
+    </scroll-view>
+  </view>
+</view>

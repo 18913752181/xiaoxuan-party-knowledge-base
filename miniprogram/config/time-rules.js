@@ -16,7 +16,7 @@ module.exports = {
 
   site: {
     baseUrl: "https://xiaoxuanvip.com",
-    developmentTopicPath: "/topics/development-members"
+    developmentTopicPath: "/materials/2026-08-10-material-1vnjh55"
   },
 
   fields: [
@@ -132,8 +132,8 @@ module.exports = {
   },
 
   relatedResources: [
-    { id: "topic", title: "发展党员专题", description: "查看完整流程、制度依据和阶段说明", path: "/topics/development-members" },
-    { id: "templates", title: "相关模板", description: "前往网站专题查找对应阶段的表格和参考材料", path: "/topics/development-members" },
-    { id: "faq", title: "常见问题", description: "前往网站专题核对办理中容易拿不准的问题", path: "/topics/development-members" }
+    { id: "topic", title: "发展党员专题资料", description: "查看指定资料页中的流程、制度依据和阶段说明", path: "/materials/2026-08-10-material-1vnjh55" },
+    { id: "templates", title: "相关模板", description: "前往指定资料页查找对应阶段的表格和参考材料", path: "/materials/2026-08-10-material-1vnjh55" },
+    { id: "faq", title: "常见问题", description: "前往指定资料页核对办理中容易拿不准的问题", path: "/materials/2026-08-10-material-1vnjh55" }
   ]
 };

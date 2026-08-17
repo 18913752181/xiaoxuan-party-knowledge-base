@@ -42,6 +42,7 @@
 .disclaimer { margin-top: 26rpx; padding: 24rpx; border-radius: 18rpx; background: #f0f1ef; color: #5f6863; font-size: 23rpx; font-weight: 600; line-height: 1.7; }
 .rule-meta { margin-top: 16rpx; color: #979d99; font-size: 20rpx; text-align: right; }
 .resource-intro { margin-top: 22rpx; color: #737d77; font-size: 23rpx; line-height: 1.65; }
+.flow-resource { margin-top: 22rpx; padding: 24rpx; display: flex; align-items: center; gap: 20rpx; border-radius: 20rpx; background: #eaf0ec; }
 .resource-row { display: flex; align-items: center; gap: 20rpx; padding: 24rpx 0; border-bottom: 1rpx solid #edf0ed; }
 .resource-row:last-child { border-bottom: 0; padding-bottom: 4rpx; }
 .resource-main { min-width: 0; flex: 1; }

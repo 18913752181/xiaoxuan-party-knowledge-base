@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/calculator/calculator",
     "pages/result/result",
+    "pages/flow/flow",
     "pages/webview/webview"
   ],
   "window": {

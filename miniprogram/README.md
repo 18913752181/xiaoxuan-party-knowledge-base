@@ -1,6 +1,8 @@
 # 党员发展时间助手（微信小程序第一版）
 
-第一版只提供“入党时间核算”：用户填写已经发生的阶段日期，小程序在本地计算阶段间隔、当前阶段、明显冲突、下一步工作和参考办理时间。
+第一版提供“入党时间核算”，并补充“发展党员全流程”：用户既可以填写五个关键阶段日期进行核算，也可以选择 51 个流程节点中的任一已知日期，查看后续节点的最早、截止或条件参考时间。
+
+全流程内容集中维护在 `config/development-flow.js`。页面不硬编码流程文案；Excel 未区分的材料类型和无法换算的时间条件会明确标记为待确认。
 
 ## 数据与边界
 
@@ -54,7 +56,7 @@ utils/time-calculator.js
 网站地址和专题路径在 `config/time-rules.js` 的 `site` 与 `relatedResources` 中维护。小程序通过 `web-view` 打开：
 
 ```text
-https://xiaoxuanvip.com/topics/development-members
+https://xiaoxuanvip.com/materials/2026-08-10-material-1vnjh55
 ```
 
 正式发布前，必须在微信公众平台将 `xiaoxuanvip.com` 配置为小程序业务域名，并按平台要求在该域名根目录放置校验文件。

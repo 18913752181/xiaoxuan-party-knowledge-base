@@ -11,6 +11,9 @@
 .tool-title { margin-top: 30rpx; font-size: 38rpx; font-weight: 700; }
 .tool-description { margin-top: 14rpx; color: #6a756f; font-size: 26rpx; line-height: 1.7; }
 .tool-action { margin-top: 30rpx; padding-top: 24rpx; border-top: 1rpx solid #edf0ed; color: #4e7160; font-size: 28rpx; font-weight: 600; }
+.flow-action { margin-top: 24rpx; padding: 24rpx; display: flex; align-items: center; justify-content: space-between; gap: 20rpx; border-radius: 20rpx; background: #edf2ee; color: #4e7160; }
+.flow-action-title { display: block; font-size: 26rpx; font-weight: 650; }
+.flow-action-copy { display: block; margin-top: 7rpx; color: #77847d; font-size: 20rpx; line-height: 1.5; }
 .arrow { font-size: 36rpx; font-weight: 400; }
 .feature-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; margin-top: 24rpx; }
 .feature-item { min-height: 176rpx; padding: 24rpx 18rpx; border-radius: 22rpx; background: #edf0ec; }
