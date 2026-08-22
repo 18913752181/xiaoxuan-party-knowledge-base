@@ -1,4 +1,5 @@
 import { handleWorkCatMessage } from "@/lib/work-cat/handler";
+import { sendCustomerServiceText, sendCustomerServiceTyping } from "@/lib/work-cat/wechat-customer-service";
 import {
   buildEncryptedReply,
   buildTextReply,
@@ -16,7 +17,8 @@ function config() {
   return {
     token: process.env.WECHAT_TOKEN || "",
     appId: process.env.WECHAT_OFFICIAL_APP_ID || process.env.WECHAT_APP_ID || "",
-    aesKey: process.env.WECHAT_ENCODING_AES_KEY || ""
+    aesKey: process.env.WECHAT_ENCODING_AES_KEY || "",
+    appSecret: process.env.WECHAT_OFFICIAL_APP_SECRET || ""
   };
 }
 
@@ -42,7 +44,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { token, appId, aesKey } = config();
+  const { token, appId, aesKey, appSecret } = config();
   if (!token) return text("success");
   const url = new URL(request.url);
   const timestamp = url.searchParams.get("timestamp") || "";
@@ -63,9 +65,23 @@ export async function POST(request: Request) {
 
   const message = parseWechatMessage(messageXml);
   if (!message.FromUserName || message.MsgType !== "text") return text("success");
+
+  // 先请求微信客户端展示原生“正在输入”。不具备客服接口权限时继续走被动回复，
+  // 因而不会影响现有服务号收发消息。
+  const typingStartedAt = Date.now();
+  const typingEnabled = await sendCustomerServiceTyping(message.FromUserName, appId, appSecret);
   const result = await handleWorkCatMessage({ openid: message.FromUserName, content: message.Content, msgId: message.MsgId });
   if (!result.reply) return text("success");
 
+  if (typingEnabled) {
+    // 避免回复快到输入状态不可感知，同时控制在微信被动请求超时窗口内。
+    const remainingDelay = Math.max(0, 700 - (Date.now() - typingStartedAt));
+    if (remainingDelay) await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+    const sent = await sendCustomerServiceText(message.FromUserName, result.reply, appId, appSecret);
+    if (sent) return text("success");
+  }
+
+  // 客服输入状态/消息接口不可用时，保留原有被动 XML 回复作为可靠兜底。
   const replyXml = buildTextReply(message.FromUserName, message.ToUserName, result.reply);
   return text(encryptedMode ? buildEncryptedReply(replyXml, token, aesKey, appId) : replyXml);
 }
