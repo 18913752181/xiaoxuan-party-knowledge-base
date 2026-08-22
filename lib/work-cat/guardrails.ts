@@ -98,7 +98,7 @@ export function classifyByHardRules(content: string): Classification | null {
       summary: "普通接待",
       reply: asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
-        : "🐾 社长现在不在，赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪会认真记好～",
+        : "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～",
       source: "rule"
     };
   }
