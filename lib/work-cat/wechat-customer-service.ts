@@ -18,15 +18,23 @@ async function getAccessToken(appId: string, appSecret: string) {
       url.searchParams.set("secret", appSecret);
       const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(3500) });
       const data = await response.json() as WechatApiResult;
-      if (!response.ok || !data.access_token) return null;
+      if (!response.ok || !data.access_token) {
+        console.warn("[work-cat] WeChat access token unavailable", {
+          status: response.status,
+          errcode: data.errcode,
+          errmsg: data.errmsg
+        });
+        return null;
+      }
       cachedToken = {
         value: data.access_token,
         // 微信令牌通常有效 7200 秒；提前 5 分钟刷新，避免临界失效。
         expiresAt: Date.now() + Math.max(60, (data.expires_in || 7200) - 300) * 1000
       };
       return cachedToken.value;
-    } catch {
-      return null;
+  } catch (error) {
+    console.warn("[work-cat] WeChat access token request failed", error instanceof Error ? error.message : "unknown error");
+    return null;
     }
   })();
 
@@ -49,8 +57,21 @@ async function postCustomerService(path: string, body: Record<string, unknown>, 
       signal: AbortSignal.timeout(3500)
     });
     const data = await response.json() as WechatApiResult;
-    return response.ok && data.errcode === 0;
-  } catch {
+    const ok = response.ok && data.errcode === 0;
+    if (!ok) {
+      console.warn("[work-cat] WeChat customer-service API rejected request", {
+        path,
+        status: response.status,
+        errcode: data.errcode,
+        errmsg: data.errmsg
+      });
+    }
+    return ok;
+  } catch (error) {
+    console.warn("[work-cat] WeChat customer-service API request failed", {
+      path,
+      error: error instanceof Error ? error.message : "unknown error"
+    });
     return false;
   }
 }
