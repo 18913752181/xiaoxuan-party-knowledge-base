@@ -40,7 +40,7 @@ Page({
     wx.showModal({
       title: "清空已填日期？",
       content: "只会清除保存在本机的本次核算日期。",
-      confirmColor: "#547565",
+      confirmColor: "#e39a68",
       success: (result) => {
         if (!result.confirm) return;
         const fields = this.data.fields.map((field) => ({ ...field, value: "" }));

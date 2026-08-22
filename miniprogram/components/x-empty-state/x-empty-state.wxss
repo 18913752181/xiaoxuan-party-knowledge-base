@@ -1,0 +1,4 @@
+.empty-state { margin-top: 30rpx; padding: 70rpx 36rpx; border-radius: 30rpx; background: #fffdfa; color: #6b5e55; text-align: center; box-shadow: 0 14rpx 42rpx rgba(142, 101, 66, .065); }
+.empty-icon { display: block; font-size: 58rpx; }
+.empty-title { margin-top: 16rpx; font-size: 30rpx; font-weight: 650; }
+.empty-description { margin-top: 12rpx; color: #978b82; font-size: 25rpx; line-height: 1.7; }

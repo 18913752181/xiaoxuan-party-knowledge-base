@@ -612,3 +612,43 @@ export function contentUnitToMaterial(unit: ContentUnit): Material {
     is_content_unit: true,
   };
 }
+
+/** 列表页只需要摘要字段，避免把正文、流程和知识网络序列化进首页 HTML。 */
+export function contentUnitToMaterialSummary(unit: ContentUnit): Material {
+  const material = contentUnitToMaterial(unit);
+  const hasValue = (value: string) => {
+    const text = value.trim();
+    return Boolean(text && !["待补充", "暂无", "无"].includes(text));
+  };
+  return {
+    id: material.id,
+    slug: material.slug,
+    title: material.title,
+    description: material.description,
+    summary: material.summary,
+    category: material.category,
+    topic: material.topic,
+    stage: material.stage,
+    status: material.status,
+    file_type: material.file_type,
+    file_size: material.file_size,
+    file_name: material.file_name,
+    uploaded_at: material.uploaded_at,
+    updated_at: material.updated_at,
+    member_only: material.member_only,
+    isVip: material.isVip,
+    downloadable: material.downloadable,
+    download_count: material.download_count,
+    favorite_count: material.favorite_count,
+    file_url: material.file_url,
+    tags: material.tags,
+    organizationLevels: material.organizationLevels,
+    workSections: material.workSections,
+    workItems: material.workItems,
+    sort_order: material.sort_order,
+    introduction: hasValue(unit.introduction) ? "有填写说明" : "",
+    downloadNote: hasValue(unit.downloadNote) ? "有填写说明" : "",
+    note: hasValue(unit.note) ? "有填写说明" : "",
+    is_content_unit: true
+  };
+}

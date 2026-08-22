@@ -53,6 +53,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 supabase/002_favorites.sql
 ```
 
+微信公众号 Dimmo「工作小猫」的接入、环境变量、测试和上线步骤见：
+
+```text
+docs/work-cat-wechat.md
+```
+
 ## 知识单元生成器
 
 后台生成页：

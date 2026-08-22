@@ -1,0 +1,9 @@
+<view class="page-shell plan-page">
+  <view class="plan-hero surface"><view class="eyebrow">宣知 · MY FIELD ROUTE</view><view class="page-title">教育活动路线</view><view class="page-subtitle">选择最多3个教育基地，作为活动筹备时的路线清单。路线顺序和实际交通请结合点位通知另行确认。</view><view class="plan-summary"><text><text class="summary-number">{{routeCount}}</text> 个基地</text><text>仅作筹备参考</text></view></view>
+  <view class="section-card"><view class="section-heading"><view class="section-index">01</view><view class="section-title">路线清单</view></view>
+    <view wx:for="{{stops}}" wx:key="id" class="stop-row"><view class="stop-order">0{{index + 1}}</view><view class="stop-content"><view>{{item.name}}</view><text>{{item.area}} · {{item.type}}</text></view><text class="remove-stop" data-position="{{index}}" bindtap="removeStop">移除</text></view>
+    <view wx:if="{{routeCount < 3}}" class="add-stop"><text>添加第 {{routeCount + 1}} 个基地</text><picker range="{{allBases}}" range-key="name" data-position="{{routeCount}}" bindchange="chooseStop"><view class="select-stop">从目录选择 ›</view></picker></view>
+  </view>
+  <view class="section-card warm-note"><view class="section-heading"><view class="section-index">02</view><view class="section-title">办理提示</view></view><view class="tip-line">· 请逐个确认开放状态、预约方式与接待条件。</view><view class="tip-line">· 已核实公开位置的基地可在详情页打开地图；待核实点位不使用区县中心等虚构坐标。</view><view class="tip-line">· 当前清单不自动计算路线顺序和交通时间，最终行程请以实际通知为准。</view></view>
+  <view class="plan-actions"><button class="secondary-button" bindtap="openBases">继续浏览基地</button><button wx:if="{{routeCount}}" class="clear-button" bindtap="clearRoute">清空路线</button></view>
+</view>

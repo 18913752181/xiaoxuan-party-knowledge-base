@@ -1,0 +1,10 @@
+.favorite-page { padding-bottom: 160rpx; }
+.base-list { margin-top: 30rpx; }
+.base-card { display: flex; align-items: center; gap: 20rpx; margin-top: 16rpx; padding: 24rpx; }
+.base-icon { display: flex; flex: none; align-items: center; justify-content: center; width: 76rpx; height: 76rpx; border-radius: 25rpx; background: #fff0e4; color: #c77c43; font-size: 32rpx; }
+.base-content { min-width: 0; flex: 1; }
+.base-name { overflow: hidden; color: #51443b; font-size: 28rpx; font-weight: 650; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.base-meta { overflow: hidden; margin-top: 8rpx; color: #978b82; font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
+.favorite-tag { display: inline-block; margin-top: 13rpx; padding: 5rpx 11rpx; border-radius: 999rpx; background: #fff0e4; color: #b96d39; font-size: 18rpx; }
+.card-arrow { color: #c7b2a1; font-size: 42rpx; }
+.empty-button { width: 100%; margin-top: 30rpx; }

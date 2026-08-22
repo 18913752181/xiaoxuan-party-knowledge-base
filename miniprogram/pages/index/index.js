@@ -1,11 +1,11 @@
-const rules = require("../../config/time-rules");
+const flow = require("../../config/development-flow");
 
 Page({
-  data: { version: rules.version },
+  data: { version: flow.version },
   startCalculation() {
-    wx.navigateTo({ url: "/pages/calculator/calculator" });
-  },
-  openFlow() {
     wx.navigateTo({ url: "/pages/flow/flow" });
+  },
+  openBases() {
+    wx.navigateTo({ url: "/pages/bases/bases" });
   }
 });

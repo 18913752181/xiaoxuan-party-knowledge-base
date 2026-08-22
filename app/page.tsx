@@ -1,12 +1,16 @@
-import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ResourceLibrary } from "@/components/ResourceLibrary";
+import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-units";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
-export default function HomePage() {
-  return (
-    <Suspense fallback={<section className="mx-auto max-w-6xl px-5 py-12 text-neutral-600">正在读取资料库...</section>}>
-      <ResourceLibrary />
-    </Suspense>
-  );
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" }
+};
+
+export default async function HomePage() {
+  const materials = (await listContentUnits()).map(contentUnitToMaterialSummary);
+
+  return <ResourceLibrary initialMaterials={materials} />;
 }

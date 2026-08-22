@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export:miniprogram": "node scripts/export-miniprogram-materials.js"
+    "export:miniprogram": "node scripts/export-miniprogram-materials.js",
+    "test:work-cat": "node scripts/test-work-cat-webhook.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

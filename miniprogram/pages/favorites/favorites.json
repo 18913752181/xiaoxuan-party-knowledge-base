@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "我的收藏",
+  "usingComponents": {
+    "x-tabbar": "/components/x-tabbar/x-tabbar",
+    "x-empty-state": "/components/x-empty-state/x-empty-state"
+  }
+}

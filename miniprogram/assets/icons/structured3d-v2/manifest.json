@@ -1,0 +1,24 @@
+{
+  "style": "宣知利落微等距 3D 图标 v2",
+  "size": "256x256",
+  "background": "transparent",
+  "palette": ["#A65A31", "#E8A87C", "#FFF4E6", "#5B4030"],
+  "icons": {
+    "timeCalculation": "time-calculation.png",
+    "developmentWorkflow": "development-workflow.png",
+    "nodeProjection": "node-projection.png",
+    "nextStepReminder": "next-step-reminder.png",
+    "educationMap": "education-map.png",
+    "baseSearch": "base-search.png",
+    "locationPin": "location-pin.png",
+    "activityRoute": "activity-route.png",
+    "baseFavorite": "base-favorite.png",
+    "activityPreparation": "activity-preparation.png",
+    "policyMaterials": "policy-materials.png",
+    "templateFolder": "template-folder.png",
+    "riskReview": "risk-review.png",
+    "stageIdentification": "stage-identification.png",
+    "resultSummary": "result-summary.png",
+    "myList": "my-list.png"
+  }
+}

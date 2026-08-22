@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { contentUnitToMaterial, listContentUnits } from "@/lib/content-units";
+import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-units";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function GET() {
   const units = await listContentUnits();
-  return NextResponse.json(units.map(contentUnitToMaterial));
+  return NextResponse.json(units.map(contentUnitToMaterialSummary), {
+    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" }
+  });
 }

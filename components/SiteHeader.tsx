@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/", label: "首页" },
-  { href: "/library", label: "资料库" },
-  { href: "/#submit-question", label: "提交问题" },
+  { href: "/library", label: "资料" },
+  { href: "/#submit-question", label: "提问" },
   { href: "/me", label: "我的" }
 ];
 
@@ -52,13 +52,13 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[#ddd6cc] bg-[#faf7f2]/94 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-brand-line bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-3 text-brand-ink" aria-label="宣知资料库首页">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#9a4650] text-lg font-semibold text-white">宣</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red text-lg font-semibold text-white shadow-[0_6px_16px_rgba(166,62,71,0.16)]">宣</span>
           <span>
             <span className="block text-lg font-semibold tracking-tight">宣知</span>
-            <span className="block text-[11px] text-[#6f746f]">小宣资料库</span>
+            <span className="block text-[11px] text-neutral-500">小宣资料库</span>
           </span>
         </Link>
         <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
@@ -69,10 +69,10 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`relative rounded-xl px-3 py-2 transition ${
+                className={`relative rounded-xl px-3 py-2 transition-[background-color,color,transform] duration-150 ${
                   active
-                    ? "bg-white font-semibold text-[#9a4650] shadow-sm"
-                    : "text-neutral-600 hover:bg-white hover:text-[#8d2f32]"
+                    ? "bg-[#fff1f2] font-semibold text-brand-red"
+                    : "text-neutral-600 hover:bg-[#f1f3f5] hover:text-brand-red"
                 }`}
               >
                 {item.label}
@@ -84,24 +84,24 @@ export function SiteHeader() {
           {sessionChecked && sessionEmail ? (
             <Link
               href="/me"
-              className="flex items-center gap-2 rounded-xl border border-[#e4ded5] bg-white py-1.5 pl-1.5 pr-4 text-sm font-medium text-brand-ink transition hover:border-[#c9a2a6] hover:text-[#8d2f32]"
+              className="flex items-center gap-2 rounded-xl border border-brand-line bg-white py-1.5 pl-1.5 pr-4 text-sm font-medium text-brand-ink transition-[border-color,color,transform] duration-150 hover:border-[#d9a6ac] hover:text-brand-red active:scale-[0.98]"
               title={sessionEmail}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#9a4650] text-xs font-semibold text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-red text-xs font-semibold text-white">
                 {sessionEmail.slice(0, 1).toUpperCase()}
               </span>
               我的
             </Link>
           ) : (
-            <Link href="/login" className="rounded-xl bg-[#9a4650] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#7d3540]">登录</Link>
+            <Link href="/login" className="rounded-xl bg-brand-red px-4 py-2 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">登录</Link>
           )}
         </div>
         </div>
       </header>
-      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-[#e8e4de] bg-white/95 px-3 py-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(54,48,42,0.06)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-brand-line bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(35,43,52,0.055)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
         <MobileNavItem href="/" label="首页" active={pathname === "/" && hash !== "#submit-question"} />
-        <MobileNavItem href="/library" label="资料库" active={pathname === "/library" || pathname.startsWith("/materials/")} />
-        <MobileNavItem href="/#submit-question" label="提交问题" active={pathname === "/" && hash === "#submit-question"} />
+        <MobileNavItem href="/library" label="资料" active={pathname === "/library" || pathname.startsWith("/materials/")} />
+        <MobileNavItem href="/#submit-question" label="提问" active={pathname === "/" && hash === "#submit-question"} />
         <MobileNavItem href="/me" label="我的" active={pathname === "/me" || pathname.startsWith("/me/")} />
       </nav>
     </>
@@ -109,10 +109,10 @@ export function SiteHeader() {
 }
 
 function MobileNavItem({ href, label, active }: { href: string; label: string; active: boolean }) {
-  const className = `flex items-center justify-center rounded-xl px-1 py-3 text-sm transition ${
+  const className = `flex items-center justify-center rounded-xl px-1 py-3 text-sm transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${
     active
-      ? "bg-[#f3e7e6] font-semibold text-[#9a4650]"
-      : "text-neutral-500 hover:bg-[#f7f4ee] hover:text-[#9a4650]"
+      ? "bg-[#fff1f2] font-semibold text-brand-red"
+      : "text-neutral-500 hover:bg-[#f1f3f5] hover:text-brand-red"
   }`;
   const content = <span>{label}</span>;
   if (href.includes("#")) {

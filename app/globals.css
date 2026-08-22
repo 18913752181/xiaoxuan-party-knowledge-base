@@ -4,15 +4,21 @@
 
 :root {
   color-scheme: light;
-  --xuan-paper: #f5f5f3;
-  --xuan-surface: #fffefa;
-  --xuan-soft: #f0efec;
-  --xuan-ink: #30312f;
-  --xuan-muted: #777873;
-  --xuan-accent: #a34f55;
-  --xuan-accent-dark: #884047;
-  --xuan-sage: #718b7f;
-  --xuan-line: #e4e2dd;
+  --xuan-canvas: #f6f7f9;
+  --xuan-paper: #fafbfc;
+  --xuan-surface: #ffffff;
+  --xuan-soft: #f1f3f5;
+  --xuan-ink: #1b1f24;
+  --xuan-muted: #68727d;
+  --xuan-tertiary: #89939e;
+  --xuan-accent: #a63e47;
+  --xuan-accent-dark: #873039;
+  --xuan-accent-soft: #fff1f2;
+  --xuan-sage: #637a70;
+  --xuan-line: #e3e7eb;
+  --xuan-radius-control: 0.75rem;
+  --xuan-radius-card: 1rem;
+  --xuan-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 html {
@@ -20,10 +26,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at 12% -4%, rgba(255, 255, 255, 0.98), transparent 32rem),
-    radial-gradient(circle at 92% 2%, rgba(216, 163, 93, 0.06), transparent 28rem),
-    linear-gradient(180deg, #fafaf8 0%, var(--xuan-paper) 64%, #f2f1ee 100%);
+  background: var(--xuan-canvas);
   color: var(--xuan-ink);
   font-family: "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -41,6 +44,57 @@ h3 {
 ::selection {
   background: var(--xuan-accent);
   color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--xuan-accent);
+  outline-offset: 3px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  transition-timing-function: var(--xuan-ease-out);
+}
+
+.xuan-shell {
+  background: var(--xuan-canvas);
+}
+
+.xuan-workspace {
+  border: 1px solid var(--xuan-line);
+  background: var(--xuan-surface);
+  box-shadow: 0 16px 40px rgba(35, 43, 52, 0.035);
+}
+
+.xuan-search-shell {
+  border: 1px solid var(--xuan-line);
+  background: var(--xuan-surface);
+  box-shadow: 0 18px 46px rgba(35, 43, 52, 0.045);
+}
+
+.xuan-search-shell:focus-within {
+  border-color: color-mix(in srgb, var(--xuan-accent) 48%, white);
+  box-shadow: 0 0 0 4px rgba(166, 62, 71, 0.1), 0 18px 46px rgba(35, 43, 52, 0.055);
+}
+
+.xuan-quiet-card {
+  border: 1px solid var(--xuan-line);
+  background: var(--xuan-surface);
+  box-shadow: 0 8px 22px rgba(35, 43, 52, 0.025);
+}
+
+.xuan-display-title {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.045em;
 }
 
 /* 统一现有页面的纸张、墨色与强调色，仅调整视觉色彩，不改变布局尺寸。 */
@@ -92,6 +146,80 @@ h3 {
   background-color: #34443d !important;
 }
 
+.material-title {
+  text-wrap: pretty;
+}
+
+.dimmo-companion {
+  contain: layout paint;
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 140ms var(--xuan-ease-out);
+}
+
+.dimmo-static-sprite {
+  pointer-events: none;
+  user-select: none;
+}
+
+.dimmo-atlas-sprite {
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dimmo-atlas-texture {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  max-width: none;
+  transform: translate3d(0, 0, 0);
+  transform-origin: top left;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dimmo-companion:is(
+  [data-dimmo-state="rising"],
+  [data-dimmo-state="yawning"],
+  [data-dimmo-state="settling"]
+) .dimmo-atlas-texture {
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dimmo-companion:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.dimmo-companion:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .dimmo-companion {
+    transform: none !important;
+  }
+
+  .dimmo-atlas-sprite {
+    display: none;
+  }
+}
+
 .prose-content p {
   margin-bottom: 1rem;
   line-height: 1.9;
@@ -113,15 +241,4 @@ h3 {
 .prose-content li {
   margin-bottom: 0.5rem;
   line-height: 1.8;
-}
-
-@keyframes carouselFade {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

@@ -1,0 +1,5 @@
+<view class="tabbar safe-bottom">
+  <view class="tab-item {{active === 'home' ? 'is-active' : ''}}" data-page="home" bindtap="go"><text class="tab-icon">⌂</text><text>首页</text></view>
+  <view class="tab-item {{active === 'bases' ? 'is-active' : ''}}" data-page="bases" bindtap="go"><text class="tab-icon">⌖</text><text>教育基地</text></view>
+  <view class="tab-item {{active === 'favorites' ? 'is-active' : ''}}" data-page="favorites" bindtap="go"><text class="tab-icon">♡</text><text>收藏</text></view>
+</view>

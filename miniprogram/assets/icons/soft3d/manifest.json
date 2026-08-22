@@ -1,0 +1,27 @@
+{
+  "style": "宣知柔软 3D 图标",
+  "palette": {
+    "primary": "#A65A31",
+    "secondary": "#E8A87C",
+    "highlight": "#FFF4E6",
+    "detail": "#5B4030"
+  },
+  "icons": [
+    { "file": "time-calculation.png", "name": "时间核算" },
+    { "file": "development-workflow.png", "name": "发展流程" },
+    { "file": "node-projection.png", "name": "节点推算" },
+    { "file": "next-step-reminder.png", "name": "下一步提醒" },
+    { "file": "education-map.png", "name": "教育地图" },
+    { "file": "base-search.png", "name": "基地搜索" },
+    { "file": "location-pin.png", "name": "地点定位" },
+    { "file": "activity-route.png", "name": "活动路线" },
+    { "file": "base-favorite.png", "name": "基地收藏" },
+    { "file": "activity-preparation.png", "name": "活动筹备" },
+    { "file": "policy-materials.png", "name": "制度资料" },
+    { "file": "template-folder.png", "name": "模板材料" },
+    { "file": "risk-review.png", "name": "风险核对" },
+    { "file": "stage-identification.png", "name": "阶段判断" },
+    { "file": "result-summary.png", "name": "结果说明" },
+    { "file": "my-list.png", "name": "我的清单" }
+  ]
+}

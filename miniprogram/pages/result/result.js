@@ -41,7 +41,7 @@ Page({
   },
 
   editDates() {
-    wx.navigateBack();
+    wx.navigateBack({ fail: () => wx.redirectTo({ url: "/pages/calculator/calculator" }) });
   },
 
   openFlow() {

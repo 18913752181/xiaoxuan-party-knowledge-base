@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "党员发展时间助手"
+  "navigationBarTitleText": "宣知工作助手",
+  "usingComponents": {
+    "x-tabbar": "/components/x-tabbar/x-tabbar"
+  }
 }

@@ -68,7 +68,7 @@ function pendingResult(node, reason) {
     status: "pending",
     dateValue: "",
     dateText: "待确认",
-    summary: reason || "Excel未提供可直接换算的日期关系",
+    summary: reason || "流程资料未提供可直接换算的日期关系",
     basis: node.timeRequirement,
     lowerBound: false
   };
@@ -90,7 +90,7 @@ function datedResult(node, date, summary, status, lowerBound) {
 function calculateNode(node, known) {
   const timing = node.timing || { type: "manual" };
   if (timing.type === "manual") return pendingResult(node);
-  if (timing.type === "before") return pendingResult(node, "该节点要求在后续事项前完成，Excel未给出可倒推的具体间隔");
+  if (timing.type === "before") return pendingResult(node, "该节点要求在后续事项前完成，流程资料未给出可倒推的具体间隔");
 
   const anchor = known[timing.anchorId];
   if (!anchor || !anchor.internalDate) return pendingResult(node, "缺少可计算的前置节点日期，需结合实际办理进度确定");

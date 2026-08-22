@@ -1,0 +1,30 @@
+<view class="page-shell directory-page">
+  <view wx:if="{{loadError}}" class="load-error surface">{{loadError}}</view>
+  <block wx:else>
+  <view class="directory-hero surface">
+    <view class="eyebrow">宣知 · EDUCATION GUIDE</view>
+    <view class="page-title">教育基地导航</view>
+    <view class="page-subtitle">从已收录的教育现场中，按地区和类型找到适合本次学习活动的点位。</view>
+    <view class="hero-row"><view><text class="hero-number">149</text><text class="hero-unit">处已收录点位</text></view><button class="route-link" bindtap="openPlan">路线清单 {{routeCount}} ›</button></view>
+  </view>
+  <view class="search-card surface"><text class="search-icon">⌕</text><input value="{{keyword}}" bindinput="inputKeyword" placeholder="搜索名称、地区或类型" placeholder-class="placeholder" /><text wx:if="{{keyword}}" class="clear-search" bindtap="clearKeyword">×</text></view>
+  <scroll-view class="filter-scroll" scroll-x="true" show-scrollbar="false"><view class="filter-row"><view wx:for="{{types}}" wx:key="*this" class="filter-chip {{activeType === item ? 'is-active' : ''}}" data-value="{{item}}" bindtap="selectType">{{item}}</view></view></scroll-view>
+  <scroll-view class="filter-scroll area-scroll" scroll-x="true" show-scrollbar="false"><view class="filter-row"><view wx:for="{{areas}}" wx:key="*this" class="area-chip {{activeArea === item ? 'is-active' : ''}}" data-value="{{item}}" bindtap="selectArea">{{item}}</view></view></scroll-view>
+  <view class="view-switch surface"><view class="view-option {{viewMode === 'list' ? 'is-active' : ''}}" data-mode="list" bindtap="switchView">列表</view><view class="view-option {{viewMode === 'map' ? 'is-active' : ''}}" data-mode="map" bindtap="switchView">地图 · {{mappedFilteredTotal}}</view></view>
+  <view wx:if="{{viewMode === 'map'}}" class="map-card surface">
+    <view class="map-heading"><view class="map-subtitle">当前筛选中 {{mappedFilteredTotal}} 处有公开位置</view><view class="map-badge">地图</view></view>
+    <map wx:if="{{mappedFilteredTotal}}" id="educationMap" class="education-map" latitude="{{mapLatitude}}" longitude="{{mapLongitude}}" scale="8" markers="{{markers}}" bindmarkertap="selectMarker" enable-zoom="true" enable-scroll="true" show-location="false"></map>
+    <view wx:else class="map-empty"><text class="map-empty-icon">⌖</text><text class="map-empty-title">当前筛选结果暂无已核实位置</text><text class="map-empty-copy">可以切换到列表查看全部匹配基地。</text></view>
+    <view wx:if="{{selectedBase}}" class="selected-place" data-id="{{selectedBase.id}}" bindtap="openDetail">
+      <image class="selected-logo" src="/assets/education-map-logo.jpg" mode="aspectFill"></image>
+      <view class="selected-content"><view class="selected-name">{{selectedBase.name}}</view><view class="selected-address">{{selectedBase.location.address}}</view></view>
+      <text class="selected-arrow">›</text>
+    </view>
+    <view class="map-note"><text class="verified-dot"></text>全库已有 {{mappedTotal}} 处公开位置；尚未核实唯一地址的点位只在列表中展示。</view>
+  </view>
+  <view class="list-heading"><text>为你找到 <text class="count">{{total}}</text> 个教育现场</text><text class="list-note">以各点位通知为准</text></view>
+  <view wx:if="{{total && viewMode === 'list'}}" class="base-list"><view wx:for="{{bases}}" wx:key="id" class="base-card surface" data-id="{{item.id}}" bindtap="openDetail"><view class="base-icon">{{item.icon}}</view><view class="base-content"><view class="base-name">{{item.name}}</view><view class="base-meta">⌖ {{item.area}} · {{item.type}}</view><view class="base-tags"><text>{{item.status}}</text><text class="location-tag {{item.location ? 'is-verified' : ''}}">{{item.locationStatus}}</text></view></view><text class="card-arrow">›</text></view><button wx:if="{{hasMore}}" class="more-button" bindtap="loadMore">继续加载更多基地</button></view>
+  <x-empty-state wx:if="{{!total}}" icon="⌕" title="没有找到匹配的基地" description="可以换个关键词，或清除地区和类型筛选。"><button class="secondary-button reset-filter" bindtap="resetFilters">清除筛选</button></x-empty-state>
+  </block>
+</view>
+<x-tabbar active="bases"></x-tabbar>

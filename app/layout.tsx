@@ -5,15 +5,17 @@ import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://xiaoxuanvip.com"),
   title: { default: "小宣资料库", template: "%s | 小宣资料库" },
   description: "整理常用党建资料、制度文件和工作模板，支持分类查找、收藏与下载。",
   openGraph: {
     title: "小宣资料库",
     description: "查找、收藏和下载常用党建资料。",
     type: "website",
-    locale: "zh_CN"
-  }
+    locale: "zh_CN",
+    siteName: "小宣资料库"
+  },
+  twitter: { card: "summary_large_image" }
 };
 
 export default function RootLayout({

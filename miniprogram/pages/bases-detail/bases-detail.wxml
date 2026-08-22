@@ -1,0 +1,35 @@
+<view wx:if="{{base}}" class="page-shell detail-page">
+  <view class="detail-hero surface">
+    <view class="detail-symbol">{{base.icon}}</view>
+    <view class="detail-type">{{base.type}} · {{base.area}}</view>
+    <view class="detail-title">{{base.name}}</view>
+    <view class="detail-status"><text class="status-dot"></text>{{base.status}}</view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-heading"><view class="section-index">01</view><view class="section-title">基地信息</view></view>
+    <view class="info-row"><text>所在地区</text><view>{{base.area}}</view></view>
+    <view class="info-row"><text>示范类型</text><view>{{base.type}}</view></view>
+    <view class="info-row"><text>具体位置</text><view class="intro {{base.location ? '' : 'is-muted'}}">{{base.location ? base.location.address : '公开位置待核实'}}</view></view>
+    <view wx:if="{{base.location}}" class="location-source">定位来源：{{base.location.sourceName}}</view>
+    <button class="map-button {{base.location ? '' : 'is-disabled'}}" disabled="{{!base.location}}" bindtap="openLocation">{{base.location ? '在地图中打开' : '位置待核实'}}</button>
+    <view class="info-row"><text>简介</text><view class="intro {{base.intro === '示范点信息待补充' ? 'is-muted' : ''}}">{{base.intro}}</view></view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-heading"><view class="section-index">02</view><view class="section-title">联系与来源</view></view>
+    <view class="contact-card" bindtap="copyContact"><view><text class="contact-label">联系方式</text><text class="contact-value {{base.contact === '联系信息待核实' ? 'is-muted' : ''}}">{{base.contact || '联系信息待核实'}}</text></view><text>复制</text></view>
+    <view wx:if="{{base.source}}" class="contact-card source-card" bindtap="copySource"><view><text class="contact-label">公开信息来源</text><text class="contact-value">已收录链接，可复制后查看</text></view><text>复制</text></view>
+    <view class="notice">开放、预约、讲解和接待安排请以基地最新通知为准。</view>
+  </view>
+
+  <view class="section-card soft-card">
+    <view class="section-heading"><view class="section-index">03</view><view class="section-title">活动准备提示</view></view>
+    <view class="tip-line">· 建议先联系确认开放状态、预约方式和接待条件。</view>
+    <view class="tip-line">· 可结合本次主题党日或现场教学目标安排学习内容。</view>
+    <view class="tip-line">· {{base.location ? '地图位置来自公开地图或场馆公开资料，出发前建议再次确认入口。' : '公开地图中暂未确认唯一位置，本页不使用区县中心等虚构坐标。'}}</view>
+  </view>
+
+  <view class="detail-actions"><button class="secondary-button action-half favorite-button {{favorite ? 'is-active' : ''}}" bindtap="toggleFavorite">{{favorite ? '♥ 已收藏' : '♡ 收藏基地'}}</button><button class="primary-button action-half" disabled="{{inRoute || routeFull}}" bindtap="addToRoute">{{routeButtonText}}</button></view>
+  <button class="route-text-button" bindtap="openPlan">查看我的路线清单 ›</button>
+</view>

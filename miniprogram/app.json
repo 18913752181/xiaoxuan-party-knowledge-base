@@ -4,13 +4,17 @@
     "pages/calculator/calculator",
     "pages/result/result",
     "pages/flow/flow",
-    "pages/webview/webview"
+    "pages/webview/webview",
+    "pages/bases/bases",
+    "pages/bases-detail/bases-detail",
+    "pages/bases-plan/bases-plan",
+    "pages/favorites/favorites"
   ],
   "window": {
-    "navigationBarTitleText": "党员发展时间助手",
-    "navigationBarBackgroundColor": "#f5f6f2",
+    "navigationBarTitleText": "宣知工作助手",
+    "navigationBarBackgroundColor": "#faf6f0",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f2",
+    "backgroundColor": "#faf6f0",
     "backgroundTextStyle": "light"
   },
   "style": "v2",

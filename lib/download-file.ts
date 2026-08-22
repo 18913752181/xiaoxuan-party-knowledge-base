@@ -9,6 +9,17 @@ export type DownloadResult = {
   membershipRequired?: boolean;
 };
 
+export type BatchDownloadFailure = DownloadResult & {
+  material: Material;
+};
+
+export type BatchDownloadResult = {
+  ok: boolean;
+  downloaded: Material[];
+  failures: BatchDownloadFailure[];
+  error?: string;
+};
+
 export type RecordedDownload = {
   article_slug: string;
   title: string;
@@ -111,24 +122,48 @@ function fileNameFromDisposition(disposition: string | null, fallback: string) {
   return safeFileName(plainMatch?.[1] || fallback);
 }
 
-export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
-  const response = await fetch(url, { credentials: "same-origin" });
+function uniqueFileName(name: string, usedNames: Set<string>) {
+  const safeName = safeFileName(name);
+  if (!usedNames.has(safeName)) {
+    usedNames.add(safeName);
+    return safeName;
+  }
 
+  const dotIndex = safeName.lastIndexOf(".");
+  const base = dotIndex > 0 ? safeName.slice(0, dotIndex) : safeName;
+  const extension = dotIndex > 0 ? safeName.slice(dotIndex) : "";
+  let index = 2;
+  let candidate = `${base} (${index})${extension}`;
+  while (usedNames.has(candidate)) {
+    index += 1;
+    candidate = `${base} (${index})${extension}`;
+  }
+  usedNames.add(candidate);
+  return candidate;
+}
+
+async function responseError(response: Response): Promise<DownloadResult> {
   if (response.status === 401) {
     return { ok: false, error: "登录状态已失效，请重新登录后下载。", needsLogin: true };
   }
 
+  let error = "";
+  let code = "";
+  try {
+    const body = await response.json();
+    error = body?.error || body?.message || `下载失败：${response.status}`;
+    code = body?.code || "";
+  } catch {
+    error = `下载失败：${response.status}`;
+  }
+  return { ok: false, error, membershipRequired: code === "MEMBERSHIP_REQUIRED" };
+}
+
+export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
+  const response = await fetch(url, { credentials: "same-origin" });
+
   if (!response.ok) {
-    let error = "";
-    let code = "";
-    try {
-      const body = await response.json();
-      error = body?.error || body?.message || `下载失败：${response.status}`;
-      code = body?.code || "";
-    } catch {
-      error = `下载失败：${response.status}`;
-    }
-    return { ok: false, error, membershipRequired: code === "MEMBERSHIP_REQUIRED" };
+    return responseError(response);
   }
 
   const blob = await response.blob();
@@ -149,4 +184,57 @@ export async function downloadMaterialFile(material: Material): Promise<Download
   const result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title);
   if (result.ok) await rememberDownload(material);
   return result;
+}
+
+export async function downloadMaterialsAsZip(materials: Material[]): Promise<BatchDownloadResult> {
+  if (!materials.length) return { ok: false, downloaded: [], failures: [], error: "请先选择需要下载的资料。" };
+
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  const usedNames = new Set<string>();
+  const downloaded: Material[] = [];
+  const failures: BatchDownloadFailure[] = [];
+
+  for (const material of materials) {
+    if (!material.file_url) {
+      failures.push({ material, ok: false, error: "该资料暂未上传可下载文件。" });
+      continue;
+    }
+
+    try {
+      const response = await fetch(material.file_url, { credentials: "same-origin" });
+      if (!response.ok) {
+        failures.push({ material, ...(await responseError(response)) });
+        continue;
+      }
+
+      const blob = await response.blob();
+      const fileName = fileNameFromDisposition(response.headers.get("content-disposition"), material.file_name || material.title);
+      zip.file(uniqueFileName(fileName, usedNames), blob);
+      downloaded.push(material);
+    } catch {
+      failures.push({ material, ok: false, error: "网络异常，未能取得文件。" });
+    }
+  }
+
+  if (!downloaded.length) {
+    return { ok: false, downloaded, failures, error: failures[0]?.error || "没有可打包的文件。" };
+  }
+
+  const blob = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 3 }
+  });
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = `小宣资料库-批量下载-${new Date().toISOString().slice(0, 10)}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+  await Promise.all(downloaded.map((material) => rememberDownload(material)));
+  return { ok: true, downloaded, failures };
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 export function SiteFooter() {
   // pb-24 为移动端底部固定导航预留空间，桌面端恢复正常间距。
   return (
-    <footer className="border-t border-[#ebe5dc] bg-white/45 pb-24 lg:pb-0">
+    <footer className="border-t border-[#ebe5dc] bg-white/45 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
         <div>
           <div className="flex items-center gap-2.5">

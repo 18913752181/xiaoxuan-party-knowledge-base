@@ -1,5 +1,5 @@
 <view class="page-shell calculator-page">
-  <view class="eyebrow">入党时间核算</view>
+  <view class="eyebrow">🗓️ 入党时间核算</view>
   <view class="page-title">填写已经发生的日期</view>
   <view class="page-subtitle">除申请书日期外，其余节点按实际进度选填。请按阶段顺序填写，不要填写计划中的未来日期。</view>
 
@@ -22,11 +22,11 @@
   </view>
 
   <view class="input-notice">
-    <view class="notice-title">日期口径</view>
+    <view class="notice-title">📌 日期口径</view>
     <view class="notice-line">“接收预备党员”填写党支部党员大会通过日期。</view>
     <view class="notice-line">“转为正式党员”填写正式党员身份的生效日期，不填党委批复日期。</view>
   </view>
 
-  <button class="primary-button submit-button" bindtap="submit">查看核算结果</button>
+  <button class="primary-button submit-button" bindtap="submit">查看核算结果 <text class="button-arrow">→</text></button>
   <button wx:if="{{hasSavedValues}}" class="reset-button" bindtap="resetForm">清空全部日期</button>
 </view>

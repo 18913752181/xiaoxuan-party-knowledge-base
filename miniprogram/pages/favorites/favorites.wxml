@@ -1,0 +1,10 @@
+<view class="page-shell favorite-page">
+  <view class="eyebrow">宣知 · MY LIST</view>
+  <view class="page-title">我的收藏</view>
+  <view class="page-subtitle">收藏感兴趣的教育现场，方便后续筹备活动时查看。</view>
+  <view wx:if="{{bases.length}}" class="base-list">
+    <view wx:for="{{bases}}" wx:key="id" class="base-card surface" data-id="{{item.id}}" bindtap="openDetail"><view class="base-icon">{{item.icon}}</view><view class="base-content"><view class="base-name">{{item.name}}</view><view class="base-meta">⌖ {{item.area}} · {{item.type}}</view><view class="favorite-tag">已收藏</view></view><text class="card-arrow">›</text></view>
+  </view>
+  <x-empty-state wx:else icon="♡" title="暂未收藏教育基地" description="在基地详情页点击“收藏基地”，就能在这里集中查看。"><button class="primary-button empty-button" bindtap="openBases">去浏览教育基地</button></x-empty-state>
+</view>
+<x-tabbar active="favorites"></x-tabbar>

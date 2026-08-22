@@ -45,12 +45,14 @@ Page({
     selectedDate: "",
     maxDate: formatDate(new Date()),
     activeStageId: flow.stages[0].id,
+    activeStageAnchor: `stage-${flow.stages[0].id}`,
     showFull: false,
     visibleGroups: [],
     hasCalculated: false,
     calculationSummary: null,
     detail: null,
-    detailVisible: false
+    detailVisible: false,
+    detailOpen: false
   },
 
   onLoad(options) {
@@ -63,7 +65,8 @@ Page({
     this.setData({
       selectedNodeIndex: index,
       selectedNodeTitle: flow.nodes[index].title,
-      activeStageId: flow.nodes[index].stageId
+      activeStageId: flow.nodes[index].stageId,
+      activeStageAnchor: `stage-${flow.nodes[index].stageId}`
     });
     this.refreshGroups();
   },
@@ -76,11 +79,13 @@ Page({
       selectedNodeIndex: index,
       selectedNodeTitle: node.title,
       activeStageId: node.stageId,
+      activeStageAnchor: `stage-${node.stageId}`,
       hasCalculated: false,
       calculationSummary: null,
       showFull: false
     });
     this.refreshGroups();
+    setTimeout(() => wx.pageScrollTo({ selector: "#calculationSummary", duration: 260 }), 80);
   },
 
   selectDate(event) {
@@ -115,7 +120,8 @@ Page({
   },
 
   selectStage(event) {
-    this.setData({ activeStageId: event.currentTarget.dataset.id, showFull: false });
+    const activeStageId = event.currentTarget.dataset.id;
+    this.setData({ activeStageId, activeStageAnchor: `stage-${activeStageId}`, showFull: false });
     this.refreshGroups();
   },
 
@@ -142,22 +148,28 @@ Page({
     const previous = node.previousStep ? flow.nodes.find((item) => item.id === node.previousStep) : null;
     const next = node.nextStep ? flow.nodes.find((item) => item.id === node.nextStep) : null;
     const schedule = this.resultMap && this.resultMap[node.id];
+    clearTimeout(this.drawerTimer);
     this.setData({
       detailVisible: true,
+      detailOpen: false,
       detail: Object.assign({}, node, {
         orderText: String(node.sourceOrder).padStart(2, "0"),
-        partyText: node.responsibleParties.join("、") || "Excel未明确",
+        partyText: node.responsibleParties.join("、") || "资料未明确",
         previousText: previous ? `${previous.sourceOrder}. ${previous.title}` : "无",
         nextText: next ? `${next.sourceOrder}. ${next.title}` : "无",
         materialText: node.sourceMaterials.length ? node.sourceMaterials : [node.materialClassification],
-        noteList: node.notes.length ? node.notes : ["Excel无单独备注；请结合现行规定和上级党组织要求核对。"],
+        noteList: node.notes.length ? node.notes : ["资料未列明单独备注；请结合现行规定和上级党组织要求核对。"],
         schedule: schedule ? Object.assign({}, schedule, { statusLabel: statusLabel(schedule.status) }) : null
       })
+    }, () => {
+      this.drawerTimer = setTimeout(() => this.setData({ detailOpen: true }), 20);
     });
   },
 
   closeDetail() {
-    this.setData({ detailVisible: false });
+    clearTimeout(this.drawerTimer);
+    this.setData({ detailOpen: false });
+    this.drawerTimer = setTimeout(() => this.setData({ detailVisible: false }), 200);
   },
 
   preventClose() {},
@@ -166,5 +178,9 @@ Page({
     wx.navigateTo({
       url: `/pages/webview/webview?title=${encodeURIComponent("发展党员专题资料")}&url=${encodeURIComponent(flow.websiteUrl)}`
     });
+  },
+
+  onUnload() {
+    clearTimeout(this.drawerTimer);
   }
 });

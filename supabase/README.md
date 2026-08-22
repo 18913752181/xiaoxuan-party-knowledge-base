@@ -8,6 +8,7 @@
 - `favorites.sql`：早期收藏表脚本，保留用于历史参考。
 - `002_favorites.sql`：当前收藏功能使用的收藏表脚本。收藏只保存本地文章的 `article_slug`、标题和分类，不把文章正文迁移到 Supabase。
 - `007_wechat_binding.sql`：微信登录/绑定支持。为 `profiles` 增加 `wechat_openid` 字段（部分唯一索引），用于微信一键登录与邮箱账号绑定微信。
+- `008_work_cat.sql`：Dimmo「工作小猫」服务号消息、对话、专业问题转人工与提醒留言表。
 
 ## 如何执行 SQL
 
