@@ -11,7 +11,11 @@ const PROFESSIONAL_PATTERNS = [
 
 const REMINDER_PATTERNS = [/提醒.*小宣|帮我.*提醒|留(个)?言|传(个)?话|回来.*回复|让(她|社长).*回复|转告/];
 const RESOURCE_PATTERNS = [/模板|资料|材料.*哪里|有没有.*(记录|表|范文)|想找|下载/];
-const RECEPTION_PATTERNS = [/^(你好|您好|嗨|hi|hello|在吗|有人吗)[呀吗呢～~!！。 ]*$/i, /你是谁|小宣在吗|社长在吗/];
+const RECEPTION_PATTERNS = [
+  /^(你好|您好|嗨|hi|hello|在吗|有人吗)[呀吗呢～~!！。 ]*$/i,
+  /你是谁|小宣在吗|社长在吗/,
+  /小宣是谁|社长是谁|小宣.*(什么人|做什么)|社长.*(什么人|做什么)/
+];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
 export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪不敢乱答～问题已经收进小本本，等小宣社长回来回复喵。";
@@ -91,12 +95,15 @@ export function classifyByHardRules(content: string): Classification | null {
 
   if (RECEPTION_PATTERNS.some((pattern) => pattern.test(text))) {
     const asksWho = /你是谁/.test(text);
+    const asksAboutXiaoxuan = /小宣是谁|社长是谁|小宣.*(什么人|做什么)|社长.*(什么人|做什么)/.test(text);
     return {
       category: "reception",
       shouldReplyDirectly: true,
       needHuman: false,
       summary: "普通接待",
-      reply: asksWho
+      reply: asksAboutXiaoxuan
+        ? "小宣是「干货社」的社长，也是「小宣同志」本人，平时会和咪一起住在「喵喵工作台」。\n\n平时社长会整理资料、研究问题，也会亲自回复需要判断和经验的问题喵～"
+        : asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
         : "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～",
       source: "rule"
