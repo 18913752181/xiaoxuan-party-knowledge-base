@@ -14,7 +14,7 @@ const RESOURCE_PATTERNS = [/模板|资料|材料.*哪里|有没有.*(记录|表|
 const RECEPTION_PATTERNS = [/^(你好|您好|嗨|hi|hello|在吗|有人吗)[呀吗呢～~!！。 ]*$/i, /你是谁|小宣在吗|社长在吗/];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
-export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪不敢乱答～问题已经帮你收进小本本，等小宣社长回来回复你喵。";
+export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪不敢乱答～问题已经收进小本本，等小宣社长回来回复喵。";
 
 /** Dimmo 对外回复统一以“咪”自称，避免生成内容突然切回普通客服口吻。 */
 export function normalizeCatVoice(reply: string) {
@@ -92,7 +92,7 @@ export function classifyByHardRules(content: string): Classification | null {
       summary: "普通接待",
       reply: asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
-        : "🐾 社长现在不在，赚钱养咪了喵～有事可以先告诉咪，咪会帮你记好～",
+        : "🐾 社长现在不在，赚钱养咪了喵～老大有事尽管告诉咪，咪会认真记好～",
       source: "rule"
     };
   }
