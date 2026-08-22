@@ -17,7 +17,7 @@ const SUBSCRIBE_REPLY = `嗨，我是 Dimmo，和我们社长住在「喵喵工�
 
 🐾【喵喵工作台】
 初次见面，咪先做个自我介绍。
-👉 Dimmo 介绍页正在准备中
+👉 https://xiaoxuanvip.com/dimmo
 有事、想找资料，或者想给小宣社长留言，直接告诉咪就好。
 
 📚【资料库】
