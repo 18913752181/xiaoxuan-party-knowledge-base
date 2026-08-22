@@ -14,7 +14,12 @@ const RESOURCE_PATTERNS = [/模板|资料|材料.*哪里|有没有.*(记录|表|
 const RECEPTION_PATTERNS = [/^(你好|您好|嗨|hi|hello|在吗|有人吗)[呀吗呢～~!！。 ]*$/i, /你是谁|小宣在吗|社长在吗/];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
-export const PROFESSIONAL_REPLY = "🐾 这个涉及具体党务判断，咪不敢替社长乱说。我先帮你记下来，等小宣社长回来后让她回复你～";
+export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪不敢乱答～问题已经帮你收进小本本，等小宣社长回来回复你喵。";
+
+/** Dimmo 对外回复统一以“咪”自称，避免生成内容突然切回普通客服口吻。 */
+export function normalizeCatVoice(reply: string) {
+  return reply.replace(/我们/g, "咪这边").replace(/我/g, "咪");
+}
 
 function isReminder(content: string) {
   return REMINDER_PATTERNS.some((pattern) => pattern.test(content));
@@ -39,7 +44,7 @@ export function classifyByHardRules(content: string): Classification | null {
       shouldReplyDirectly: true,
       needHuman: true,
       summary: `用户给小宣的提醒或留言：${text.slice(0, 120)}`,
-      reply: "好呀，咪已经记进社长的待办里了 🐾",
+      reply: "好哒，咪已经记进社长的待办小本本啦 🐾",
       source: "rule"
     };
   }
@@ -50,7 +55,7 @@ export function classifyByHardRules(content: string): Classification | null {
       shouldReplyDirectly: true,
       needHuman: false,
       summary: `用户想查找资料：${text.slice(0, 120)}`,
-      reply: "📚 可以先到喵喵资料库搜索关键词：https://xiaoxuanvip.com/\n如果没找到，把资料名称告诉咪，我再帮你记下来～",
+      reply: "📚 可以先到喵喵资料库搜搜关键词：https://xiaoxuanvip.com/\n没找到的话，把资料名字告诉咪，咪再帮你找找～",
       source: "rule"
     };
   }
@@ -86,7 +91,7 @@ export function classifyByHardRules(content: string): Classification | null {
       needHuman: false,
       summary: "普通接待",
       reply: asksWho
-        ? "我是 Dimmo，一只住在「喵喵工作台」里的工作小猫。小宣社长不在时，由咪负责接待、传话和帮你找资料 🐾"
+        ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
         : "🐾 社长现在不在，赚钱养咪了喵～有事可以先告诉咪，咪会帮你记好～",
       source: "rule"
     };
@@ -112,7 +117,7 @@ export function enforceSafety(content: string, result: Classification): Classifi
       reply: PROFESSIONAL_REPLY
     };
   }
-  return result;
+  return { ...result, reply: normalizeCatVoice(result.reply) };
 }
 
 export function fallbackProfessional(content: string): Classification {
