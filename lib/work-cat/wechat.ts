@@ -2,13 +2,15 @@ import "server-only";
 
 import crypto from "crypto";
 
-export type WechatTextMessage = {
+export type WechatMessage = {
   ToUserName: string;
   FromUserName: string;
   CreateTime: string;
   MsgType: string;
   Content: string;
   MsgId: string;
+  Event: string;
+  EventKey: string;
   Encrypt?: string;
 };
 
@@ -37,7 +39,7 @@ export function xmlValue(xml: string, tag: string) {
   return decodeXml((match?.[1] ?? match?.[2] ?? "").trim());
 }
 
-export function parseWechatMessage(xml: string): WechatTextMessage {
+export function parseWechatMessage(xml: string): WechatMessage {
   return {
     ToUserName: xmlValue(xml, "ToUserName"),
     FromUserName: xmlValue(xml, "FromUserName"),
@@ -45,6 +47,8 @@ export function parseWechatMessage(xml: string): WechatTextMessage {
     MsgType: xmlValue(xml, "MsgType"),
     Content: xmlValue(xml, "Content"),
     MsgId: xmlValue(xml, "MsgId"),
+    Event: xmlValue(xml, "Event"),
+    EventKey: xmlValue(xml, "EventKey"),
     Encrypt: xmlValue(xml, "Encrypt") || undefined
   };
 }

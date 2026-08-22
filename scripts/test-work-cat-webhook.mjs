@@ -58,6 +58,10 @@ function xml(content, msgId) {
   return `<xml><ToUserName><![CDATA[gh_local_test]]></ToUserName><FromUserName><![CDATA[openid_local_test]]></FromUserName><CreateTime>${Math.floor(Date.now() / 1000)}</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[${content}]]></Content><MsgId>${msgId}</MsgId></xml>`;
 }
 
+function subscribeXml() {
+  return `<xml><ToUserName><![CDATA[gh_local_test]]></ToUserName><FromUserName><![CDATA[openid_subscribe_test]]></FromUserName><CreateTime>${Math.floor(Date.now() / 1000)}</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[subscribe]]></Event></xml>`;
+}
+
 async function verifyUrl() {
   const params = new URLSearchParams({ ...query(), echostr: "dimmo-ok" });
   const response = await fetch(`${baseUrl}?${params}`);
@@ -75,6 +79,18 @@ async function message(content, msgId) {
   });
   const body = await response.text();
   if (!response.ok) throw new Error(`消息请求失败 (${response.status}): ${body}`);
+  return body;
+}
+
+async function subscribe() {
+  const params = new URLSearchParams(query());
+  const response = await fetch(`${baseUrl}?${params}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/xml" },
+    body: subscribeXml()
+  });
+  const body = await response.text();
+  if (!response.ok) throw new Error(`关注事件请求失败 (${response.status}): ${body}`);
   return body;
 }
 
@@ -96,6 +112,12 @@ async function encryptedMessage(content, msgId) {
 }
 
 await verifyUrl();
+
+const welcome = await subscribe();
+if (!/嗨，我是 Dimmo/.test(welcome) || !/喵喵工作台/.test(welcome)) {
+  throw new Error(`关注欢迎语不符合预期：${welcome}`);
+}
+console.log("✓ 关注事件返回 Dimmo 欢迎语");
 
 const suffix = Date.now();
 const reception = await message("你好", `local-reception-${suffix}`);

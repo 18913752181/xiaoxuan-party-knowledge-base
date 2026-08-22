@@ -13,6 +13,25 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const SUBSCRIBE_REPLY = `嗨，我是 Dimmo，和我们社长住在「喵喵工作台」的小猫。
+
+🐾【喵喵工作台】
+初次见面，咪先做个自我介绍。
+👉 Dimmo 介绍页正在准备中
+有事、想找资料，或者想给小宣社长留言，直接告诉咪就好。
+
+📚【资料库】
+喵喵资料库｜工作资料、模板、专题内容
+👉 https://xiaoxuanvip.com/
+
+🧰【工具箱】
+喵喵小程序｜入党时间核算、红色教育基地导览
+👉 小程序正在准备中
+
+🌱 咪还在慢慢长大。
+涉及具体党务判断的问题，咪会认真收进小本本，交给小宣社长回复。
+需要时随时叫咪，咪一直住在这里喵～`;
+
 function config() {
   return {
     token: process.env.WECHAT_TOKEN || "",
@@ -64,7 +83,14 @@ export async function POST(request: Request) {
   }
 
   const message = parseWechatMessage(messageXml);
-  if (!message.FromUserName || message.MsgType !== "text") return text("success");
+  if (!message.FromUserName) return text("success");
+
+  if (message.MsgType === "event" && message.Event.toLowerCase() === "subscribe") {
+    const replyXml = buildTextReply(message.FromUserName, message.ToUserName, SUBSCRIBE_REPLY);
+    return text(encryptedMode ? buildEncryptedReply(replyXml, token, aesKey, appId) : replyXml);
+  }
+
+  if (message.MsgType !== "text") return text("success");
 
   // 先请求微信客户端展示原生“正在输入”。不具备客服接口权限时继续走被动回复，
   // 因而不会影响现有服务号收发消息。
