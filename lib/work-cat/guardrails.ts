@@ -18,7 +18,13 @@ export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪�
 
 /** Dimmo 对外回复统一以“咪”自称，避免生成内容突然切回普通客服口吻。 */
 export function normalizeCatVoice(reply: string) {
-  return reply.replace(/我们/g, "咪这边").replace(/我/g, "咪");
+  const catVoice = reply.replace(/我们/g, "咪这边").replace(/我/g, "咪");
+  let hasTilde = false;
+  return catVoice.replace(/[～~]+/g, () => {
+    if (hasTilde) return "";
+    hasTilde = true;
+    return "～";
+  });
 }
 
 function isReminder(content: string) {
@@ -92,7 +98,7 @@ export function classifyByHardRules(content: string): Classification | null {
       summary: "普通接待",
       reply: asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
-        : "🐾 社长现在不在，赚钱养咪了喵～老大有事尽管告诉咪，咪会认真记好～",
+        : "🐾 社长现在不在，赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪会认真记好～",
       source: "rule"
     };
   }
