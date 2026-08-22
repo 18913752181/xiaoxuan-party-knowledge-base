@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "fps": 48,
+  "frameDuration": 0.020833333333333332,
+  "initialState": "resting-start",
+  "states": [
+    { "id": "resting-start", "hold": 0 },
+    { "id": "awake", "hold": 2.0833333333333335 },
+    { "id": "yawning", "hold": 2.8333333333333335 },
+    { "id": "drowsy", "hold": 3.4166666666666665 },
+    { "id": "resting-end", "hold": 3.9583333333333335 }
+  ],
+  "segments": [
+    {
+      "id": "rise",
+      "from": "resting-start",
+      "to": "awake",
+      "start": 0,
+      "hold": 2.0833333333333335,
+      "endExclusive": 2.1041666666666665,
+      "curve": { "type": "constant", "rate": 1 }
+    },
+    {
+      "id": "yawn-open",
+      "from": "awake",
+      "to": "yawning",
+      "start": 2.1041666666666665,
+      "hold": 2.8333333333333335,
+      "endExclusive": 2.8541666666666665,
+      "curve": { "type": "constant", "rate": 1 }
+    },
+    {
+      "id": "yawn-close",
+      "from": "yawning",
+      "to": "drowsy",
+      "start": 2.8541666666666665,
+      "hold": 3.4166666666666665,
+      "endExclusive": 3.4375,
+      "curve": { "type": "constant", "rate": 1 }
+    },
+    {
+      "id": "settle",
+      "from": "drowsy",
+      "to": "resting-end",
+      "start": 3.4375,
+      "hold": 3.9583333333333335,
+      "endExclusive": 3.9791666666666665,
+      "curve": { "type": "constant", "rate": 1 }
+    }
+  ]
+}
