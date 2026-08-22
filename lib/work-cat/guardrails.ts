@@ -102,7 +102,7 @@ export function classifyByHardRules(content: string): Classification | null {
       needHuman: false,
       summary: "普通接待",
       reply: asksAboutXiaoxuan
-        ? "小宣是「干货社」的社长，也是「小宣同志」本人，平时会和咪一起住在「喵喵工作台」。\n\n平时社长会整理资料、研究问题，也会亲自回复需要判断和经验的问题喵～"
+        ? "小宣是「干货社」社长，也是公主号「小宣同志」本人，平时社长和咪一起住在「喵喵工作台」喵。"
         : asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
         : "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～",
