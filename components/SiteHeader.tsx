@@ -54,12 +54,8 @@ export function SiteHeader() {
     <>
       <header className="sticky top-0 z-40 border-b border-brand-line bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-3 text-brand-ink" aria-label="宣知资料库首页">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red text-lg font-semibold text-white shadow-[0_6px_16px_rgba(166,62,71,0.16)]">宣</span>
-          <span>
-            <span className="block text-lg font-semibold tracking-tight">宣知</span>
-            <span className="block text-[11px] text-neutral-500">小宣资料库</span>
-          </span>
+        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label="小宣资料库首页">
+          小宣资料库
         </Link>
         <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
           {navItems.map((item) => {
@@ -84,12 +80,9 @@ export function SiteHeader() {
           {sessionChecked && sessionEmail ? (
             <Link
               href="/me"
-              className="flex items-center gap-2 rounded-xl border border-brand-line bg-white py-1.5 pl-1.5 pr-4 text-sm font-medium text-brand-ink transition-[border-color,color,transform] duration-150 hover:border-[#d9a6ac] hover:text-brand-red active:scale-[0.98]"
+              className="rounded-xl border border-brand-line bg-white px-4 py-2 text-sm font-medium text-brand-ink transition-[border-color,color,transform] duration-150 hover:border-[#d9a6ac] hover:text-brand-red active:scale-[0.98]"
               title={sessionEmail}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-red text-xs font-semibold text-white">
-                {sessionEmail.slice(0, 1).toUpperCase()}
-              </span>
               我的
             </Link>
           ) : (

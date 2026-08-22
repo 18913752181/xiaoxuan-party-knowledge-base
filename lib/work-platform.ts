@@ -111,7 +111,7 @@ export const workTopics: WorkTopic[] = [
 ];
 
 export const annualWorkPlan = [
-  { month: 1, items: ["制定年度党建工作计划", "梳理党员教育培训安排", "研究主题党日计划"] },
+  { month: 1, items: ["制定年度工作计划", "梳理党员教育培训安排", "研究主题党日计划"] },
   { month: 2, items: ["开展集中学习", "更新党员信息台账", "部署年度组织生活"] },
   { month: 3, items: ["组织生活会", "民主评议党员", "形成整改清单"] },
   { month: 4, items: ["第一议题学习", "入党积极分子培养考察", "主题党日"] },
@@ -122,7 +122,7 @@ export const annualWorkPlan = [
   { month: 9, items: ["三会一课计划复盘", "发展对象培养", "主题党日"] },
   { month: 10, items: ["年度重点任务检查", "换届准备", "党员培训"] },
   { month: 11, items: ["年度总结准备", "党组织书记述职评议考核", "明年工作建议"] },
-  { month: 12, items: ["年度党建工作总结", "支部资料归档", "制定下一年度计划"] }
+  { month: 12, items: ["年度工作总结", "支部资料归档", "制定下一年度计划"] }
 ];
 
 export const workTools = [

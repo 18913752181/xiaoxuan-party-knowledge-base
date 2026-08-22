@@ -5,12 +5,12 @@ import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-un
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "党建工作资料库",
-  description: "按专题、文件类型和使用场景查找党建工作模板、制度文件与填写说明。",
+  title: "工作资料库",
+  description: "按专题、文件类型和使用场景查找工作模板、制度文件与填写说明。",
   alternates: { canonical: "/library" },
   openGraph: {
-    title: "党建工作资料库 | 小宣资料库",
-    description: "按专题查找可直接使用的党建工作模板、制度文件与填写说明。",
+    title: "工作资料库 | 小宣资料库",
+    description: "按专题查找可直接使用的工作模板、制度文件与填写说明。",
     url: "/library"
   }
 };

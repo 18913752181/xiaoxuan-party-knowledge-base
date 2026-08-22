@@ -6,12 +6,9 @@ export function SiteFooter() {
     <footer className="border-t border-[#ebe5dc] bg-white/45 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
         <div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#9a4650] text-sm font-semibold text-white">宣</span>
-            <span className="text-base font-semibold text-brand-ink">宣知 · 小宣资料库</span>
-          </div>
+          <div className="text-base font-semibold text-brand-ink">小宣资料库</div>
           <p className="mt-3 max-w-sm text-sm leading-6 text-neutral-500">
-            整理常用党建资料、制度文件和工作模板，配上填写说明，支持分类查找、收藏与下载。
+            整理常用资料、制度文件和工作模板，配上填写说明，支持分类查找、收藏与下载。
           </p>
         </div>
         <nav aria-label="页脚导航">
@@ -33,7 +30,7 @@ export function SiteFooter() {
           >
             苏ICP备2026052948号
           </a>
-          <p className="mt-2 text-sm text-neutral-500">© 2026 【宣知网】 · 小宣同志资料库</p>
+          <p className="mt-2 text-sm text-neutral-500">© 2026 小宣资料库</p>
         </div>
       </div>
     </footer>

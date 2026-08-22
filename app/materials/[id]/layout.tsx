@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 
   const title = unit.seo.seoTitle || unit.meta.title;
-  const description = (unit.seo.seoDescription || unit.meta.summary || unit.summary || unit.introduction || "查看党建工作资料与填写说明。")
+  const description = (unit.seo.seoDescription || unit.meta.summary || unit.summary || unit.introduction || "查看工作资料与填写说明。")
     .replace(/\s+/g, " ")
     .slice(0, 160);
   const canonical = `/materials/${unit.slug}`;

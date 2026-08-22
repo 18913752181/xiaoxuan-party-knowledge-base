@@ -168,7 +168,7 @@ export default function LoginForm() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
           <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">登录 / 注册</p>
-          <h1 className="mt-3 text-2xl font-semibold text-brand-ink">登录宣知网</h1>
+          <h1 className="mt-3 text-2xl font-semibold text-brand-ink">登录小宣资料库</h1>
           <p className="mt-5 text-base leading-8 text-neutral-600">
             微信内可直接使用微信一键登录；也可以输入邮箱并验证 6 位验证码登录。
             新用户首次登录会自动创建账号，无需设置和记忆密码；已有邮箱账号的会员权益不受影响。

@@ -74,7 +74,7 @@ export default async function KnowledgeMapPage() {
   return (
     <main className="mx-auto max-w-6xl px-5 py-12 lg:px-8">
       <section className="mb-10">
-        <p className="mb-4 text-sm font-medium tracking-wide text-brand-sageDark">小宣同志基层党建知识体系</p>
+        <p className="mb-4 text-sm font-medium tracking-wide text-brand-sageDark">小宣同志基层工作知识体系</p>
         <h1 className="text-4xl font-semibold text-brand-ink">知识地图</h1>
         <p className="mt-5 max-w-3xl leading-8 text-neutral-600">
           文件仍然是入口，但每份资料也可以成为知识节点。你可以按专题、阶段和关联路径继续阅读，也可以回到详情页下载模板、收藏资料。

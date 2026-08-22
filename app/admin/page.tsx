@@ -44,7 +44,7 @@ const links = [
   {
     href: "/",
     title: "返回前台",
-    description: "回到小宣同志基层党建工作平台首页。"
+    description: "回到小宣资料库首页。"
   }
 ];
 

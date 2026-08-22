@@ -6,8 +6,8 @@ import { findWorkTopics } from "@/lib/work-platform";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "工作导航｜宣知党建",
-  description: "按党建工作事项查找专题、办理流程、制度依据、常见问题和可下载资料。"
+  title: "工作导航｜小宣资料库",
+  description: "按工作事项查找专题、办理流程、制度依据、常见问题和可下载资料。"
 };
 
 export default async function WorkNavigationPage({ searchParams }: { searchParams: { q?: string } }) {
