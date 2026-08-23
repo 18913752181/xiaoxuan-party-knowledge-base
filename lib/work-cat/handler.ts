@@ -19,6 +19,11 @@ export async function handleWorkCatMessage(input: { openid: string; content: str
       ? await rewriteRuleReplyWithAi(content, context, ruleResult)
       : await classifyWithAi(content, context);
     const classification = enforceSafety(content, candidate);
+    console.info("[work-cat] reply prepared", {
+      category: classification.category,
+      source: classification.source,
+      needHuman: classification.needHuman
+    });
     const contextSummary = [
       ...context.slice(-5).map((row) => `${row.role === "user" ? "用户" : row.role === "cat" ? "Dimmo" : "小宣"}：${row.content}`),
       `用户：${content}`,
