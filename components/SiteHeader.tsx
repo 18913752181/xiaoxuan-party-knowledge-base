@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ProfileAvatar } from "@/components/ProfileAvatar";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -22,7 +23,7 @@ function navItemActive(href: string, pathname: string, hash: string) {
 export function SiteHeader() {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
-  const [sessionEmail, setSessionEmail] = useState("");
+  const [sessionProfile, setSessionProfile] = useState<{ id: string; email: string; avatar_key?: string | null } | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
@@ -35,11 +36,11 @@ export function SiteHeader() {
   // 感知登录状态：已登录用户显示账号入口而不是“登录”按钮。
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/session", { cache: "no-store" })
+    fetch("/api/auth/profile", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (cancelled) return;
-        setSessionEmail(data?.user?.email || "");
+        setSessionProfile(data?.profile || null);
         setSessionChecked(true);
       })
       .catch(() => {
@@ -77,13 +78,14 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          {sessionChecked && sessionEmail ? (
+          {sessionChecked && sessionProfile ? (
             <Link
               href="/me"
-              className="rounded-xl border border-brand-line bg-white px-4 py-2 text-sm font-medium text-brand-ink transition-[border-color,color,transform] duration-150 hover:border-[#d9a6ac] hover:text-brand-red active:scale-[0.98]"
-              title={sessionEmail}
+              className="rounded-2xl p-0.5 transition-transform duration-150 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ink focus-visible:ring-offset-2 active:scale-[0.97]"
+              title="我的"
+              aria-label="进入我的页面"
             >
-              我的
+              <ProfileAvatar userId={sessionProfile.id} avatarKey={sessionProfile.avatar_key} size={38} />
             </Link>
           ) : (
             <Link href="/login" className="rounded-xl bg-brand-red px-4 py-2 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">登录</Link>

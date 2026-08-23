@@ -8,6 +8,12 @@ import { ProfileAvatar } from "@/components/ProfileAvatar";
 export default function MePage() {
   const { profile, loading } = useAuth();
 
+  const memberActive = Boolean(
+    profile?.member_status === "member" &&
+    profile.member_expires_at &&
+    profile.member_expires_at >= new Date().toISOString().slice(0, 10)
+  );
+
   if (loading) return <section className="mx-auto max-w-5xl px-5 py-12 text-neutral-600">正在读取账号信息...</section>;
 
   if (!profile) {
@@ -38,7 +44,9 @@ export default function MePage() {
           <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} size={64} />
           <div>
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
-            <p className="mt-2 text-sm text-neutral-500">{maskAccountEmail(profile.email) || "已登录"}</p>
+            <p className="mt-2 text-sm text-neutral-500">
+              {memberActive ? `会员有效期至 ${profile.member_expires_at}` : maskAccountEmail(profile.email) || "已登录"}
+            </p>
           </div>
         </div>
       </div>

@@ -50,13 +50,24 @@ export function ProfileAvatar({ userId, avatarKey, size = 64, className = "", ti
   const avatar = AVATAR_OPTIONS.find((item) => item.key === key) || AVATAR_OPTIONS[0];
 
   return (
-    <Image
-      src={avatar.src}
-      alt={title}
-      width={size}
-      height={size}
-      className={`shrink-0 rounded-[28%] object-cover ${className}`}
-      priority={size >= 64}
-    />
+    <span
+      className={`relative block shrink-0 overflow-hidden rounded-[28%] bg-white ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src={avatar.src}
+        alt={title}
+        fill
+        sizes={`${size}px`}
+        className="scale-[1.07] object-cover"
+        priority={size >= 64}
+      />
+      {avatar.key === "cactus" ? (
+        <span
+          aria-hidden="true"
+          className="absolute left-[28%] top-[2%] h-[18%] w-[44%] rounded-t-[70%] bg-[#8fb3d0] shadow-[inset_0_-2px_0_rgba(44,74,102,0.16)]"
+        />
+      ) : null}
+    </span>
   );
 }
