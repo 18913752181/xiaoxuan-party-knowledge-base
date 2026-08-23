@@ -10,4 +10,4 @@ alter table public.profiles
 
 alter table public.profiles
   add constraint profiles_avatar_key_check
-  check (avatar_key is null or avatar_key in ('terracotta', 'mist', 'moss', 'plum', 'sky', 'amber'));
+  check (avatar_key is null or avatar_key in ('fox', 'dog', 'robot', 'elephant', 'acorn', 'bear', 'whale', 'cactus', 'panda', 'mushroom', 'cream-blob', 'shadow-blob', 'cowboy'));

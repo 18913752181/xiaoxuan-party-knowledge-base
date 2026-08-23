@@ -1,23 +1,28 @@
-import type { CSSProperties } from "react";
+import Image from "next/image";
 
 export const AVATAR_OPTIONS = [
-  { key: "terracotta", name: "陶土", background: "#B8644B", fur: "#FFF0D1", detail: "#46352F" },
-  { key: "mist", name: "雾蓝", background: "#A5BBC8", fur: "#FFF8E9", detail: "#394953" },
-  { key: "moss", name: "苔绿", background: "#62806F", fur: "#F8E8C8", detail: "#2B4138" },
-  { key: "plum", name: "梅紫", background: "#80607B", fur: "#FFE6C9", detail: "#3B3040" },
-  { key: "sky", name: "晴蓝", background: "#5B78B8", fur: "#EDF6F4", detail: "#283D6D" },
-  { key: "amber", name: "琥珀", background: "#C99535", fur: "#FFF0D3", detail: "#513B22" }
+  { key: "fox", name: "小狐狸", src: "/images/avatars/avatar-fox.webp" },
+  { key: "dog", name: "小狗", src: "/images/avatars/avatar-dog.webp" },
+  { key: "robot", name: "小机器人", src: "/images/avatars/avatar-robot.webp" },
+  { key: "elephant", name: "小象", src: "/images/avatars/avatar-elephant.webp" },
+  { key: "acorn", name: "小橡果", src: "/images/avatars/avatar-acorn.webp" },
+  { key: "bear", name: "小熊", src: "/images/avatars/avatar-bear.webp" },
+  { key: "whale", name: "小鲸鱼", src: "/images/avatars/avatar-whale.webp" },
+  { key: "cactus", name: "小仙人掌", src: "/images/avatars/avatar-cactus.webp" },
+  { key: "panda", name: "小熊猫", src: "/images/avatars/avatar-panda.webp" },
+  { key: "mushroom", name: "小蘑菇", src: "/images/avatars/avatar-mushroom.webp" },
+  { key: "cream-blob", name: "奶油团子", src: "/images/avatars/avatar-cream-blob.webp" },
+  { key: "shadow-blob", name: "黑团子", src: "/images/avatars/avatar-shadow-blob.webp" },
+  { key: "cowboy", name: "牛仔小人", src: "/images/avatars/avatar-cowboy.webp" }
 ] as const;
 
 export type AvatarKey = (typeof AVATAR_OPTIONS)[number]["key"];
 
-const FALLBACK_AVATAR_KEY: AvatarKey = "mist";
+const FALLBACK_AVATAR_KEY: AvatarKey = "fox";
 
 function hash(value: string) {
   let result = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    result = (result * 31 + value.charCodeAt(index)) | 0;
-  }
+  for (let index = 0; index < value.length; index += 1) result = (result * 31 + value.charCodeAt(index)) | 0;
   return Math.abs(result);
 }
 
@@ -39,35 +44,19 @@ type ProfileAvatarProps = {
   title?: string;
 };
 
-/**
- * 全部头像共享完全相同的圆润小猫轮廓；只更换三色配色。
- * 不依赖图片文件，在任意尺寸下都保持清晰。
- */
+/** 直接使用 ip-as-logo 参考图中的独立角色，首次登录按用户 ID 稳定随机分配。 */
 export function ProfileAvatar({ userId, avatarKey, size = 64, className = "", title = "用户头像" }: ProfileAvatarProps) {
   const key = resolveAvatarKey(userId, avatarKey);
-  const palette = AVATAR_OPTIONS.find((avatar) => avatar.key === key) || AVATAR_OPTIONS[0];
+  const avatar = AVATAR_OPTIONS.find((item) => item.key === key) || AVATAR_OPTIONS[0];
 
   return (
-    <svg
-      viewBox="0 0 96 96"
-      role="img"
-      aria-label={title}
+    <Image
+      src={avatar.src}
+      alt={title}
       width={size}
       height={size}
-      className={`shrink-0 overflow-hidden rounded-[28%] ${className}`}
-      style={{ "--avatar-bg": palette.background, "--avatar-fur": palette.fur, "--avatar-detail": palette.detail } as CSSProperties}
-    >
-      <rect width="96" height="96" rx="22" fill="var(--avatar-bg)" />
-      <path
-        d="M18 91V46.5c0-4.7 2-9 5.5-12L22 20.5c-.2-2.1 2.2-3.2 3.6-1.6L38 31.7a34 34 0 0 1 20 0l12.4-12.8c1.4-1.6 3.8-.5 3.6 1.6l-1.5 14c3.5 3 5.5 7.3 5.5 12V91H18Z"
-        fill="var(--avatar-fur)"
-      />
-      <path d="M25.3 27.2 27 41.3l9.1-8.1-10.8-6Z" fill="var(--avatar-detail)" opacity=".14" />
-      <path d="m70.7 27.2-1.7 14.1-9.1-8.1 10.8-6Z" fill="var(--avatar-detail)" opacity=".14" />
-      <ellipse cx="37" cy="56" rx="3.9" ry="5.6" fill="var(--avatar-detail)" />
-      <ellipse cx="59" cy="56" rx="3.9" ry="5.6" fill="var(--avatar-detail)" />
-      <path d="M45.5 67.3c1.6 1.4 3.4 1.4 5 0" fill="none" stroke="var(--avatar-detail)" strokeLinecap="round" strokeWidth="2.6" />
-      <path d="M45.8 63.2h4.4c.8 0 1.2 1 .6 1.6L48 67l-2.8-2.2c-.6-.6-.2-1.6.6-1.6Z" fill="var(--avatar-detail)" />
-    </svg>
+      className={`shrink-0 rounded-[28%] object-cover ${className}`}
+      priority={size >= 64}
+    />
   );
 }
