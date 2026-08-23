@@ -93,10 +93,12 @@ export async function POST(request: Request) {
   if (message.MsgType !== "text") return text("success");
 
   // 先请求微信客户端展示原生“正在输入”。不具备客服接口权限时继续走被动回复，
-  // 因而不会影响现有服务号收发消息。
+  // 同时开始消息处理，避免 AI 改写与微信接口串行后超过被动回复窗口。
   const typingStartedAt = Date.now();
-  const typingEnabled = await sendCustomerServiceTyping(message.FromUserName, appId, appSecret);
-  const result = await handleWorkCatMessage({ openid: message.FromUserName, content: message.Content, msgId: message.MsgId });
+  const [typingEnabled, result] = await Promise.all([
+    sendCustomerServiceTyping(message.FromUserName, appId, appSecret),
+    handleWorkCatMessage({ openid: message.FromUserName, content: message.Content, msgId: message.MsgId })
+  ]);
   if (!result.reply) return text("success");
 
   if (typingEnabled) {

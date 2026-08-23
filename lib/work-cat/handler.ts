@@ -1,6 +1,6 @@
 import "server-only";
 
-import { classifyWithAi } from "@/lib/work-cat/ai";
+import { classifyWithAi, rewriteRuleReplyWithAi } from "@/lib/work-cat/ai";
 import { classifyByHardRules, enforceSafety, fallbackProfessional } from "@/lib/work-cat/guardrails";
 import { getProcessedReply, getRecentConversation, persistInteraction } from "@/lib/work-cat/repository";
 
@@ -15,7 +15,10 @@ export async function handleWorkCatMessage(input: { openid: string; content: str
     ]);
     if (cachedReply) return { reply: cachedReply, duplicate: true };
     const ruleResult = classifyByHardRules(content);
-    const classification = enforceSafety(content, ruleResult || await classifyWithAi(content, context));
+    const candidate = ruleResult
+      ? await rewriteRuleReplyWithAi(content, context, ruleResult)
+      : await classifyWithAi(content, context);
+    const classification = enforceSafety(content, candidate);
     const contextSummary = [
       ...context.slice(-5).map((row) => `${row.role === "user" ? "用户" : row.role === "cat" ? "Dimmo" : "小宣"}：${row.content}`),
       `用户：${content}`,

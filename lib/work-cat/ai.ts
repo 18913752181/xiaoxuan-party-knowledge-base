@@ -17,6 +17,25 @@ const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工
 只输出 JSON：
 {"category":"reception|faq|resource_navigation|reminder|professional_question","should_reply_directly":boolean,"need_human":boolean,"summary":"给小宣看的简短摘要","reply":"给用户的简短回复"}`;
 
+const REWRITE_SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工作小猫，也是小宣社长的微信工作助手。
+
+代码已经完成意图分类并提供了一条“事实底稿”。你只负责结合最近对话，把底稿改写成自然、不重复的微信回复，不得改变分类、处理结果或事实。
+
+说话要求：
+- 用“咪”自称，优先让“咪”作主语，不使用“我”或“我们”。
+- 可爱、克制、自然、简洁，像小宣的工作助手，不像机器人客服。
+- 通常省略“你/您”；轻松接待时偶尔可以称“老大”。禁止使用“亲”“宝子”“主人”。
+- 一条回复中“～”或“~”最多一次。两个不同意思用空行分段，每段简短。
+- 可以根据上下文承接前一句，但不能声称记得底稿和最近对话之外的事情。
+
+事实与安全要求：
+- 底稿中的网址、名称、服务状态、是否已经记录留言等事实必须保留，不得新增、猜测或改写成不同含义。
+- 资料导航只负责指路，不解释资料中的专业内容。
+- 绝对不得回答党务制度、程序、材料填写、个案处理或合规判断，不得编造政策依据。
+- 如果底稿表示转交小宣，只能自然表达“已收好、等小宣回复”，不能添加任何专业结论。
+
+只输出 JSON：{"reply":"改写后的回复"}`;
+
 function stripJsonFence(value: string) {
   return value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 }
@@ -69,5 +88,64 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
     return enforceSafety(content, result);
   } catch {
     return fallbackProfessional(content);
+  }
+}
+
+function requiredFragments(ruleResult: Classification) {
+  const urls = ruleResult.reply.match(/https?:\/\/[^\s，。]+/g) || [];
+  if (ruleResult.category === "reminder") return [...urls, "小本本"];
+  if (/小宣同志/.test(ruleResult.reply)) return [...urls, "小宣同志", "干货社"];
+  return urls;
+}
+
+/**
+ * 硬规则只确定类别、动作和事实；对允许直接回复的消息，让 AI 结合上下文改写语气。
+ * 模型不可用、超时、漏掉关键事实时，继续使用规则底稿。
+ */
+export async function rewriteRuleReplyWithAi(
+  content: string,
+  context: ConversationRow[],
+  ruleResult: Classification
+): Promise<Classification> {
+  if (ruleResult.category === "professional_question" || !ruleResult.shouldReplyDirectly) return ruleResult;
+
+  const { apiKey, baseUrl, model } = aiConfig();
+  if (!apiKey) return ruleResult;
+
+  const recent = context.slice(-6).map((row) => `${row.role}: ${row.content}`).join("\n");
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        temperature: 0.72,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: REWRITE_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              `最近对话：\n${recent || "（无）"}`,
+              `用户新消息：${content}`,
+              `已确定分类：${ruleResult.category}`,
+              `事实底稿：${ruleResult.reply}`
+            ].join("\n\n")
+          }
+        ]
+      }),
+      signal: AbortSignal.timeout(3200)
+    });
+    if (!response.ok) return ruleResult;
+
+    const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = payload.choices?.[0]?.message?.content || "";
+    const parsed = JSON.parse(stripJsonFence(raw)) as Record<string, unknown>;
+    const reply = String(parsed.reply || "").trim().slice(0, 600);
+    if (!reply || requiredFragments(ruleResult).some((fragment) => !reply.includes(fragment))) return ruleResult;
+
+    return { ...ruleResult, reply, source: "ai" };
+  } catch {
+    return ruleResult;
   }
 }

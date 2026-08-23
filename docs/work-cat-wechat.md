@@ -6,7 +6,7 @@
 - `POST /api/wechat`：校验签名，接收文字消息，兼容明文 / AES 加密消息与加密回复。
 - 接收用户关注事件并由服务器返回 Dimmo 欢迎语；开启服务器回调后，公众号后台自带的“被关注回复”会失效。
 - 已配置服务号 AppSecret 且具备客服消息接口权限时，先显示微信原生“正在输入”，再发送客服消息；不可用时自动回退到被动回复。
-- 规则优先 + AI 结构化分类；专业党务关键词在调用 AI 前、AI 返回后各拦截一次。
+- 规则负责安全分类和事实底稿，AI 会结合最近对话自然改写接待、FAQ、资料导航和留言回复；专业党务关键词在调用 AI 前、AI 返回后各拦截一次。
 - 对话、专业问题、提醒/留言写入现有 Supabase。
 - `/admin/work-cat`：今日接待统计、待回复列表、上下文、状态处理、提醒留言。
 
@@ -47,7 +47,7 @@ WORK_CAT_AI_MODEL=gpt-4.1-mini
 
 `SUPABASE_URL` 是仅服务端地址，通常与 `NEXT_PUBLIC_SUPABASE_URL` 相同；未填写时自动回退到后者。兼容别名：回调也识别 `WECHAT_APP_ID`；AI 也会回退读取 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`。没有配置 AI 时，固定接待/FAQ/资料/留言仍能工作；其余不确定消息会按专业问题转人工，不会越权。
 
-`WECHAT_OFFICIAL_APP_SECRET` 不参与被动消息验签，但现有项目的微信网页授权会使用，仍应配置。FAQ 可在 `data/work-cat-faq.json` 直接维护。
+`WECHAT_OFFICIAL_APP_SECRET` 不参与被动消息验签，但现有项目的微信网页授权会使用，仍应配置。FAQ 可在 `data/work-cat-faq.json` 直接维护。常见接待、FAQ、资料导航和留言仍由规则确定类别与真实信息，但在配置 AI 后会结合最近六条对话改写措辞；模型不可用时自动回退到事实底稿。
 
 ## 3. 本地测试
 
