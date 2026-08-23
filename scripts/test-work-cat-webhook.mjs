@@ -126,6 +126,12 @@ if (!/Dimmo|咪|社长/.test(reception) || /具体党务判断/.test(reception))
 }
 console.log("✓ 普通问题由 Dimmo 直接回复");
 
+const casualChat = await message("你在干嘛", `local-casual-chat-${suffix}`);
+if (!/咪|Dimmo/.test(casualChat) || /交给小宣社长确认|专业判断/.test(casualChat)) {
+  throw new Error(`日常闲聊被误转人工：${casualChat}`);
+}
+console.log("✓ 日常闲聊不会误转小宣");
+
 const resource = await message("有没有主题党日模板？", `local-resource-${suffix}`);
 if (!/主题党日|xiaoxuanvip\.com\/materials/.test(resource) || /交给小宣社长确认/.test(resource)) {
   throw new Error(`资料检索链路不符合预期：${resource}`);

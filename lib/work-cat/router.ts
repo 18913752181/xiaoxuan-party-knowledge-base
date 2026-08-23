@@ -36,6 +36,9 @@ export async function routeWorkCatMessage(content: string, context: Conversation
       // 当前不让模型从知识条目自行推导党务结论：即使检索命中，也仅附到待办供小宣核对。
       return { ...hard, confidence: 1, retrievalSummary: formatSearchSummary(results), reply: PROFESSIONAL_REPLY };
     }
+    if (hard.intent === "CHAT" && !hard.reply) {
+      return { ...hard, reply: await generateChatReply(content, context) };
+    }
     return hard;
   }
 

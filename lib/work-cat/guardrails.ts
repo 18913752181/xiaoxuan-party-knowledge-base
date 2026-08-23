@@ -18,6 +18,11 @@ const RECEPTION_PATTERNS = [
   /你是谁|小宣在吗|社长在吗/,
   /小宣是谁|社长是谁|小宣.*(什么人|做什么)|社长.*(什么人|做什么)/
 ];
+// 明确的日常互动不交给低置信度模型判断，避免“你在干嘛”之类被误转人工。
+const CASUAL_CHAT_PATTERNS = [
+  /^(哈哈|哈哈哈|嘿嘿|呵呵|谢谢|谢啦|辛苦了|晚安|早安|午安)[呀啦哦～~!！。 ]*$/,
+  /(你在干嘛|你在做什么|在忙吗|忙不忙|陪咪聊聊|陪我聊聊|今天好累|好累啊|心情不好|吃了吗|想聊天)/
+];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
 export const PROFESSIONAL_REPLY = "🐾 这个要请社长做专业判断，咪不敢乱答～问题已经收进小本本，等小宣社长回来回复喵。";
@@ -135,6 +140,13 @@ export function classifyByHardRules(content: string): Classification | null {
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
         : "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～",
       source: "rule"
+    });
+  }
+
+  if (CASUAL_CHAT_PATTERNS.some((pattern) => pattern.test(text))) {
+    return classified({
+      category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false,
+      summary: "普通闲聊", reply: "", source: "rule"
     });
   }
 
