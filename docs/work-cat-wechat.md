@@ -39,13 +39,15 @@ WECHAT_ENCODING_AES_KEY=微信后台生成的43位EncodingAESKey
 WECHAT_OFFICIAL_APP_ID=wx_your_official_account_appid
 WECHAT_OFFICIAL_APP_SECRET=your_app_secret
 
-# 工作小猫 AI（OpenAI-compatible chat/completions）
-WORK_CAT_AI_API_KEY=your-ai-api-key
-WORK_CAT_AI_BASE_URL=https://api.openai.com/v1
-WORK_CAT_AI_MODEL=gpt-4.1-mini
+# 工作小猫 AI（仅服务端，OpenAI-compatible chat/completions）
+WORK_CAT_AI_API_KEY=your-provider-api-key
+WORK_CAT_AI_BASE_URL=https://your-provider-openai-compatible-endpoint/v1
+WORK_CAT_AI_MODEL=your-provider-model-name
 ```
 
-`SUPABASE_URL` 是仅服务端地址，通常与 `NEXT_PUBLIC_SUPABASE_URL` 相同；未填写时自动回退到后者。兼容别名：回调也识别 `WECHAT_APP_ID`；AI 也会回退读取 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`。没有配置 AI 时，固定接待/FAQ/资料/留言仍能工作；其余不确定消息会按专业问题转人工，不会越权。
+`SUPABASE_URL` 是仅服务端地址，通常与 `NEXT_PUBLIC_SUPABASE_URL` 相同；未填写时自动回退到后者。兼容别名：回调也识别 `WECHAT_APP_ID`；AI 也会回退读取 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`。两套 AI 变量只配置一套即可，`WORK_CAT_AI_*` 优先。不要使用 `NEXT_PUBLIC_` 前缀，否则变量可能进入浏览器构建产物。没有配置 AI 时，固定接待/FAQ/资料/留言仍能工作；其余不确定消息会按专业问题转人工，不会越权。
+
+Dimmo 使用供应商兼容的 `POST {BASE_URL}/chat/completions` 接口和 Bearer API Key。后续更换 OpenAI、DeepSeek、通义千问或豆包时，只需在服务器替换 API Key、Base URL 和模型名，不需要修改微信回调或业务代码。真实密钥只写入 `/srv/xiaoxuan/shared/app.env`，仓库中的 `deploy/app.env.example` 只能保留占位符。
 
 `WECHAT_OFFICIAL_APP_SECRET` 不参与被动消息验签，但现有项目的微信网页授权会使用，仍应配置。FAQ 可在 `data/work-cat-faq.json` 直接维护。常见接待、FAQ、资料导航和留言仍由规则确定类别与真实信息，但在配置 AI 后会结合最近六条对话改写措辞；模型不可用时自动回退到事实底稿。
 
