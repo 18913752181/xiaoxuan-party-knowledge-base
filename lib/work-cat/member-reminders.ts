@@ -63,12 +63,20 @@ export function parseScheduledReminder(message: string, now = new Date()): Parse
   return { kind: "scheduled", scheduledAt: scheduled.toISOString(), displayTime: formatShanghai(scheduled), content: content.slice(0, 240) };
 }
 
-export async function openidHasActiveMembership(openid: string) {
+export async function getMembershipForOpenid(openid: string) {
   const { data, error } = await getSupabaseAdmin()
     .from("profiles")
     .select("member_status,member_expires_at")
     .eq("wechat_openid", openid)
     .maybeSingle();
   if (error) throw error;
-  return membershipIsActive(data?.member_status, data?.member_expires_at);
+  return {
+    bound: Boolean(data),
+    active: membershipIsActive(data?.member_status, data?.member_expires_at),
+    expiresAt: data?.member_expires_at || null
+  };
+}
+
+export async function openidHasActiveMembership(openid: string) {
+  return (await getMembershipForOpenid(openid)).active;
 }

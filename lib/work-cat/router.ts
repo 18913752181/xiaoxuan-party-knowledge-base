@@ -3,10 +3,27 @@ import "server-only";
 import { classifyWithAi, generateChatReply } from "@/lib/work-cat/ai";
 import { HUMAN_REPLY, PROFESSIONAL_REPLY, classifyByHardRules, fallbackProfessional, normalizeCatVoice } from "@/lib/work-cat/guardrails";
 import { formatSearchSummary, searchWorkCatLibrary } from "@/lib/work-cat/library-search";
-import { openidHasActiveMembership, parseScheduledReminder } from "@/lib/work-cat/member-reminders";
+import { getMembershipForOpenid, openidHasActiveMembership, parseScheduledReminder } from "@/lib/work-cat/member-reminders";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
+const MEMBERSHIP_STATUS_PATTERN = /(我(是|是不是|算不算).{0,4}会员|会员(状态|资格|到期|有效期)|查.{0,4}会员|是不是.{0,4}会员)/;
+
+function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembershipForOpenid>>): Classification {
+  if (membership.active) {
+    const expiresAt = membership.expiresAt ? new Date(membership.expiresAt).toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) : "会员到期日";
+    return {
+      category: "faq", intent: "CHAT", confidence: 1, source: "rule",
+      shouldReplyDirectly: true, needHuman: false, summary: "查询公众号绑定会员状态",
+      reply: `🐾 咪查到老大已经是会员啦，有效期到 ${expiresAt}。\n\n资料库和 Dimmo 的会员功能都可以直接用。`
+    };
+  }
+  return {
+    category: "faq", intent: "CHAT", confidence: 1, source: "rule",
+    shouldReplyDirectly: true, needHuman: false, summary: "未查询到公众号绑定会员",
+    reply: "🐾 咪还没有查到这个微信绑定的有效会员记录。\n\n这不代表老大一定不是会员：公众号和网站账号是分开的，需要先在网站登录并绑定这个微信，咪才能认出老大。"
+  };
+}
 
 function resourceReply(results: Awaited<ReturnType<typeof searchWorkCatLibrary>>) {
   const lines = results.map((item, index) => `${index + 1}. ${item.title}\nhttps://xiaoxuanvip.com${item.url}`);
@@ -24,6 +41,9 @@ function humanFromResource(content: string, retrievalSummary: string): Classific
 
 /** 五类意图的唯一入口：硬规则优先，低置信度和所有不确定结果一律 HUMAN。 */
 export async function routeWorkCatMessage(content: string, context: ConversationRow[], openid: string): Promise<Classification> {
+  if (MEMBERSHIP_STATUS_PATTERN.test(content.trim())) {
+    return membershipStatusReply(await getMembershipForOpenid(openid));
+  }
   const hard = classifyByHardRules(content);
   if (hard) {
     if (hard.category === "reminder") {
