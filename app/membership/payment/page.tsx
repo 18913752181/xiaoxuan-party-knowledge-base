@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { maskAccountEmail } from "@/lib/display";
 
-type Plan = { name: string; duration: string; amountTotal: number };
+type Plan = { code: "monthly" | "quarterly" | "annual"; name: string; duration: string; amountTotal: number };
 
 const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
 const POLL_INTERVAL = 3000;
@@ -35,7 +36,8 @@ function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMs
 export default function MembershipPaymentPage() {
   const router = useRouter();
   const { profile, loading, refreshProfile } = useAuth();
-  const [plan, setPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedPlanCode, setSelectedPlanCode] = useState<Plan["code"]>("annual");
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
   const [qrCode, setQrCode] = useState("");
@@ -64,7 +66,9 @@ export default function MembershipPaymentPage() {
       .then((data) => {
         setConfigured(Boolean(data.configured));
         setJsapiReady(Boolean(data.jsapiConfigured));
-        setPlan(data.plan);
+        const nextPlans = Array.isArray(data.plans) ? data.plans as Plan[] : [];
+        setPlans(nextPlans);
+        if (!nextPlans.some((plan) => plan.code === "annual") && nextPlans[0]) setSelectedPlanCode(nextPlans[0].code);
       })
       .catch(() => setMessage("会员信息读取失败，请稍后重试。"));
   }, []);
@@ -143,7 +147,11 @@ export default function MembershipPaymentPage() {
   async function createOrder() {
     setStatus("creating");
     setMessage("");
-    const response = await fetch("/api/payments/wechat/orders", { method: "POST" });
+    const response = await fetch("/api/payments/wechat/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planCode: selectedPlanCode })
+    });
     const data = await response.json();
     if (!response.ok) {
       setStatus("idle");
@@ -161,7 +169,11 @@ export default function MembershipPaymentPage() {
     setStatus("creating");
     setMessage("");
     try {
-      const response = await fetch("/api/payments/wechat/jsapi/orders", { method: "POST" });
+      const response = await fetch("/api/payments/wechat/jsapi/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planCode: selectedPlanCode })
+      });
       const data = await response.json();
       if (response.status === 401 && data.needOAuth) {
         // 跳转微信静默授权，完成后携 jsapi=auto 回到本页自动唤起收银台
@@ -191,7 +203,7 @@ export default function MembershipPaymentPage() {
       setStatus("idle");
       setMessage("网络异常，请稍后重试。");
     }
-  }, []);
+  }, [selectedPlanCode]);
 
   // 授权回跳后，等待登录态与支付配置就绪再自动唤起收银台
   useEffect(() => {
@@ -202,28 +214,37 @@ export default function MembershipPaymentPage() {
 
   const useJsapi = inWechat && jsapiReady;
 
-  const price = plan ? (plan.amountTotal / 100).toFixed(2) : "--";
+  const plan = plans.find((candidate) => candidate.code === selectedPlanCode) || null;
+  const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
 
   return (
-    <main className="min-h-screen bg-[#f7f4ed] px-5 py-10 text-[#303731]">
+    <main className="min-h-[100dvh] bg-[#f6f5ef] px-4 py-6 text-[#24372e] sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
-        <Link href="/library" className="text-sm text-[#6f8f7e]">返回资料库</Link>
-        <section className="mt-5 overflow-hidden rounded-[2rem] border border-[#e5ded2] bg-white shadow-sm">
-          <div className="bg-[#f2e9e5] p-7 md:p-10">
-            <p className="text-sm font-medium text-[#a64550]">会员支付</p>
-            <h1 className="mt-3 text-3xl font-semibold">成为专属会员</h1>
-            <p className="mt-3 text-sm leading-7 text-[#6c746f]">开通后可在有效期内下载会员专属资料，支付成功自动生效。</p>
-          </div>
-          <div className="grid gap-7 p-7 md:grid-cols-[1fr_320px] md:p-10">
+        <Link href="/library" className="text-sm font-medium text-[#587063]">返回资料库</Link>
+        <section className="mt-4 overflow-hidden rounded-[28px] border border-[#d9dfd4] bg-white shadow-[0_20px_60px_rgba(36,55,46,0.08)]">
+          <header className="relative overflow-hidden bg-[#eaf0ea] px-6 py-8 sm:px-10 sm:py-10">
+            <Image src="/images/dimmo-resting-transparent-v2.png" alt="Dimmo 工作小猫" width={240} height={240} priority className="pointer-events-none absolute -bottom-7 right-3 h-36 w-auto opacity-95 sm:right-10 sm:h-44" />
+            <p className="text-sm font-semibold tracking-wide text-[#9b4d48]">小宣干货社年度会员</p>
+            <h1 className="mt-3 max-w-md text-3xl font-semibold tracking-tight sm:text-4xl">资料有归处，工作也有人陪着记。</h1>
+            <p className="mt-4 max-w-lg pr-24 text-sm leading-7 text-[#587063] sm:text-base">一份会员，包含资料库完整权益，也包含 Dimmo 的任务小本本、提醒与非专业工作陪伴。</p>
+          </header>
+          <div className="grid gap-7 p-5 sm:p-8 md:grid-cols-[minmax(0,1fr)_330px] md:p-10">
             <div>
-              <h2 className="text-xl font-semibold">{plan?.name || "小宣资料库年度会员"}</h2>
-              <p className="mt-4 text-sm text-neutral-500">有效期：{plan?.duration || "1 年"}</p>
-              <p className="mt-6 text-4xl font-semibold text-[#a64550]">¥ {price}</p>
-              <ul className="mt-7 space-y-3 text-sm leading-7 text-neutral-600">
-                <li>会员专属资料下载权限</li>
-                <li>支付成功后自动升级，无需人工审核</li>
-                <li>续费将在当前有效期基础上顺延一年</li>
-              </ul>
+              <h2 className="text-xl font-semibold">选一张适合现在的卡</h2>
+              <div className="mt-5 grid gap-3">
+                {plans.map((candidate) => {
+                  const selected = candidate.code === selectedPlanCode;
+                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-left transition active:scale-[0.99] ${selected ? "border-[#9b4d48] bg-[#fbf2ef] ring-1 ring-[#9b4d48]" : "border-[#dce2dc] bg-white hover:border-[#aebcb0]"}`}>
+                    <span><span className="block text-base font-semibold">{candidate.name} · {candidate.duration}</span><span className="mt-1 block text-sm text-[#718277]">资料库 + Dimmo 工作台</span></span>
+                    <span className={`text-2xl font-semibold ${selected ? "text-[#9b4d48]" : "text-[#24372e]"}`}>¥{(candidate.amountTotal / 100).toFixed(0)}</span>
+                  </button>;
+                })}
+              </div>
+              <div className="mt-7 rounded-2xl bg-[#f3f6f2] p-5 text-sm leading-7 text-[#52675b]">
+                <p className="font-semibold text-[#24372e]">会员包含</p>
+                <ul className="mt-2 space-y-1"><li>完整会员资料与后续更新</li><li>Dimmo 任务小本本与提醒</li><li>非专业内容的 AI 陪伴与资料导航</li></ul>
+              </div>
+              <p className="mt-4 text-xs leading-6 text-[#718277]">已开通的资料库会员可直接使用 Dimmo 会员权益，无需重复付费。涉及具体党务判断的问题仍由小宣社长处理。</p>
             </div>
             <div className="rounded-3xl bg-[#faf8f3] p-5 text-center ring-1 ring-[#e8e1d6]">
               {loading ? <p className="py-24 text-sm text-neutral-500">正在确认登录状态…</p> : null}
@@ -240,19 +261,21 @@ export default function MembershipPaymentPage() {
                   profile.member_expires_at >= new Date().toISOString().slice(0, 10) ? (
                     <div className="mb-4 rounded-xl bg-[#c79b52]/10 px-4 py-3 text-center ring-1 ring-[#c79b52]/40">
                       <p className="text-sm font-semibold text-[#8a6b50]">★ 当前已是会员</p>
-                      <p className="mt-1 text-xs text-[#a08d72]">有效期至 {profile.member_expires_at}，再次支付将顺延一年</p>
+                  <p className="mt-1 text-xs text-[#a08d72]">有效期至 {profile.member_expires_at}，续费会在当前有效期后顺延</p>
                     </div>
                   ) : null}
                   <p className="text-sm text-neutral-500">当前账号：{maskAccountEmail(profile.email)}</p>
+                  <p className="mt-6 text-sm text-neutral-500">已选：{plan ? `${plan.name} · ${plan.duration}` : "正在读取套餐"}</p>
+                  <p className="mt-2 text-4xl font-semibold text-[#9b4d48]">¥ {price}</p>
                   <button
                     disabled={!configured}
                     onClick={() => {
                       if (useJsapi) void startJsapiPay();
                       else void createOrder();
                     }}
-                    className="mt-8 w-full rounded-xl bg-[#a64550] px-5 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-neutral-300"
+                    className="mt-8 w-full rounded-xl bg-[#24372e] px-5 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-neutral-300"
                   >
-                    {configured ? "微信支付" : "支付功能待配置"}
+                    {configured ? `开通${plan?.name || "会员"}` : "支付功能待配置"}
                   </button>
                   {configured && useJsapi ? (
                     <p className="mt-3 text-xs leading-5 text-neutral-400">微信内直接唤起收银台，无需扫码</p>

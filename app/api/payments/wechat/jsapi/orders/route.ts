@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
-  annualPriceCents,
   createJsapiOrder,
+  membershipPlan,
   signJsapiPayParams,
   wechatJsapiConfigured
 } from "@/lib/wechat-pay";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
  * JSAPI（公众号）支付下单：微信内置浏览器一键唤起收银台。
  * 依赖 wx_openid Cookie（由 /api/payments/wechat/oauth 授权流程写入）。
  */
-export async function POST() {
+export async function POST(request: Request) {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: "请先登录后购买会员。" }, { status: 401 });
   if (!wechatJsapiConfigured()) {
@@ -30,14 +30,18 @@ export async function POST() {
     return NextResponse.json({ needOAuth: true, error: "需要先完成微信授权。" }, { status: 401 });
   }
 
-  const amountTotal = annualPriceCents();
+  const body = await request.json().catch(() => ({}));
+  const plan = membershipPlan(body?.planCode);
+  if (!plan) return NextResponse.json({ error: "请选择月卡、季卡或年卡。" }, { status: 400 });
+  const amountTotal = plan.amountTotal;
   const outTradeNo = `XX${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`.slice(0, 32);
   const admin = getSupabaseAdmin();
-  const description = "小宣资料库年度会员";
+  const description = plan.description;
   const { error: insertError } = await admin.from("membership_orders").insert({
     out_trade_no: outTradeNo,
     user_id: session.user.id,
     email: session.user.email || null,
+    plan_code: plan.code,
     description,
     amount_total: amountTotal
   });

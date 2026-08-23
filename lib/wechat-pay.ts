@@ -32,9 +32,35 @@ function configuredPlatformPublicKey() {
   );
 }
 
-export function annualPriceCents() {
-  const value = Number(env("MEMBERSHIP_ANNUAL_PRICE_CENTS"));
-  return Number.isInteger(value) && value > 0 ? value : 0;
+export type MembershipPlanCode = "monthly" | "quarterly" | "annual";
+
+export type MembershipPlan = {
+  code: MembershipPlanCode;
+  name: string;
+  duration: string;
+  durationDays: number;
+  amountTotal: number;
+  description: string;
+};
+
+function positiveCents(name: string, fallback: number) {
+  const value = Number(env(name));
+  return Number.isInteger(value) && value > 0 ? value : fallback;
+}
+
+/**
+ * Dimmo 与资料库共用一份会员身份。价格使用独立变量，避免覆盖历史 99 元资料库订单配置。
+ */
+export function membershipPlans(): MembershipPlan[] {
+  return [
+    { code: "monthly", name: "月卡", duration: "30 天", durationDays: 30, amountTotal: positiveCents("DIMMO_MONTHLY_PRICE_CENTS", 2800), description: "小宣干货社会员月卡" },
+    { code: "quarterly", name: "季卡", duration: "90 天", durationDays: 90, amountTotal: positiveCents("DIMMO_QUARTERLY_PRICE_CENTS", 7900), description: "小宣干货社会员季卡" },
+    { code: "annual", name: "年卡", duration: "365 天", durationDays: 365, amountTotal: positiveCents("DIMMO_ANNUAL_PRICE_CENTS", 29900), description: "小宣干货社会员年卡" }
+  ];
+}
+
+export function membershipPlan(code: unknown) {
+  return membershipPlans().find((plan) => plan.code === code) || null;
 }
 
 export function wechatPayConfigured() {
@@ -45,7 +71,7 @@ export function wechatPayConfigured() {
     privateKey() &&
     env("WECHAT_PAY_API_V3_KEY") &&
     env("WECHAT_PAY_NOTIFY_URL") &&
-    annualPriceCents()
+    membershipPlans().some((plan) => plan.amountTotal > 0)
   );
 }
 
