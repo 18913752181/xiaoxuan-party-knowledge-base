@@ -8,7 +8,6 @@ export const AVATAR_OPTIONS = [
   { key: "acorn", name: "小橡果", src: "/images/avatars/avatar-acorn.webp" },
   { key: "bear", name: "小熊", src: "/images/avatars/avatar-bear.webp" },
   { key: "whale", name: "小鲸鱼", src: "/images/avatars/avatar-whale.webp" },
-  { key: "cactus", name: "小仙人掌", src: "/images/avatars/avatar-cactus.webp" },
   { key: "panda", name: "小熊猫", src: "/images/avatars/avatar-panda.webp" },
   { key: "mushroom", name: "小蘑菇", src: "/images/avatars/avatar-mushroom.webp" },
   { key: "cream-blob", name: "奶油团子", src: "/images/avatars/avatar-cream-blob.webp" },
@@ -19,6 +18,7 @@ export const AVATAR_OPTIONS = [
 export type AvatarKey = (typeof AVATAR_OPTIONS)[number]["key"];
 
 const FALLBACK_AVATAR_KEY: AvatarKey = "fox";
+const DEFAULT_AVATAR_KEYS: AvatarKey[] = ["fox", "dog", "bear", "whale", "panda", "mushroom", "cream-blob", "shadow-blob"];
 
 function hash(value: string) {
   let result = 0;
@@ -33,7 +33,7 @@ export function isAvatarKey(value?: string | null): value is AvatarKey {
 export function resolveAvatarKey(userId?: string, savedKey?: string | null): AvatarKey {
   if (isAvatarKey(savedKey)) return savedKey;
   if (!userId) return FALLBACK_AVATAR_KEY;
-  return AVATAR_OPTIONS[hash(userId) % AVATAR_OPTIONS.length].key;
+  return DEFAULT_AVATAR_KEYS[hash(userId) % DEFAULT_AVATAR_KEYS.length];
 }
 
 type ProfileAvatarProps = {
@@ -62,12 +62,6 @@ export function ProfileAvatar({ userId, avatarKey, size = 64, className = "", ti
         className="scale-[1.07] object-cover"
         priority={size >= 64}
       />
-      {avatar.key === "cactus" ? (
-        <span
-          aria-hidden="true"
-          className="absolute left-[28%] top-[2%] h-[18%] w-[44%] rounded-t-[70%] bg-[#8fb3d0] shadow-[inset_0_-2px_0_rgba(44,74,102,0.16)]"
-        />
-      ) : null}
     </span>
   );
 }
