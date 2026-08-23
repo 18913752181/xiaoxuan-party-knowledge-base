@@ -4,6 +4,7 @@ export type Profile = {
   id: string;
   nickname: string;
   email: string;
+  avatar_key?: string | null;
   phone?: string | null;
   member_status: MemberStatus;
   member_expires_at?: string | null;

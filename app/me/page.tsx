@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { maskAccountEmail } from "@/lib/display";
+import { ProfileAvatar } from "@/components/ProfileAvatar";
 
 export default function MePage() {
   const { profile, loading } = useAuth();
@@ -14,7 +15,7 @@ export default function MePage() {
       <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
         <Link href="/login" className="block rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm transition hover:border-[#c9a2a6] hover:bg-[#fbfaf6]">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#9a4650] text-2xl font-semibold text-white">宣</div>
+            <ProfileAvatar size={64} />
             <div>
               <h1 className="text-2xl font-semibold text-brand-ink">点我登录</h1>
               <p className="mt-2 text-sm text-neutral-500">登录后查看下载和收藏的文档。</p>
@@ -34,7 +35,7 @@ export default function MePage() {
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
       <div className="rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#9a4650] text-2xl font-semibold text-white">宣</div>
+          <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} size={64} />
           <div>
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
             <p className="mt-2 text-sm text-neutral-500">{maskAccountEmail(profile.email) || "已登录"}</p>

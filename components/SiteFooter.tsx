@@ -14,10 +14,10 @@ export function SiteFooter() {
         <nav aria-label="页脚导航">
           <p className="text-sm font-semibold text-brand-ink">快速入口</p>
           <ul className="mt-3 grid gap-2 text-sm text-neutral-500">
-            <li><Link href="/library" className="transition hover:text-[#9a4650]">资料库</Link></li>
-            <li><Link href="/#submit-question" className="transition hover:text-[#9a4650]">提交问题</Link></li>
-            <li><Link href="/membership" className="transition hover:text-[#9a4650]">会员服务</Link></li>
-            <li><Link href="/about" className="transition hover:text-[#9a4650]">关于我们</Link></li>
+            <li><Link href="/library" className="xuan-hover-highlight transition hover:text-[#9a4650]">资料库</Link></li>
+            <li><Link href="/#submit-question" className="xuan-hover-highlight transition hover:text-[#9a4650]">提交问题</Link></li>
+            <li><Link href="/membership" className="xuan-hover-highlight transition hover:text-[#9a4650]">会员服务</Link></li>
+            <li><Link href="/about" className="xuan-hover-highlight transition hover:text-[#9a4650]">关于我们</Link></li>
           </ul>
         </nav>
         <div>
@@ -26,7 +26,7 @@ export function SiteFooter() {
             href="https://beian.miit.gov.cn/"
             target="_blank"
             rel="noreferrer"
-            className="mt-3 block w-fit text-sm text-neutral-500 transition hover:text-[#9a4650]"
+            className="xuan-hover-highlight mt-3 block w-fit text-sm text-neutral-500 transition hover:text-[#9a4650]"
           >
             苏ICP备2026052948号
           </a>

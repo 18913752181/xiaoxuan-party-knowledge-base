@@ -28,6 +28,7 @@ export async function GET() {
       id: session.user.id,
       email: session.user.email || "",
       nickname: session.user.email?.split("@")[0] || "小宣用户",
+      avatar_key: null,
       member_status: "free",
       member_expires_at: null,
       is_admin: false,
@@ -43,4 +44,3 @@ export async function GET() {
   if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
   return response;
 }
-

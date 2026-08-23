@@ -7,7 +7,6 @@ import { downloadMaterialFile, downloadMaterialsAsZip } from "@/lib/download-fil
 import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites";
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
-import { WorkPanoramaHome } from "@/components/WorkPanoramaHome";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
@@ -279,7 +278,7 @@ export function ResourceLibrary({
           <form onSubmit={submitSearch} className={`xuan-search-shell ${libraryOnly ? "mt-6 max-w-3xl" : "mt-8"} flex items-center rounded-3xl p-2 pl-5 transition-[border-color,box-shadow] duration-150`}>
             <span className="mr-3 text-xl text-neutral-400" aria-hidden="true">⌕</span>
             <label htmlFor="material-search" className="sr-only">搜索资料</label>
-            <input id="material-search" type="search" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、组织生活会、发展党员、党支部换届……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-500 md:text-base" />
+            <input id="material-search" type="search" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、发展党员、换届选举……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-500 md:text-base" />
             {submittedKeyword ? <button type="button" onClick={clearSearch} className="h-12 shrink-0 px-3 text-sm text-neutral-400 transition-colors hover:text-brand-red">清除</button> : null}
             <button type="submit" className="h-12 shrink-0 rounded-2xl bg-brand-red px-5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">开始查找</button>
           </form>
@@ -356,11 +355,15 @@ export function ResourceLibrary({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader title={topic === topicAllOption ? (libraryOnly ? "资料列表" : "最新资料") : topic} subtitle={libraryOnly ? `共 ${filteredMaterials.length} 份` : undefined} />
             <div className="flex flex-wrap gap-2">
-              <label htmlFor="topic-filter" className="sr-only">按专题筛选资料</label>
-              <select id="topic-filter" value={topic} onChange={(event) => { setTopic(event.target.value); setMemberOnlyMaterial(null); }} className="h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 outline-none transition-colors focus:border-[#d9a6ac] focus:ring-2 focus:ring-[#f5d8db]">
-                <option value={topicAllOption}>{topicAllOption}</option>
-                {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              {libraryOnly ? (
+                <>
+                  <label htmlFor="topic-filter" className="sr-only">按专题筛选资料</label>
+                  <select id="topic-filter" value={topic} onChange={(event) => { setTopic(event.target.value); setMemberOnlyMaterial(null); }} className="h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 outline-none transition-colors focus:border-[#d9a6ac] focus:ring-2 focus:ring-[#f5d8db]">
+                    <option value={topicAllOption}>{topicAllOption}</option>
+                    {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
+                  </select>
+                </>
+              ) : <Link href="/library" className="group inline-flex min-h-11 items-center rounded-xl border border-brand-line bg-white px-4 py-2.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#d9dde2] hover:bg-[#fff8f8] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.98]"><span className="text-sm font-medium text-brand-ink transition-colors duration-150 group-hover:text-brand-red">全部专题</span></Link>}
               {libraryOnly ? (
                 <>
                   <label htmlFor="sort-filter" className="sr-only">资料排序</label>
@@ -449,7 +452,7 @@ export function ResourceLibrary({
                       <span>{material.topic || material.category}</span><span>·</span><span>{material.file_type}</span>
                       {material.member_only ? <span className="rounded-full bg-[#fff1f2] px-2 py-0.5 text-[#8d5057]">会员专属</span> : null}
                     </div>
-                    <Link href={`/materials/${slug}`} title={material.title} className="material-title mt-2 block text-lg font-semibold leading-7 text-brand-ink transition-colors duration-150 hover:text-brand-red">{displayMaterialTitle(material.title)}</Link>
+                    <Link href={`/materials/${slug}`} title={material.title} className="material-title mt-2 block text-lg font-semibold leading-7 text-brand-ink transition-colors duration-150 hover:text-brand-red"><span className="xuan-hover-highlight">{displayMaterialTitle(material.title)}</span></Link>
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
@@ -486,7 +489,6 @@ export function ResourceLibrary({
           )}
         </section>
 
-        {!libraryOnly ? <WorkPanoramaHome /> : null}
 
         {!libraryOnly ? <QuestionEntry /> : null}
       </div>}

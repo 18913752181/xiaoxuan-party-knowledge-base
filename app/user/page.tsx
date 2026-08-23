@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listMyFavorites, type FavoriteRow } from "@/lib/favorites";
 import { maskAccountEmail, WECHAT_EMAIL_SUFFIX } from "@/lib/display";
+import { AVATAR_OPTIONS, ProfileAvatar, resolveAvatarKey, type AvatarKey } from "@/components/ProfileAvatar";
 
 type PageState = "loading" | "guest" | "ready" | "error";
 
@@ -20,6 +21,8 @@ export default function UserPage() {
   const [wechatMessage, setWechatMessage] = useState("");
   const [wechatMessageKind, setWechatMessageKind] = useState<"ok" | "error">("ok");
   const [unbinding, setUnbinding] = useState(false);
+  const [avatarKey, setAvatarKey] = useState<AvatarKey | null>(null);
+  const [savingAvatar, setSavingAvatar] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const memberActive = memberStatus === "member" && Boolean(memberExpiresAt && memberExpiresAt >= today);
@@ -63,6 +66,7 @@ export default function UserPage() {
             setMemberStatus(profileData.profile.member_status || "free");
             setMemberExpiresAt(profileData.profile.member_expires_at || null);
             setWechatBound(Boolean(profileData.profile.wechat_bound));
+            setAvatarKey(resolveAvatarKey(data.user.id, profileData.profile.avatar_key));
           }
         })
         .catch(() => undefined);
@@ -103,6 +107,24 @@ export default function UserPage() {
     setWechatMessage("已解绑微信。");
   }
 
+  async function chooseAvatar(nextKey: AvatarKey) {
+    if (!userId || savingAvatar) return;
+    const previousKey = avatarKey;
+    setAvatarKey(nextKey);
+    setSavingAvatar(true);
+    const response = await fetch("/api/auth/avatar", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatar_key: nextKey })
+    });
+    setSavingAvatar(false);
+    if (!response.ok) {
+      setAvatarKey(previousKey);
+      const data = await response.json().catch(() => ({}));
+      setMessage(data.error || "头像保存失败，请稍后重试。");
+    }
+  }
+
   return (
     <section className="mx-auto max-w-4xl px-5 py-14 lg:px-8">
       <div className="rounded-2xl border border-brand-line bg-white p-8 shadow-soft">
@@ -131,10 +153,13 @@ export default function UserPage() {
         {state === "ready" ? (
           <>
             <div className="mt-6 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-5 py-4">
-              <p className="text-sm text-neutral-600">当前用户</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <p className="text-xl font-semibold text-brand-ink">{maskAccountEmail(email)}</p>
-                {memberActive ? (
+              <div className="flex flex-wrap gap-5">
+                <ProfileAvatar userId={userId} avatarKey={avatarKey} size={76} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-neutral-600">当前用户</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <p className="text-xl font-semibold text-brand-ink">{maskAccountEmail(email)}</p>
+                    {memberActive ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#c79b52]/15 px-3 py-1 text-xs font-semibold text-[#8a6b50] ring-1 ring-[#c79b52]/40">
                     ★ 会员
                     <span className="font-normal">有效期至 {memberExpiresAt}</span>
@@ -147,8 +172,32 @@ export default function UserPage() {
                     </Link>
                   </span>
                 )}
+                  </div>
+                  <p className="mt-2 break-all text-xs text-neutral-500">User ID：{userId}</p>
+                </div>
               </div>
-              <p className="mt-2 break-all text-xs text-neutral-500">User ID：{userId}</p>
+              <div className="mt-5 border-t border-[#cfe4d5] pt-4">
+                <p className="text-sm font-medium text-brand-ink">选择头像</p>
+                <p className="mt-1 text-xs text-neutral-500">首次登录会随机获得一个；之后可以随时更换。</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {AVATAR_OPTIONS.map((avatar) => {
+                    const selected = avatar.key === avatarKey;
+                    return (
+                      <button
+                        key={avatar.key}
+                        type="button"
+                        onClick={() => chooseAvatar(avatar.key)}
+                        disabled={savingAvatar}
+                        aria-label={`选择${avatar.name}头像`}
+                        aria-pressed={selected}
+                        className={`rounded-2xl p-1 transition disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "bg-brand-ink ring-2 ring-brand-ink ring-offset-2" : "hover:bg-white"}`}
+                      >
+                        <ProfileAvatar userId={userId} avatarKey={avatar.key} size={42} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={signOut}

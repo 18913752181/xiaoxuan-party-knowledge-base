@@ -21,6 +21,7 @@ const levelStyles = [
 
 export function WorkPanoramaHome() {
   const [workLevels, setWorkLevels] = useState<WorkLevel[]>(defaultWorkLevels);
+  const visibleWorkLevels = workLevels.filter((level) => level.slug !== "general-party-branch");
 
   useEffect(() => {
     fetch("/api/work-panorama", { cache: "no-store" })
@@ -37,7 +38,7 @@ export function WorkPanoramaHome() {
         </div>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
-        {workLevels.map((level, index) => {
+        {visibleWorkLevels.map((level, index) => {
           const style = levelStyles[index % levelStyles.length];
           return (
             <Link

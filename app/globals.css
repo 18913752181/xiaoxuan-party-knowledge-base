@@ -181,18 +181,20 @@ button:not(:disabled),
   padding: 0 2px;
 }
 
-/* Oil-html 式的“手写批注”：只标记可阅读的文字链接，不干扰卡片和按钮。 */
+/* Oil-html 式的“手写批注”：黄色色块只在文字悬停时显现。 */
+.xuan-hover-highlight {
+  background: linear-gradient(transparent 58%, var(--xuan-highlight) 58%, var(--xuan-highlight) 94%, transparent 94%);
+  background-repeat: no-repeat;
+  background-size: 0 100%;
+  padding: 0 2px;
+  transition: background-size 140ms var(--xuan-ease-out);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .material-title:hover,
-  .prose-content a:hover,
-  footer a:hover,
-  main a:not([class*="rounded"]):not([class*="border"]):not([class*="bg-"]):hover {
+  .material-title:hover .xuan-hover-highlight,
+  .xuan-hover-highlight:hover {
     color: var(--xuan-ink) !important;
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--xuan-highlight);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 6px;
+    background-size: 100% 100%;
   }
 }
 
