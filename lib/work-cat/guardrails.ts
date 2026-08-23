@@ -51,6 +51,14 @@ function isToolRequest(content: string) {
   return TOOL_PATTERNS.some((pattern) => pattern.test(content));
 }
 
+function localGreetingReply() {
+  const hour = Number(new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai", hour: "2-digit", hourCycle: "h23"
+  }).format(new Date()));
+  const period = hour >= 5 && hour < 11 ? "早上" : hour >= 11 && hour < 14 ? "中午" : hour >= 14 && hour < 18 ? "下午" : "晚上";
+  return `🐾 ${period}好，咪在呢。\n\n老大有什么事尽管和咪说。`;
+}
+
 /** 只找文件/链接属于资料导航，即使文件名里有“入党、政审”等专业词。 */
 function isPureResourceNavigation(content: string) {
   const asksForResource = RESOURCE_PATTERNS.some((pattern) => pattern.test(content)) || /哪里|在哪|链接|找.*(材料|表|记录|志愿书)/.test(content);
@@ -129,6 +137,7 @@ export function classifyByHardRules(content: string): Classification | null {
   if (RECEPTION_PATTERNS.some((pattern) => pattern.test(text))) {
     const asksWho = /你是谁/.test(text);
     const asksAboutXiaoxuan = /小宣是谁|社长是谁|小宣.*(什么人|做什么)|社长.*(什么人|做什么)/.test(text);
+    const asksWhereIsXiaoxuan = /小宣在吗|社长在吗/.test(text);
     return classified({
       category: "reception", intent: "CHAT",
       shouldReplyDirectly: true,
@@ -138,7 +147,9 @@ export function classifyByHardRules(content: string): Classification | null {
         ? "小宣是「干货社」社长，也是公主号「小宣同志」本人，平时社长和咪一起住在「喵喵工作台」喵。"
         : asksWho
         ? "咪是 Dimmo，一只住在「喵喵工作台」里的工作小猫～社长不在时，接待、传话和找资料都可以交给咪 🐾"
-        : "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～",
+        : asksWhereIsXiaoxuan
+        ? "🐾 社长现在不在，出去赚钱养咪了喵。\n\n老大有事尽管告诉咪，咪记在待办小本本～"
+        : localGreetingReply(),
       source: "rule"
     });
   }
