@@ -17,7 +17,7 @@ export function SiteFooter() {
             <li><Link href="/library" className="xuan-hover-highlight transition hover:text-[#9a4650]">资料库</Link></li>
             <li><Link href="/#submit-question" className="xuan-hover-highlight transition hover:text-[#9a4650]">提交问题</Link></li>
             <li><Link href="/membership" className="xuan-hover-highlight transition hover:text-[#9a4650]">会员服务</Link></li>
-            <li><Link href="/about" className="xuan-hover-highlight transition hover:text-[#9a4650]">关于我们</Link></li>
+            <li><Link href="/dimmo" className="xuan-hover-highlight transition hover:text-[#9a4650]">关于我们</Link></li>
           </ul>
         </nav>
         <div>

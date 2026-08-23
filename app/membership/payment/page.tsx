@@ -10,6 +10,12 @@ import { maskAccountEmail } from "@/lib/display";
 
 type Plan = { code: "monthly" | "quarterly" | "annual"; name: string; duration: string; amountTotal: number };
 
+const DEFAULT_PLANS: Plan[] = [
+  { code: "monthly", name: "月卡", duration: "30 天", amountTotal: 2800 },
+  { code: "quarterly", name: "季卡", duration: "90 天", amountTotal: 7900 },
+  { code: "annual", name: "年卡", duration: "365 天", amountTotal: 29900 }
+];
+
 const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
 const POLL_INTERVAL = 3000;
 const REDIRECT_DELAY = 2500;
@@ -36,7 +42,7 @@ function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMs
 export default function MembershipPaymentPage() {
   const router = useRouter();
   const { profile, loading, refreshProfile } = useAuth();
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [selectedPlanCode, setSelectedPlanCode] = useState<Plan["code"]>("annual");
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
@@ -66,11 +72,11 @@ export default function MembershipPaymentPage() {
       .then((data) => {
         setConfigured(Boolean(data.configured));
         setJsapiReady(Boolean(data.jsapiConfigured));
-        const nextPlans = Array.isArray(data.plans) ? data.plans as Plan[] : [];
+        const nextPlans = Array.isArray(data.plans) && data.plans.length ? data.plans as Plan[] : DEFAULT_PLANS;
         setPlans(nextPlans);
         if (!nextPlans.some((plan) => plan.code === "annual") && nextPlans[0]) setSelectedPlanCode(nextPlans[0].code);
       })
-      .catch(() => setMessage("会员信息读取失败，请稍后重试。"));
+      .catch(() => setMessage("会员信息暂未同步，当前展示默认套餐。"));
   }, []);
 
   // 微信授权回跳处理：jsapi=auto 自动唤起收银台；jsapi=error 展示失败原因
@@ -221,34 +227,46 @@ export default function MembershipPaymentPage() {
     ? Math.max(0, Math.ceil((new Date(`${profile.member_expires_at}T00:00:00`).getTime() - Date.now()) / 86400000))
     : 0;
 
+  // 当前资料库会员均为年费会员，进入续费页时先展示其对应的年卡方案。
+  useEffect(() => {
+    if (isActiveMember) setSelectedPlanCode("annual");
+  }, [isActiveMember]);
+
   return (
-    <main className="studio-membership-page">
-      <div className="studio-membership-shell">
-        <nav className="studio-membership-nav"><span>小宣干货社</span><Link href="/dimmo">回到喵喵工作台</Link></nav>
-        <section className="studio-membership-hero">
-          <div><p className="studio-membership-kicker">DIMMO 的会员工作台</p><h1>资料有人整理，<br />工作也有人惦记。</h1><p>开通后，完整资料、任务小本本和 Dimmo 的日常陪伴，都住进同一张会员卡里。</p></div>
-          {isActiveMember ? (
-            <div className="studio-member-hero-status"><Image src="/images/dimmo-default-transparent.png" alt="Dimmo 工作小猫" width={420} height={420} priority /><div><span>Dimmo 会员工作台</span><strong>剩余 <b>{daysRemaining}</b> 天</strong><small>咪会继续把事情记在小本本里</small></div></div>
-          ) : <Image src="/images/xiaoxuan-dimmo-workbench.png" alt="小宣和 Dimmo 在喵喵工作台工作" width={1536} height={1024} priority />}
+    <main className="dimmo-membership-page">
+      <div className="dimmo-membership-shell">
+        <nav className="dimmo-membership-nav"><span>小宣社长 <i>×</i> DIMMO</span><Link className="dimmo-membership-nav-label" href="/dimmo">小宣干货社</Link></nav>
+        <section className={`dimmo-membership-hero ${isActiveMember ? "" : "is-welcome"}`}>
+          <div className="dimmo-membership-cat"><Image src="/images/dimmo-member-coin-transparent.png" alt="踩着金币的 Dimmo 工作小猫" width={720} height={720} priority /></div>
+          <div className="dimmo-membership-ticket">
+            {isActiveMember ? <><span>喵喵工作台通行卡</span><strong>剩余 <b>{daysRemaining}</b> 天</strong>{profile?.member_expires_at ? <small>有效期至 {profile.member_expires_at}</small> : null}</> : <><span>Dimmo 欢迎卡</span><strong>嗨，咪是 Dimmo 🐾</strong><Link href="/dimmo" className="dimmo-welcome-link">认识小宣社长与 Dimmo</Link></>}
+          </div>
         </section>
-        <section className="studio-membership-content">
-          <div className="studio-membership-intro"><p className="studio-membership-kicker">选一张卡</p><h2>按现在的节奏，先和咪一起工作。</h2></div>
+        <section className="dimmo-membership-content">
+          <div className="dimmo-membership-intro"><p>喵喵工作台</p><span>完整资料、任务小本本和 Dimmo 的日常陪伴。</span></div>
           <div className="grid gap-7 pb-16 pt-8 md:grid-cols-[minmax(0,1fr)_330px]">
             <div>
-              <div className="studio-plan-list">
+              {isActiveMember && profile ? <div className="dimmo-member-summary"><strong>★ 当前已是年卡会员</strong><span>续费后将在当前有效期后顺延</span><small>当前账号：{maskAccountEmail(profile.email)}</small></div> : null}
+              <div className="dimmo-plan-list">
                 {plans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
-                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`studio-plan ${selected ? "is-selected" : ""}`}>
-                    <span><span>{candidate.name} · {candidate.duration}</span><small>资料库 + Dimmo 工作台</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
+                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${selected ? "is-selected" : ""}`}>
+                    <span><em>{candidate.code === "annual" ? "推荐" : "DIMMO 会员"}</em><span>{candidate.name} · {candidate.duration}</span></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
                 })}
               </div>
-              <div className="studio-membership-note">
-                <p>会员包含</p><ul><li>完整会员资料与后续更新</li><li>Dimmo 任务小本本与提醒</li><li>非专业内容的 AI 陪伴与资料导航</li></ul>
+              <div className="dimmo-membership-note">
+                <p>通行卡会员权益</p><ul>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>会员专属资料</b><small>解锁专属模板、填写说明与完整附件</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/continuous-updates.png" alt="" width={64} height={64} /><span><b>资料持续更新</b><small>新增资料和优化版本持续同步</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>多份资料一次打包为 ZIP</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-daily-companion.png" alt="" width={64} height={64} /><span><b>Dimmo 日常陪伴</b><small>非专业问题，随时找咪聊聊</small></span></li>
+                </ul>
               </div>
-              <p className="studio-membership-legacy">已开通的资料库会员可直接使用 Dimmo 会员权益，无需重复付费。涉及具体党务判断的问题仍由小宣社长处理。</p>
+              <p className="dimmo-membership-legacy">已开通的资料库会员，可直接使用 Dimmo 会员权益，无需重复付费。涉及专业问题，仍由小宣社长处理。</p>
             </div>
-            <div className="studio-checkout">
+            <div className="dimmo-checkout">
               {loading ? <p className="py-24 text-sm text-neutral-500">正在确认登录状态…</p> : null}
               {!loading && !profile ? (
                 <div className="py-20">
@@ -258,15 +276,6 @@ export default function MembershipPaymentPage() {
               ) : null}
               {!loading && profile && status === "idle" ? (
                 <>
-                  {profile.member_status === "member" &&
-                  profile.member_expires_at &&
-                  profile.member_expires_at >= new Date().toISOString().slice(0, 10) ? (
-                    <div className="mb-4 rounded-xl bg-[#c79b52]/10 px-4 py-3 text-center ring-1 ring-[#c79b52]/40">
-                      <p className="text-sm font-semibold text-[#8a6b50]">★ 当前已是会员</p>
-                  <p className="mt-1 text-xs text-[#a08d72]">有效期至 {profile.member_expires_at}，续费会在当前有效期后顺延</p>
-                    </div>
-                  ) : null}
-                  <p className="text-sm text-neutral-500">当前账号：{maskAccountEmail(profile.email)}</p>
                   <p className="mt-6 text-sm text-neutral-500">已选：{plan ? `${plan.name} · ${plan.duration}` : "正在读取套餐"}</p>
                   <p className="mt-2 text-4xl font-semibold text-[#9b4d48]">¥ {price}</p>
                   <button
@@ -275,7 +284,7 @@ export default function MembershipPaymentPage() {
                       if (useJsapi) void startJsapiPay();
                       else void createOrder();
                     }}
-                    className="studio-checkout-button"
+                    className="dimmo-checkout-button"
                   >
                     {isActiveMember ? `续费${plan?.name || "会员"}` : (configured ? `开通${plan?.name || "会员"}` : "支付功能待配置")}
                   </button>
@@ -347,7 +356,10 @@ export default function MembershipPaymentPage() {
         body:has(.studio-membership-page)>header,body:has(.studio-membership-page)>footer,body:has(.studio-membership-page) nav[aria-label="移动端导航"]{display:none} body:has(.studio-membership-page)>main{padding-bottom:0}
         .studio-membership-page{--ink:#302d28;--muted:#706a61;--line:#e9e3d7;--paper:#fffdf8;--warm:#f4d77d;--warm-soft:#fff5d8;min-height:100vh;background:var(--paper);color:var(--ink);font-family:PingFang SC,Microsoft YaHei,system-ui,sans-serif;line-height:1.78}.studio-membership-shell{width:min(100% - 44px,1120px);margin:auto}.studio-membership-nav{display:flex;justify-content:space-between;align-items:center;min-height:72px;border-bottom:1px solid var(--line);font-size:18px;font-weight:700}.studio-membership-nav a{font-size:14px;color:var(--ink);text-decoration:none}.studio-membership-nav a:hover{text-decoration:underline;text-underline-offset:5px}.studio-membership-hero{display:grid;grid-template-columns:.86fr 1.14fr;align-items:center;min-height:510px;position:relative;overflow:hidden}.studio-membership-hero:before{content:'';position:absolute;width:440px;height:440px;border-radius:50%;background:var(--warm-soft);right:-90px;top:35px}.studio-membership-hero>div{position:relative;z-index:1}.studio-membership-kicker{margin:0 0 14px;color:#8b6a16;font-size:14px;font-weight:650;letter-spacing:.12em}.studio-membership-hero h1,.studio-membership-intro h2{margin:0;line-height:1.32;letter-spacing:-.03em}.studio-membership-hero h1{font-size:clamp(38px,5vw,58px);font-weight:680}.studio-membership-hero p:not(.studio-membership-kicker){max-width:480px;margin:20px 0 0;color:var(--muted);font-size:17px}.studio-membership-hero>img{position:relative;z-index:1;width:124%;height:auto;max-width:none;margin:35px 0 -18px -18%;filter:drop-shadow(0 24px 28px rgba(83,62,29,.11))}.studio-membership-content{border-top:1px solid var(--line)}.studio-membership-intro{max-width:620px;padding-top:70px}.studio-membership-intro h2{font-size:clamp(29px,3.7vw,40px);font-weight:680}.studio-plan-list{border-top:1px solid var(--line)}.studio-plan{display:flex;width:100%;justify-content:space-between;align-items:center;padding:22px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer}.studio-plan span>span{display:block;font-size:20px;font-weight:650}.studio-plan small{display:block;margin-top:4px;color:var(--muted);font-size:14px}.studio-plan strong{font-size:27px}.studio-plan.is-selected{padding-left:22px;padding-right:22px;background:var(--warm-soft);box-shadow:inset 4px 0 var(--warm)}.studio-plan.is-selected strong{color:#8b6a16}.studio-membership-note{margin-top:34px;padding:22px 26px;border-left:4px solid var(--warm);background:rgba(255,245,216,.66);color:#665b48;font-size:15px}.studio-membership-note p{margin:0;font-size:16px;font-weight:650;color:var(--ink)}.studio-membership-note ul{margin:10px 0 0;padding-left:20px}.studio-membership-legacy{margin:20px 0 0;color:var(--muted);font-size:14px}.studio-checkout{align-self:start;padding:28px;background:#34312c;color:#fff;text-align:center}.studio-checkout p{color:rgba(255,255,255,.7)!important}.studio-checkout .text-neutral-500,.studio-checkout .text-neutral-400{color:rgba(255,255,255,.62)!important}.studio-checkout .text-\[\#9b4d48\]{color:var(--warm)!important}.studio-checkout-button{width:100%;margin-top:30px;padding:15px;border:0;border-radius:14px;background:var(--warm);color:#302d28;font-size:15px;font-weight:700;cursor:pointer}.studio-checkout-button:disabled{background:#737068;color:#dbd8cf;cursor:not-allowed}.studio-checkout a{background:var(--warm)!important;color:#302d28!important}.studio-checkout .bg-\[\#c79b52\]\\/10{background:rgba(244,215,125,.14)!important}.studio-checkout .text-\[\#8a6b50\],.studio-checkout .text-\[\#a08d72\]{color:#f6df97!important}@media(max-width:800px){.studio-membership-shell{width:min(100% - 28px,620px)}.studio-membership-nav{min-height:62px}.studio-membership-hero{grid-template-columns:1fr;min-height:auto;padding-top:52px}.studio-membership-hero:before{width:330px;height:330px;right:-145px;top:300px}.studio-membership-hero h1{font-size:40px}.studio-membership-hero>img{width:118%;margin:0 0 -12px -12%}.studio-membership-intro{padding-top:58px}.studio-membership-content .grid{padding-top:28px}.studio-checkout{margin-top:8px}.studio-plan.is-selected{padding-left:16px;padding-right:16px}}
         .studio-member-hero-status{display:flex;align-items:center;align-self:end;min-height:390px;padding:30px;gap:8px}.studio-member-hero-status img{width:56%;height:auto;filter:drop-shadow(0 20px 22px rgba(83,62,29,.14))}.studio-member-hero-status>div{min-width:210px;margin-left:-45px;padding:22px 24px;border-radius:18px;background:#fffdf8;box-shadow:0 18px 32px rgba(83,62,29,.10);text-align:center}.studio-member-hero-status span,.studio-member-hero-status small{display:block;color:var(--muted);font-size:14px}.studio-member-hero-status strong{display:block;margin:6px 0;color:var(--ink);font-size:22px}.studio-member-hero-status b{font-size:42px;color:#8b6a16}.studio-checkout{background:var(--warm-soft);color:var(--ink);border:1px solid #eddaa0}.studio-checkout p,.studio-checkout .text-neutral-500,.studio-checkout .text-neutral-400{color:#665b48!important}.studio-checkout .text-\\[\\#9b4d48\\]{color:#8b6a16!important}.studio-checkout-button{background:#35312c;color:#fff}.studio-checkout-button:disabled{background:#a7a094;color:#f7f3ea}.studio-checkout a{background:#35312c!important;color:#fff!important}.studio-checkout .bg-\\[\\#c79b52\\]\\\\/10{background:rgba(244,215,125,.45)!important}.studio-checkout .text-\\[\\#8a6b50\\],.studio-checkout .text-\\[\\#a08d72\\]{color:#665b48!important}@media(max-width:800px){.studio-member-hero-status{min-height:270px;padding:10px 0 0}.studio-member-hero-status img{width:54%}.studio-member-hero-status>div{min-width:180px;margin-left:-36px;padding:17px 14px}.studio-member-hero-status b{font-size:34px}}
+        .dimmo-membership-page{--ink:#2f302a;--muted:#777365;--line:#e9e3d7;--cream:#fffdf7;--yellow:#f3cf67;--yellow-soft:#fff4cf;--yellow-deep:#9d7111;min-height:100vh;background:var(--cream);color:var(--ink);font-family:PingFang SC,Microsoft YaHei,system-ui,sans-serif}.dimmo-membership-shell{width:min(100% - 44px,760px);margin:auto;padding-bottom:50px}.dimmo-membership-nav{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);font-size:15px;font-weight:740;letter-spacing:.02em}.dimmo-membership-nav i{color:var(--yellow-deep);font-style:normal}.dimmo-membership-nav a{color:var(--ink);font-size:13px;font-weight:600;text-decoration:none}.dimmo-membership-hero{display:flex;align-items:center;min-height:264px;margin:24px 0 0;padding:14px 28px 6px;border-radius:30px;background:linear-gradient(125deg,#f8dc8c,#f2c455);overflow:hidden;position:relative}.dimmo-membership-hero:before{content:'';position:absolute;width:250px;height:250px;right:-86px;top:-95px;border-radius:50%;background:rgba(255,255,255,.22)}.dimmo-membership-cat{position:relative;z-index:1;flex:1;align-self:end;min-width:0;line-height:0}.dimmo-membership-cat img{width:280px;height:auto;margin:0 0 -8px -20px;mix-blend-mode:multiply;filter:drop-shadow(0 17px 12px rgba(89,57,7,.18))}.dimmo-membership-ticket{position:relative;z-index:1;width:246px;margin:0 0 20px -18px;padding:21px 18px 19px;border-radius:20px;background:rgba(255,253,247,.94);box-shadow:0 14px 24px rgba(98,66,11,.12);text-align:center}.dimmo-membership-ticket:before{content:'';position:absolute;top:-27px;left:50%;height:27px;border-left:2px solid var(--ink);transform:rotate(27deg)}.dimmo-membership-ticket span,.dimmo-membership-ticket small{display:block;color:var(--muted);font-size:12px}.dimmo-membership-ticket strong{display:block;margin:3px 0 6px;font-size:19px;line-height:1.35;letter-spacing:-.03em}.dimmo-membership-ticket b{font-size:42px;color:var(--ink)}.dimmo-membership-content{padding-top:48px}.dimmo-membership-intro{text-align:center}.dimmo-membership-intro p{margin:0 0 10px;color:var(--yellow-deep);font-size:13px;font-weight:750;letter-spacing:.14em}.dimmo-membership-intro h1{margin:0;font-size:clamp(28px,5vw,38px);letter-spacing:-.055em;line-height:1.28}.dimmo-membership-intro>span{display:block;max-width:430px;margin:14px auto 0;color:var(--muted);font-size:14px;line-height:1.75}.dimmo-plan-list{display:grid;gap:12px}.dimmo-plan{position:relative;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:112px;padding:18px 22px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.dimmo-plan:hover{transform:translateY(-2px)}.dimmo-plan.is-selected{border:2px solid var(--yellow);background:repeating-linear-gradient(-45deg,#fffdf6 0,#fffdf6 12px,#fff8df 12px,#fff8df 24px);box-shadow:0 9px 20px rgba(143,100,12,.08)}.dimmo-plan>span>span{display:block;font-size:19px;font-weight:760}.dimmo-plan em{display:inline-block;margin-bottom:4px;padding:1px 8px;border-radius:20px;background:var(--yellow-soft);color:var(--yellow-deep);font-size:11px;font-style:normal;font-weight:750}.dimmo-plan small{display:block;margin-top:3px;color:var(--muted);font-size:12px}.dimmo-plan strong{font-size:30px;letter-spacing:-.05em}.dimmo-plan.is-selected strong{color:var(--yellow-deep)}.dimmo-membership-note{margin-top:25px;padding:24px;border-radius:22px;background:#fff8e4}.dimmo-membership-note>p{margin:0 0 15px;color:#6a561e;font-size:16px;font-weight:760}.dimmo-membership-note ul{display:grid;gap:14px;margin:0;padding:0;list-style:none}.dimmo-membership-note li{display:grid;grid-template-columns:104px 1fr;gap:10px;align-items:baseline}.dimmo-membership-note b{font-size:14px}.dimmo-membership-note span{color:var(--muted);font-size:13px}.dimmo-membership-legacy{margin:18px 3px 0;color:var(--muted);font-size:12px;line-height:1.8}.dimmo-checkout{align-self:start;padding:25px;border:1px solid #efdc9f;border-radius:22px;background:var(--yellow-soft);color:var(--ink);text-align:center}.dimmo-checkout p,.dimmo-checkout .text-neutral-500,.dimmo-checkout .text-neutral-400{color:#746846!important}.dimmo-checkout .text-\\[\\#9b4d48\\]{color:#8d6816!important}.dimmo-checkout .bg-\\[\\#c79b52\\]\\/10{background:rgba(243,207,103,.38)!important}.dimmo-checkout .text-\\[\\#8a6b50\\],.dimmo-checkout .text-\\[\\#a08d72\\]{color:#705819!important}.dimmo-checkout-button{width:100%;margin-top:28px;padding:15px;border:0;border-radius:14px;background:var(--yellow);box-shadow:0 4px 0 #d6ad3f;color:#312f28;font-size:15px;font-weight:780;cursor:pointer}.dimmo-checkout-button:disabled{background:#d6ccae;box-shadow:none;color:#827b68;cursor:not-allowed}.dimmo-checkout a{background:var(--yellow)!important;color:#302d28!important}.dimmo-checkout .text-\\[\\#a64550\\]{color:#a45a42!important}@media(max-width:700px){.dimmo-membership-shell{width:min(100% - 28px,520px);padding-bottom:26px}.dimmo-membership-nav{height:62px}.dimmo-membership-hero{min-height:220px;margin-top:17px;padding:10px 16px 5px;border-radius:24px}.dimmo-membership-cat img{width:245px;margin-left:-25px}.dimmo-membership-ticket{width:190px;margin:0 0 14px -31px;padding:16px 9px}.dimmo-membership-ticket strong{font-size:15px}.dimmo-membership-ticket b{font-size:35px}.dimmo-membership-content{padding-top:38px}.dimmo-membership-intro h1{font-size:30px}.dimmo-membership-note li{grid-template-columns:93px 1fr;gap:8px}.dimmo-checkout{margin-top:0}.dimmo-membership-page .grid{gap:22px;padding-top:26px;padding-bottom:30px}}@media(max-width:390px){.dimmo-membership-cat img{width:220px}.dimmo-membership-ticket{width:175px;margin-left:-42px}.dimmo-membership-ticket b{font-size:31px}}
       ` }} />
+      <style dangerouslySetInnerHTML={{ __html: `body:has(.dimmo-membership-page)>header,body:has(.dimmo-membership-page)>footer,body:has(.dimmo-membership-page) nav[aria-label="移动端导航"]{display:none}body:has(.dimmo-membership-page)>main{padding-bottom:0}` }} />
+      <style dangerouslySetInnerHTML={{ __html: `.dimmo-membership-nav-label{color:var(--ink);font-size:13px;font-weight:650;text-decoration:none;text-decoration-thickness:1px;text-underline-offset:5px;transition:font-weight .16s ease,text-decoration-color .16s ease}.dimmo-membership-nav-label:hover{font-weight:800;text-decoration:underline}.dimmo-membership-cat{overflow:visible;border-radius:0;background:transparent}.dimmo-membership-cat img{display:block;width:306px;margin:0 0 -12px 8px}.dimmo-membership-ticket:before{display:none}.dimmo-membership-ticket span,.dimmo-membership-ticket small{color:#8d8066}.dimmo-membership-ticket strong{color:#5d574b;font-weight:650}.dimmo-membership-ticket b{color:#ab8129}.dimmo-membership-hero.is-welcome{min-height:235px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-bottom:8px;padding:17px 18px}.dimmo-welcome-link{display:inline-flex;margin-top:10px;padding:5px 10px;border:1px solid #ddd0aa;border-radius:999px;color:#786944;font-size:12px;font-weight:600;text-decoration:none}.dimmo-welcome-link:hover{background:#fff8df}.dimmo-membership-intro p{color:#354942}.dimmo-member-summary{display:grid;gap:4px;margin-bottom:13px;padding:15px 18px;border:1px solid #efd58a;border-radius:18px;background:#fff5cf;color:#695719;text-align:left}.dimmo-member-summary strong{font-size:15px}.dimmo-member-summary span{font-size:12px;line-height:1.55}.dimmo-member-summary small{color:#817144;font-size:12px}.dimmo-membership-note ul{gap:13px}.dimmo-membership-note li{grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center}.dimmo-benefit-icon{width:48px;height:48px;object-fit:contain}.dimmo-membership-note b,.dimmo-membership-note small{display:block}.dimmo-membership-note b{font-size:14px}.dimmo-membership-note small{margin-top:3px;color:var(--muted);font-size:13px;line-height:1.55}.dimmo-checkout{padding:18px 20px;border-radius:18px}.dimmo-checkout .mt-6{margin-top:.85rem!important}.dimmo-checkout .mt-2{margin-top:.35rem!important}.dimmo-checkout .mt-3{margin-top:.7rem!important}.dimmo-checkout-button{margin-top:18px;padding:12px}@media(max-width:700px){.dimmo-membership-cat img{width:262px;margin-left:-2px}.dimmo-membership-hero.is-welcome{min-height:212px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-left:-38px;padding:14px 10px}.dimmo-welcome-link{margin-top:7px;padding:4px 8px;font-size:11px}.dimmo-membership-note li{grid-template-columns:48px minmax(0,1fr);gap:10px}.dimmo-benefit-icon{width:44px;height:44px}}` }} />
     </main>
   );
 }
