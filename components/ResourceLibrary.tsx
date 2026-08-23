@@ -259,7 +259,7 @@ export function ResourceLibrary({
 
   return (
     <div className="xuan-shell">
-      <section className={`border-b border-brand-line ${libraryOnly ? "bg-white" : "bg-brand-paper"}`}>
+      <section className={libraryOnly ? "bg-white" : "bg-brand-paper"}>
         <div className={`mx-auto px-5 ${libraryOnly ? "max-w-6xl py-8 lg:px-8 lg:py-10" : "max-w-5xl py-12 text-center lg:px-8 lg:py-16"}`}>
           {libraryOnly ? (
             <div className="max-w-2xl">
@@ -271,7 +271,7 @@ export function ResourceLibrary({
               <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-5">
                 <DimmoCompanion />
                 <h1 className="xuan-display-title text-center text-4xl leading-tight text-brand-ink md:text-5xl">
-                  工作资料，<span className="text-brand-red">马上找到</span>
+                  工作资料，<span className="xuan-highlight">马上找到</span>
                 </h1>
               </div>
             </div>
@@ -318,7 +318,7 @@ export function ResourceLibrary({
       </section>
 
       {!libraryOnly && !showSearchMode && !isLoading && materials.length >= 1000 ? (
-        <div className="border-b border-brand-line bg-white">
+        <div className="bg-white">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-x-7 gap-y-2 px-5 py-4 text-sm text-neutral-600 lg:px-8">
             <span><b className="font-semibold text-brand-ink">{magnitudeLabel(materials.length)}</b> 份常用资料</span>
             <span><b className="font-semibold text-brand-ink">{magnitudeLabel(topicCounts.size)}</b> 个工作专题</span>

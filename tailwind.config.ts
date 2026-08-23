@@ -11,17 +11,17 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          red: "#a63e47",
-          darkRed: "#873039",
-          ink: "#1b1f24",
-          gray: "#f6f7f9",
-          line: "#e3e7eb",
-          paper: "#fafbfc",
+          red: "#1a1a1a",
+          darkRed: "#1a1a1a",
+          ink: "#1a1a1a",
+          gray: "#ffffff",
+          line: "#e8e8e8",
+          paper: "#ffffff",
           card: "#ffffff",
-          sage: "#637a70",
-          sageDark: "#50695d",
-          teal: "#637a70",
-          brown: "#8a6b50"
+          sage: "#67705e",
+          sageDark: "#4f5948",
+          teal: "#67705e",
+          brown: "#806642"
         }
       },
       boxShadow: {
