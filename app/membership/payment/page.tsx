@@ -218,35 +218,31 @@ export default function MembershipPaymentPage() {
   const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
 
   return (
-    <main className="min-h-[100dvh] bg-[#f6f5ef] px-4 py-6 text-[#24372e] sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-4xl">
-        <Link href="/library" className="text-sm font-medium text-[#587063]">返回资料库</Link>
-        <section className="mt-4 overflow-hidden rounded-[28px] border border-[#d9dfd4] bg-white shadow-[0_20px_60px_rgba(36,55,46,0.08)]">
-          <header className="relative overflow-hidden bg-[#eaf0ea] px-6 py-8 sm:px-10 sm:py-10">
-            <Image src="/images/dimmo-resting-transparent-v2.png" alt="Dimmo 工作小猫" width={240} height={240} priority className="pointer-events-none absolute -bottom-7 right-3 h-36 w-auto opacity-95 sm:right-10 sm:h-44" />
-            <p className="text-sm font-semibold tracking-wide text-[#9b4d48]">小宣干货社年度会员</p>
-            <h1 className="mt-3 max-w-md text-3xl font-semibold tracking-tight sm:text-4xl">资料有归处，工作也有人陪着记。</h1>
-            <p className="mt-4 max-w-lg pr-24 text-sm leading-7 text-[#587063] sm:text-base">一份会员，包含资料库完整权益，也包含 Dimmo 的任务小本本、提醒与非专业工作陪伴。</p>
-          </header>
-          <div className="grid gap-7 p-5 sm:p-8 md:grid-cols-[minmax(0,1fr)_330px] md:p-10">
+    <main className="studio-membership-page">
+      <div className="studio-membership-shell">
+        <nav className="studio-membership-nav"><span>小宣干货社</span><Link href="/dimmo">回到喵喵工作台</Link></nav>
+        <section className="studio-membership-hero">
+          <div><p className="studio-membership-kicker">DIMMO 的会员工作台</p><h1>资料有人整理，<br />工作也有人惦记。</h1><p>开通后，完整资料、任务小本本和 Dimmo 的日常陪伴，都住进同一张会员卡里。</p></div>
+          <Image src="/images/xiaoxuan-dimmo-workbench.png" alt="小宣和 Dimmo 在喵喵工作台工作" width={1536} height={1024} priority />
+        </section>
+        <section className="studio-membership-content">
+          <div className="studio-membership-intro"><p className="studio-membership-kicker">选一张卡</p><h2>按现在的节奏，先和咪一起工作。</h2></div>
+          <div className="grid gap-7 pb-16 pt-8 md:grid-cols-[minmax(0,1fr)_330px]">
             <div>
-              <h2 className="text-xl font-semibold">选一张适合现在的卡</h2>
-              <div className="mt-5 grid gap-3">
+              <div className="studio-plan-list">
                 {plans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
-                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-left transition active:scale-[0.99] ${selected ? "border-[#9b4d48] bg-[#fbf2ef] ring-1 ring-[#9b4d48]" : "border-[#dce2dc] bg-white hover:border-[#aebcb0]"}`}>
-                    <span><span className="block text-base font-semibold">{candidate.name} · {candidate.duration}</span><span className="mt-1 block text-sm text-[#718277]">资料库 + Dimmo 工作台</span></span>
-                    <span className={`text-2xl font-semibold ${selected ? "text-[#9b4d48]" : "text-[#24372e]"}`}>¥{(candidate.amountTotal / 100).toFixed(0)}</span>
+                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`studio-plan ${selected ? "is-selected" : ""}`}>
+                    <span><span>{candidate.name} · {candidate.duration}</span><small>资料库 + Dimmo 工作台</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
                 })}
               </div>
-              <div className="mt-7 rounded-2xl bg-[#f3f6f2] p-5 text-sm leading-7 text-[#52675b]">
-                <p className="font-semibold text-[#24372e]">会员包含</p>
-                <ul className="mt-2 space-y-1"><li>完整会员资料与后续更新</li><li>Dimmo 任务小本本与提醒</li><li>非专业内容的 AI 陪伴与资料导航</li></ul>
+              <div className="studio-membership-note">
+                <p>会员包含</p><ul><li>完整会员资料与后续更新</li><li>Dimmo 任务小本本与提醒</li><li>非专业内容的 AI 陪伴与资料导航</li></ul>
               </div>
-              <p className="mt-4 text-xs leading-6 text-[#718277]">已开通的资料库会员可直接使用 Dimmo 会员权益，无需重复付费。涉及具体党务判断的问题仍由小宣社长处理。</p>
+              <p className="studio-membership-legacy">已开通的资料库会员可直接使用 Dimmo 会员权益，无需重复付费。涉及具体党务判断的问题仍由小宣社长处理。</p>
             </div>
-            <div className="rounded-3xl bg-[#faf8f3] p-5 text-center ring-1 ring-[#e8e1d6]">
+            <div className="studio-checkout">
               {loading ? <p className="py-24 text-sm text-neutral-500">正在确认登录状态…</p> : null}
               {!loading && !profile ? (
                 <div className="py-20">
@@ -273,7 +269,7 @@ export default function MembershipPaymentPage() {
                       if (useJsapi) void startJsapiPay();
                       else void createOrder();
                     }}
-                    className="mt-8 w-full rounded-xl bg-[#24372e] px-5 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-neutral-300"
+                    className="studio-checkout-button"
                   >
                     {configured ? `开通${plan?.name || "会员"}` : "支付功能待配置"}
                   </button>
@@ -341,6 +337,10 @@ export default function MembershipPaymentPage() {
           </div>
         </section>
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        body:has(.studio-membership-page)>header,body:has(.studio-membership-page)>footer,body:has(.studio-membership-page) nav[aria-label="移动端导航"]{display:none} body:has(.studio-membership-page)>main{padding-bottom:0}
+        .studio-membership-page{--ink:#302d28;--muted:#706a61;--line:#e9e3d7;--paper:#fffdf8;--warm:#f4d77d;--warm-soft:#fff5d8;min-height:100vh;background:var(--paper);color:var(--ink);font-family:PingFang SC,Microsoft YaHei,system-ui,sans-serif;line-height:1.78}.studio-membership-shell{width:min(100% - 44px,1120px);margin:auto}.studio-membership-nav{display:flex;justify-content:space-between;align-items:center;min-height:72px;border-bottom:1px solid var(--line);font-size:18px;font-weight:700}.studio-membership-nav a{font-size:14px;color:var(--ink);text-decoration:none}.studio-membership-nav a:hover{text-decoration:underline;text-underline-offset:5px}.studio-membership-hero{display:grid;grid-template-columns:.86fr 1.14fr;align-items:center;min-height:510px;position:relative;overflow:hidden}.studio-membership-hero:before{content:'';position:absolute;width:440px;height:440px;border-radius:50%;background:var(--warm-soft);right:-90px;top:35px}.studio-membership-hero>div{position:relative;z-index:1}.studio-membership-kicker{margin:0 0 14px;color:#8b6a16;font-size:14px;font-weight:650;letter-spacing:.12em}.studio-membership-hero h1,.studio-membership-intro h2{margin:0;line-height:1.32;letter-spacing:-.03em}.studio-membership-hero h1{font-size:clamp(38px,5vw,58px);font-weight:680}.studio-membership-hero p:not(.studio-membership-kicker){max-width:480px;margin:20px 0 0;color:var(--muted);font-size:17px}.studio-membership-hero>img{position:relative;z-index:1;width:124%;height:auto;max-width:none;margin:35px 0 -18px -18%;filter:drop-shadow(0 24px 28px rgba(83,62,29,.11))}.studio-membership-content{border-top:1px solid var(--line)}.studio-membership-intro{max-width:620px;padding-top:70px}.studio-membership-intro h2{font-size:clamp(29px,3.7vw,40px);font-weight:680}.studio-plan-list{border-top:1px solid var(--line)}.studio-plan{display:flex;width:100%;justify-content:space-between;align-items:center;padding:22px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer}.studio-plan span>span{display:block;font-size:20px;font-weight:650}.studio-plan small{display:block;margin-top:4px;color:var(--muted);font-size:14px}.studio-plan strong{font-size:27px}.studio-plan.is-selected{padding-left:22px;padding-right:22px;background:var(--warm-soft);box-shadow:inset 4px 0 var(--warm)}.studio-plan.is-selected strong{color:#8b6a16}.studio-membership-note{margin-top:34px;padding:22px 26px;border-left:4px solid var(--warm);background:rgba(255,245,216,.66);color:#665b48;font-size:15px}.studio-membership-note p{margin:0;font-size:16px;font-weight:650;color:var(--ink)}.studio-membership-note ul{margin:10px 0 0;padding-left:20px}.studio-membership-legacy{margin:20px 0 0;color:var(--muted);font-size:14px}.studio-checkout{align-self:start;padding:28px;background:#34312c;color:#fff;text-align:center}.studio-checkout p{color:rgba(255,255,255,.7)!important}.studio-checkout .text-neutral-500,.studio-checkout .text-neutral-400{color:rgba(255,255,255,.62)!important}.studio-checkout .text-\[\#9b4d48\]{color:var(--warm)!important}.studio-checkout-button{width:100%;margin-top:30px;padding:15px;border:0;border-radius:14px;background:var(--warm);color:#302d28;font-size:15px;font-weight:700;cursor:pointer}.studio-checkout-button:disabled{background:#737068;color:#dbd8cf;cursor:not-allowed}.studio-checkout a{background:var(--warm)!important;color:#302d28!important}.studio-checkout .bg-\[\#c79b52\]\\/10{background:rgba(244,215,125,.14)!important}.studio-checkout .text-\[\#8a6b50\],.studio-checkout .text-\[\#a08d72\]{color:#f6df97!important}@media(max-width:800px){.studio-membership-shell{width:min(100% - 28px,620px)}.studio-membership-nav{min-height:62px}.studio-membership-hero{grid-template-columns:1fr;min-height:auto;padding-top:52px}.studio-membership-hero:before{width:330px;height:330px;right:-145px;top:300px}.studio-membership-hero h1{font-size:40px}.studio-membership-hero>img{width:118%;margin:0 0 -12px -12%}.studio-membership-intro{padding-top:58px}.studio-membership-content .grid{padding-top:28px}.studio-checkout{margin-top:8px}.studio-plan.is-selected{padding-left:16px;padding-right:16px}}
+      ` }} />
     </main>
   );
 }
