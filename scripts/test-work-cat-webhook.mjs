@@ -126,6 +126,24 @@ if (!/Dimmo|咪|社长/.test(reception) || /具体党务判断/.test(reception))
 }
 console.log("✓ 普通问题由 Dimmo 直接回复");
 
+const resource = await message("有没有主题党日模板？", `local-resource-${suffix}`);
+if (!/主题党日|xiaoxuanvip\.com\/materials/.test(resource) || /交给小宣社长确认/.test(resource)) {
+  throw new Error(`资料检索链路不符合预期：${resource}`);
+}
+console.log("✓ 找资料命中资料库后返回明确结果");
+
+const tool = await message("帮我算一下积极分子什么时候满一年", `local-tool-${suffix}`);
+if (!/入党时间核算/.test(tool) || /交给小宣社长确认/.test(tool)) {
+  throw new Error(`工具路由链路不符合预期：${tool}`);
+}
+console.log("✓ 工具问题进入入党时间核算，不由 Dimmo 手算");
+
+const human = await message("我要找小宣", `local-human-${suffix}`);
+if (!/交给小宣社长确认/.test(human)) {
+  throw new Error(`人工转交链路不符合预期：${human}`);
+}
+console.log("✓ 明确找小宣的问题已转人工");
+
 const professional = await message("支委会可以研究接收预备党员吗？", `local-professional-${suffix}`);
 if (!/党务判断|小宣社长|社长.*回复/.test(professional)) {
   throw new Error(`专业问题没有转交小宣：${professional}`);

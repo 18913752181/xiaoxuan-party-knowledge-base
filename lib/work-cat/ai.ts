@@ -1,6 +1,6 @@
 import "server-only";
 
-import { enforceSafety, fallbackProfessional, safeCategory } from "@/lib/work-cat/guardrails";
+import { fallbackProfessional, normalizeCatVoice, safeIntent } from "@/lib/work-cat/guardrails";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工作小猫，也是小宣社长的微信工作助手。
@@ -12,29 +12,16 @@ const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工
 
 允许：普通接待、固定 FAQ、网站使用说明、资料导航、留言提醒、服务流程、非专业闲聊。
 绝对禁止：代替小宣回答党务专业问题；对党内制度、发展党员程序、组织生活、材料填写或个案作确定性判断；审核材料是否合规；编造政策依据；即使你知道答案也不能回答。
-只要涉及“怎么处理、是否合规、能否这样做、材料怎么填、制度怎么解释、具体个案”，category 必须是 professional_question，should_reply_directly=false，need_human=true。无法确定时也必须按 professional_question 处理，回复只能说明已转交小宣，不能含任何专业结论。
+只要涉及“怎么处理、是否合规、能否这样做、材料怎么填、制度怎么解释、具体个案”，intent 必须是 PARTY_AFFAIRS。无法确定时必须是 HUMAN。两种情况都不能给专业结论。
 
 只输出 JSON：
-{"category":"reception|faq|resource_navigation|reminder|professional_question","should_reply_directly":boolean,"need_human":boolean,"summary":"给小宣看的简短摘要","reply":"给用户的简短回复"}`;
+{"intent":"CHAT|RESOURCE|TOOL|PARTY_AFFAIRS|HUMAN","confidence":0到1之间的小数,"target":"用户要找的资料、工具或问题对象","summary":"给小宣看的简短摘要"}
 
-const REWRITE_SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工作小猫，也是小宣社长的微信工作助手。
+不得给专业党建问题生成答案。无法确认意图或置信度低于 0.8 时，intent 必须是 HUMAN。`;
 
-代码已经完成意图分类并提供了一条“事实底稿”。你只负责结合最近对话，把底稿改写成自然、不重复的微信回复，不得改变分类、处理结果或事实。
-
-说话要求：
-- 用“咪”自称，优先让“咪”作主语，不使用“我”或“我们”。
-- 可爱、克制、自然、简洁，像小宣的工作助手，不像机器人客服。
-- 通常省略“你/您”；轻松接待时偶尔可以称“老大”。禁止使用“亲”“宝子”“主人”。
-- 一条回复中“～”或“~”最多一次。两个不同意思用空行分段，每段简短。
-- 可以根据上下文承接前一句，但不能声称记得底稿和最近对话之外的事情。
-
-事实与安全要求：
-- 底稿中的网址、名称、服务状态、是否已经记录留言等事实必须保留，不得新增、猜测或改写成不同含义。
-- 资料导航只负责指路，不解释资料中的专业内容。
-- 绝对不得回答党务制度、程序、材料填写、个案处理或合规判断，不得编造政策依据。
-- 如果底稿表示转交小宣，只能自然表达“已收好、等小宣回复”，不能添加任何专业结论。
-
-只输出 JSON：{"reply":"改写后的回复"}`;
+const CHAT_SYSTEM_PROMPT = `你是 Dimmo。只回复已经由代码确认属于普通聊天的微信消息。
+保持现有 Dimmo 语气：可爱、自然、简洁，用“咪”自称；不要使用“我/我们”；不要回答党务专业问题，不要编造资料、工具或政策。没有把握就简短表示咪会记下交给小宣。
+只输出 JSON：{"reply":"回复内容"}`;
 
 function stripJsonFence(value: string) {
   return value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
@@ -75,77 +62,45 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const raw = payload.choices?.[0]?.message?.content || "";
     const parsed = JSON.parse(stripJsonFence(raw)) as Record<string, unknown>;
-    const category = safeCategory(parsed.category);
+    const intent = safeIntent(parsed.intent);
+    const confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0));
     const result: Classification = {
-      category,
-      shouldReplyDirectly: parsed.should_reply_directly === true && category !== "professional_question",
-      needHuman: parsed.need_human !== false || category === "professional_question",
+      category: intent === "CHAT" ? "reception" : intent === "RESOURCE" ? "resource_navigation" : intent === "TOOL" ? "tool" : intent === "PARTY_AFFAIRS" ? "professional_question" : "human",
+      intent,
+      confidence,
+      target: String(parsed.target || "").slice(0, 160),
+      shouldReplyDirectly: intent === "CHAT" && confidence >= 0.8,
+      needHuman: intent !== "CHAT" || confidence < 0.8,
       summary: String(parsed.summary || "").slice(0, 500),
-      reply: String(parsed.reply || "").slice(0, 600),
+      reply: "",
       source: "ai"
     };
-    if (!result.reply) return fallbackProfessional(content);
-    return enforceSafety(content, result);
+    return result;
   } catch {
     return fallbackProfessional(content);
   }
 }
 
-function requiredFragments(ruleResult: Classification) {
-  const urls = ruleResult.reply.match(/https?:\/\/[^\s，。]+/g) || [];
-  if (ruleResult.category === "reminder") return [...urls, "小本本"];
-  if (/小宣同志/.test(ruleResult.reply)) return [...urls, "小宣同志", "干货社"];
-  return urls;
-}
-
-/**
- * 硬规则只确定类别、动作和事实；对允许直接回复的消息，让 AI 结合上下文改写语气。
- * 模型不可用、超时、漏掉关键事实时，继续使用规则底稿。
- */
-export async function rewriteRuleReplyWithAi(
-  content: string,
-  context: ConversationRow[],
-  ruleResult: Classification
-): Promise<Classification> {
-  if (ruleResult.category === "professional_question" || !ruleResult.shouldReplyDirectly) return ruleResult;
-
+export async function generateChatReply(content: string, context: ConversationRow[]) {
   const { apiKey, baseUrl, model } = aiConfig();
-  if (!apiKey) return ruleResult;
-
+  if (!apiKey) return "🐾 咪在呢。有事慢慢说，咪会认真听。";
   const recent = context.slice(-6).map((row) => `${row.role}: ${row.content}`).join("\n");
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
-        temperature: 0.72,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: REWRITE_SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: [
-              `最近对话：\n${recent || "（无）"}`,
-              `用户新消息：${content}`,
-              `已确定分类：${ruleResult.category}`,
-              `事实底稿：${ruleResult.reply}`
-            ].join("\n\n")
-          }
-        ]
+        model, temperature: 0.72, response_format: { type: "json_object" },
+        messages: [{ role: "system", content: CHAT_SYSTEM_PROMPT }, { role: "user", content: `最近对话：\n${recent || "（无）"}\n\n用户消息：${content}` }]
       }),
       signal: AbortSignal.timeout(3200)
     });
-    if (!response.ok) return ruleResult;
-
+    if (!response.ok) throw new Error("AI response failed");
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const raw = payload.choices?.[0]?.message?.content || "";
-    const parsed = JSON.parse(stripJsonFence(raw)) as Record<string, unknown>;
+    const parsed = JSON.parse(stripJsonFence(payload.choices?.[0]?.message?.content || "{}")) as Record<string, unknown>;
     const reply = String(parsed.reply || "").trim().slice(0, 600);
-    if (!reply || requiredFragments(ruleResult).some((fragment) => !reply.includes(fragment))) return ruleResult;
-
-    return { ...ruleResult, reply, source: "ai" };
+    return reply ? normalizeCatVoice(reply) : "🐾 咪在呢。有事慢慢说，咪会认真听。";
   } catch {
-    return ruleResult;
+    return "🐾 咪在呢。有事慢慢说，咪会认真听。";
   }
 }

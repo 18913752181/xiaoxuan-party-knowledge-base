@@ -1,8 +1,8 @@
 import "server-only";
 
-import { classifyWithAi, rewriteRuleReplyWithAi } from "@/lib/work-cat/ai";
-import { classifyByHardRules, enforceSafety, fallbackProfessional } from "@/lib/work-cat/guardrails";
+import { fallbackProfessional } from "@/lib/work-cat/guardrails";
 import { getProcessedReply, getRecentConversation, persistInteraction } from "@/lib/work-cat/repository";
+import { routeWorkCatMessage } from "@/lib/work-cat/router";
 
 export async function handleWorkCatMessage(input: { openid: string; content: string; msgId: string }) {
   const content = input.content.trim().slice(0, 2000);
@@ -14,20 +14,20 @@ export async function handleWorkCatMessage(input: { openid: string; content: str
       getRecentConversation(input.openid, 8)
     ]);
     if (cachedReply) return { reply: cachedReply, duplicate: true };
-    const ruleResult = classifyByHardRules(content);
-    const candidate = ruleResult
-      ? await rewriteRuleReplyWithAi(content, context, ruleResult)
-      : await classifyWithAi(content, context);
-    const classification = enforceSafety(content, candidate);
+    const classification = await routeWorkCatMessage(content, context);
     console.info("[work-cat] reply prepared", {
       category: classification.category,
+      intent: classification.intent,
+      confidence: classification.confidence,
       source: classification.source,
       needHuman: classification.needHuman
     });
     const contextSummary = [
       ...context.slice(-5).map((row) => `${row.role === "user" ? "用户" : row.role === "cat" ? "Dimmo" : "小宣"}：${row.content}`),
       `用户：${content}`,
-      `摘要：${classification.summary}`
+      `意图：${classification.intent}（置信度 ${classification.confidence}）`,
+      `摘要：${classification.summary}`,
+      classification.retrievalSummary ? `检索：${classification.retrievalSummary}` : ""
     ].join("\n").slice(0, 2000);
 
     await persistInteraction({ ...input, content, classification, contextSummary });
