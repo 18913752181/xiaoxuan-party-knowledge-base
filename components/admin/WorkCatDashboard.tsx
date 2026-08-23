@@ -13,7 +13,16 @@ type Question = {
   replied_at: string | null;
 };
 
-type Reminder = { id: string; openid: string; content: string; status: "pending" | "done" | "closed"; created_at: string };
+type Reminder = {
+  id: string;
+  openid: string;
+  content: string;
+  status: "pending" | "scheduled" | "sent" | "failed" | "done" | "closed";
+  scheduled_at: string | null;
+  dispatched_at: string | null;
+  delivery_error: string | null;
+  created_at: string;
+};
 type Conversation = { id: string; role: "user" | "cat" | "xiaoxuan"; content: string; created_at: string };
 type Dashboard = {
   stats: { todayUsers: number; todayMessages: number; pendingQuestions: number };
@@ -29,7 +38,10 @@ const CATEGORY_NAMES: Record<string, string> = {
   professional_question: "专业问题"
 };
 
-const STATUS_NAMES: Record<string, string> = { pending: "待回复", replied: "已回复", closed: "已关闭", done: "已完成" };
+const STATUS_NAMES: Record<string, string> = {
+  pending: "待处理", replied: "已回复", closed: "已关闭", done: "已完成",
+  scheduled: "等待发送", sent: "已送达", failed: "发送失败"
+};
 
 function time(value: string) {
   return new Date(value).toLocaleString("zh-CN", { hour12: false });
@@ -145,7 +157,12 @@ export default function WorkCatDashboard() {
             <h2 className="text-xl font-semibold">提醒与留言</h2>
             <div className="mt-4 overflow-hidden rounded-2xl border border-[#e3e7eb] bg-white shadow-sm">
               {data.reminders.map((item) => <div key={item.id} className="border-b border-[#eef0f2] p-4 last:border-0 sm:flex sm:items-center sm:gap-4">
-                <div className="min-w-0 flex-1"><p className="text-sm leading-6">{item.content}</p><p className="mt-1 text-xs text-[#89939e]">{shortOpenid(item.openid)} · {time(item.created_at)} · {STATUS_NAMES[item.status]}</p></div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-6">{item.content}</p>
+                  <p className="mt-1 text-xs text-[#89939e]">{shortOpenid(item.openid)} · 创建于 {time(item.created_at)} · {STATUS_NAMES[item.status]}</p>
+                  {item.scheduled_at ? <p className="mt-1 text-xs text-[#a77a18]">计划提醒：{time(item.scheduled_at)}{item.dispatched_at ? ` · 实际送达：${time(item.dispatched_at)}` : ""}</p> : null}
+                  {item.delivery_error ? <p className="mt-1 text-xs text-[#a63e47]">{item.delivery_error}</p> : null}
+                </div>
                 <div className="mt-3 flex gap-2 sm:mt-0"><button onClick={() => showContext(item.openid)} className="text-xs text-[#637a70]">上下文</button><button disabled={saving === item.id} onClick={() => update(item.id, "done", "reminder")} className="rounded-full bg-[#f1f3f5] px-3 py-1.5 text-xs">完成</button></div>
               </div>)}
               {!data.reminders.length ? <p className="p-6 text-center text-sm text-[#89939e]">暂无留言</p> : null}

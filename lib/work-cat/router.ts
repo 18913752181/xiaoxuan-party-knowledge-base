@@ -3,6 +3,7 @@ import "server-only";
 import { classifyWithAi, generateChatReply } from "@/lib/work-cat/ai";
 import { HUMAN_REPLY, PROFESSIONAL_REPLY, classifyByHardRules, fallbackProfessional, normalizeCatVoice } from "@/lib/work-cat/guardrails";
 import { formatSearchSummary, searchWorkCatLibrary } from "@/lib/work-cat/library-search";
+import { openidHasActiveMembership, parseScheduledReminder } from "@/lib/work-cat/member-reminders";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
@@ -22,9 +23,30 @@ function humanFromResource(content: string, retrievalSummary: string): Classific
 }
 
 /** 五类意图的唯一入口：硬规则优先，低置信度和所有不确定结果一律 HUMAN。 */
-export async function routeWorkCatMessage(content: string, context: ConversationRow[]): Promise<Classification> {
+export async function routeWorkCatMessage(content: string, context: ConversationRow[], openid: string): Promise<Classification> {
   const hard = classifyByHardRules(content);
   if (hard) {
+    if (hard.category === "reminder") {
+      const parsed = parseScheduledReminder(content);
+      if (parsed.kind === "invalid") {
+        return { ...hard, category: "reception", needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
+      }
+      if (parsed.kind === "scheduled") {
+        const active = await openidHasActiveMembership(openid);
+        if (!active) {
+          return {
+            ...hard, category: "reception", needHuman: false,
+            summary: "非会员尝试使用定时提醒",
+            reply: "🐾 到点提醒住在会员通行卡里。先在网站登录并绑定现在这个微信，再开通或确认会员，咪就能替老大按时记着。"
+          };
+        }
+        return {
+          ...hard, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
+          summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
+          reply: `🐾 咪记好了。\n\n${parsed.displayTime} 提醒老大：${parsed.content}`
+        };
+      }
+    }
     if (hard.intent === "RESOURCE") {
       const results = await searchWorkCatLibrary(content);
       const retrievalSummary = formatSearchSummary(results);

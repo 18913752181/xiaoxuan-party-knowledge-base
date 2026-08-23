@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     admin.from("wechat_conversations").select("id", { count: "exact", head: true }).gte("created_at", today),
     admin.from("pending_questions").select("id", { count: "exact", head: true }).eq("status", "pending"),
     admin.from("pending_questions").select("id,openid,question,context_summary,category,status,created_at,replied_at").order("created_at", { ascending: false }).limit(200),
-    admin.from("wechat_reminders").select("id,openid,content,status,created_at").order("created_at", { ascending: false }).limit(100)
+    admin.from("wechat_reminders").select("id,openid,content,status,scheduled_at,dispatched_at,delivery_error,created_at").order("created_at", { ascending: false }).limit(100)
   ]);
 
   const error = users.error || messages.error || pendingCount.error || pendingRows.error || reminderRows.error;

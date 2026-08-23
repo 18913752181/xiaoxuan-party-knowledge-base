@@ -72,7 +72,12 @@ export async function persistInteraction(input: {
       category: classification.category, status: "pending"
     }));
   } else if (classification.category === "reminder") {
-    writes.push(admin.from("wechat_reminders").insert({ openid, content, status: "pending" }));
+    writes.push(admin.from("wechat_reminders").insert({
+      openid,
+      content: classification.reminderContent || content,
+      status: classification.reminderAt ? "scheduled" : "pending",
+      scheduled_at: classification.reminderAt || null
+    }));
   }
 
   const results = await Promise.all(writes);

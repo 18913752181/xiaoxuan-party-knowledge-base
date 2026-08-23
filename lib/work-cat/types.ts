@@ -25,6 +25,8 @@ export type Classification = {
   confidence: number;
   target?: string;
   retrievalSummary?: string;
+  reminderAt?: string;
+  reminderContent?: string;
 };
 
 export type ConversationRow = {

@@ -14,7 +14,7 @@ export async function handleWorkCatMessage(input: { openid: string; content: str
       getRecentConversation(input.openid, 8)
     ]);
     if (cachedReply) return { reply: cachedReply, duplicate: true };
-    const classification = await routeWorkCatMessage(content, context);
+    const classification = await routeWorkCatMessage(content, context, input.openid);
     console.info("[work-cat] reply prepared", {
       category: classification.category,
       intent: classification.intent,
