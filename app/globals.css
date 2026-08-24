@@ -190,6 +190,51 @@ button:not(:disabled),
   transition: background-size 140ms var(--xuan-ease-out);
 }
 
+/* 工作台整卡点击时，标题复用 oil 风格的暖黄高亮与加粗下划线。 */
+.workbench-task-title {
+  background: linear-gradient(transparent 61%, var(--xuan-highlight) 61%, var(--xuan-highlight) 95%, transparent 95%);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 0.11em;
+  text-underline-offset: 0.14em;
+  transition: background-size 360ms cubic-bezier(0.16, 1, 0.3, 1), font-weight 180ms var(--xuan-ease-out), text-decoration-color 240ms var(--xuan-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .workbench-task-card:hover .workbench-task-title {
+    background-size: 100% 100%;
+    font-weight: 700;
+    text-decoration-color: var(--xuan-highlight);
+  }
+}
+
+.workbench-task-card:focus-visible .workbench-task-title,
+.workbench-task-card:focus-within .workbench-task-title {
+  background-size: 100% 100%;
+  font-weight: 700;
+  text-decoration-color: var(--xuan-highlight);
+}
+
+/* 工作台是任务入口，页脚只保留跳转和备案，不重复介绍资料库。 */
+body:has(.workbench-home) > header,
+body:has(.workbench-home) > nav[aria-label="移动端导航"] {
+  display: none;
+}
+
+body:has(.workbench-home) > footer > div > div:first-child {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  body:has(.workbench-home) > footer > div {
+    grid-template-columns: 1fr 1fr;
+    max-width: 56rem;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .material-title:hover .xuan-hover-highlight,
   .xuan-hover-highlight:hover {

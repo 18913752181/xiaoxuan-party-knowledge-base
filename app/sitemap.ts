@@ -6,7 +6,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://xiaoxuanvip.com").replace(/\/$/, "");
   const units = await listContentUnits();
-  const staticPages = ["", "/library", "/dimmo", "/membership", "/about"].map((path) => ({
+  const staticPages = ["", "/workbench", "/library", "/dimmo", "/membership", "/about"].map((path) => ({
     url: `${siteUrl}${path || "/"}`,
     lastModified: new Date(),
     changeFrequency: path === "" || path === "/library" ? "daily" as const : "monthly" as const,

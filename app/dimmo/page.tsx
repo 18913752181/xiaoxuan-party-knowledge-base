@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: { absolute: "喵喵工作台" },
+  title: { absolute: "小宣干货社简介" },
   description: "认识小宣干货社，以及住在喵喵工作台里的小宣社长和工作小猫 Dimmo。"
 };
 
