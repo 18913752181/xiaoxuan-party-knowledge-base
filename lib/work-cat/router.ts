@@ -3,7 +3,7 @@ import "server-only";
 import { classifyWithAi, generateChatReply } from "@/lib/work-cat/ai";
 import { HUMAN_REPLY, PROFESSIONAL_REPLY, classifyByHardRules, fallbackProfessional, normalizeCatVoice } from "@/lib/work-cat/guardrails";
 import { formatSearchSummary, searchWorkCatLibrary } from "@/lib/work-cat/library-search";
-import { getMembershipForOpenid, openidHasActiveMembership, parseScheduledReminder } from "@/lib/work-cat/member-reminders";
+import { friendlyReminderTime, getMembershipForOpenid, openidHasActiveMembership, validateAiReminder } from "@/lib/work-cat/member-reminders";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
@@ -26,12 +26,9 @@ function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembersh
 }
 
 async function routeAiReminder(content: string, identified: Classification, openid: string): Promise<Classification> {
-  const parsed = parseScheduledReminder(content);
+  const parsed = validateAiReminder(identified.reminderAt, identified.reminderContent);
   if (parsed.kind === "invalid") {
     return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
-  }
-  if (parsed.kind === "none") {
-    return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: "定时提醒缺少明确时间", reply: "🐾 咪记得是要提醒，不过还缺具体日期和时间。比如说“明天 9 点提醒咪开会”就好。" };
   }
   const active = await openidHasActiveMembership(openid);
   if (!active) {
@@ -41,10 +38,12 @@ async function routeAiReminder(content: string, identified: Classification, open
       reply: "🐾 到点提醒住在会员工作台里。\n\n已是资料库会员的老大，登录网站绑定这个微信就能直接用；还没开通的话，先去开通会员卡，咪再替老大记时间喵。"
     };
   }
+  const action = /^(去|做|参加|完成|提交|联系|查看)/.test(parsed.content) ? parsed.content : `去${parsed.content}`;
+  const timeText = friendlyReminderTime(new Date(parsed.scheduledAt));
   return {
     ...identified, category: "reminder", shouldReplyDirectly: true, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
     summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
-    reply: `🐾 咪记好了。\n\n${parsed.displayTime} 提醒老大：${parsed.content}`
+    reply: `🐾 记好啦，${timeText}提醒老大${action}喵`
   };
 }
 
