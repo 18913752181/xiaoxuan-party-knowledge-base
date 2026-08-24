@@ -16,9 +16,8 @@ export const dynamic = "force-dynamic";
 const SUBSCRIBE_REPLY = `嗨，我是 Dimmo，和我们社长住在「喵喵工作台」的小猫。
 
 🐾【喵喵工作台】
-初次见面，咪先做个自我介绍。
-👉 https://xiaoxuanvip.com/dimmo
-有事、想找资料，或者想给小宣社长留言，直接告诉咪就好。
+初次见面，咪先做介绍👉 https://xiaoxuanvip.com/dimmo
+立即开通，获得通行卡👉https://xiaoxuanvip.com/membership/payment
 
 📚【资料库】
 喵喵资料库｜工作资料、模板、专题内容

@@ -15,13 +15,36 @@ function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembersh
     return {
       category: "faq", intent: "CHAT", confidence: 1, source: "rule",
       shouldReplyDirectly: true, needHuman: false, summary: "查询公众号绑定会员状态",
-      reply: `🐾 咪查到老大已经是会员啦，有效期到 ${expiresAt}。\n\n资料库和 Dimmo 的会员功能都可以直接用。`
+      reply: `🐾 咪查到老大已经是会员啦，有效期到 ${expiresAt}。`
     };
   }
   return {
     category: "faq", intent: "CHAT", confidence: 1, source: "rule",
     shouldReplyDirectly: true, needHuman: false, summary: "未查询到公众号绑定会员",
     reply: "🐾 咪还没有查到这个微信绑定的有效会员记录。\n\n这不代表老大一定不是会员：公众号和网站账号是分开的，需要先在网站登录并绑定这个微信，咪才能认出老大。"
+  };
+}
+
+async function routeAiReminder(content: string, identified: Classification, openid: string): Promise<Classification> {
+  const parsed = parseScheduledReminder(content);
+  if (parsed.kind === "invalid") {
+    return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
+  }
+  if (parsed.kind === "none") {
+    return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: "定时提醒缺少明确时间", reply: "🐾 咪记得是要提醒，不过还缺具体日期和时间。比如说“明天 9 点提醒咪开会”就好。" };
+  }
+  const active = await openidHasActiveMembership(openid);
+  if (!active) {
+    return {
+      ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false,
+      summary: "非会员尝试使用定时提醒",
+      reply: "🐾 到点提醒住在会员工作台里。\n\n已是资料库会员的老大，登录网站绑定这个微信就能直接用；还没开通的话，先去开通会员卡，咪再替老大记时间喵。"
+    };
+  }
+  return {
+    ...identified, category: "reminder", shouldReplyDirectly: true, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
+    summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
+    reply: `🐾 咪记好了。\n\n${parsed.displayTime} 提醒老大：${parsed.content}`
   };
 }
 
@@ -46,27 +69,6 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   }
   const hard = classifyByHardRules(content);
   if (hard) {
-    if (hard.category === "reminder") {
-      const parsed = parseScheduledReminder(content);
-      if (parsed.kind === "invalid") {
-        return { ...hard, category: "reception", needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
-      }
-      if (parsed.kind === "scheduled") {
-        const active = await openidHasActiveMembership(openid);
-        if (!active) {
-          return {
-            ...hard, category: "reception", needHuman: false,
-            summary: "非会员尝试使用定时提醒",
-            reply: "🐾 到点提醒住在会员通行卡里。先在网站登录并绑定现在这个微信，再开通或确认会员，咪就能替老大按时记着。"
-          };
-        }
-        return {
-          ...hard, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
-          summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
-          reply: `🐾 咪记好了。\n\n${parsed.displayTime} 提醒老大：${parsed.content}`
-        };
-      }
-    }
     if (hard.intent === "RESOURCE") {
       const results = await searchWorkCatLibrary(content);
       const retrievalSummary = formatSearchSummary(results);
@@ -88,6 +90,8 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   if (identified.confidence < HUMAN_CONFIDENCE_THRESHOLD || identified.intent === "HUMAN") {
     return { ...fallbackProfessional(content), confidence: identified.confidence, summary: identified.summary || `意图不确定：${content.slice(0, 120)}` };
   }
+
+  if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid);
 
   if (identified.intent === "RESOURCE") {
     const results = await searchWorkCatLibrary(content);

@@ -10,9 +10,7 @@ const PROFESSIONAL_PATTERNS = [
 ];
 
 const REMINDER_PATTERNS = [
-  /提醒.*小宣|帮我.*提醒|留(个)?言|传(个)?话|回来.*回复|让(她|社长).*回复|转告/,
-  /(今天|明天|\d{1,2}月\d{1,2}日).{0,12}(点|时).{0,12}提醒/,
-  /提醒.{0,12}(今天|明天|\d{1,2}月\d{1,2}日).{0,12}(点|时)/
+  /提醒.*小宣|留(个)?言|传(个)?话|回来.*回复|让(她|社长).*回复|转告/
 ];
 const RESOURCE_PATTERNS = [/模板|资料|材料.*哪里|有没有.*(记录|表|范文)|想找|下载/];
 const TOOL_PATTERNS = [/算.*入党.*时间|入党.*时间.*(算|核算)|什么时候.*转正|什么时候.*满一年|满一年.*(算|核算)|红色教育基地|教育基地.*(在哪|哪里|参观|导览)|基地.*(参观|导览)/];
@@ -59,7 +57,7 @@ function localGreetingReply() {
   const hour = Number(new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai", hour: "2-digit", hourCycle: "h23"
   }).format(new Date()));
-  const period = hour >= 5 && hour < 11 ? "早上" : hour >= 11 && hour < 14 ? "中午" : hour >= 14 && hour < 18 ? "下午" : "晚上";
+  const period = hour < 12 ? "早上" : hour < 14 ? "中午" : hour < 19 ? "下午" : "晚上";
   return `🐾 ${period}好，咪在呢。\n\n老大有什么事尽管和咪说。`;
 }
 
@@ -174,7 +172,7 @@ export function safeCategory(value: unknown): WorkCatCategory {
 }
 
 export function safeIntent(value: unknown): WorkCatIntent {
-  const allowed: WorkCatIntent[] = ["CHAT", "RESOURCE", "TOOL", "PARTY_AFFAIRS", "HUMAN"];
+  const allowed: WorkCatIntent[] = ["CHAT", "RESOURCE", "TOOL", "REMINDER", "PARTY_AFFAIRS", "HUMAN"];
   return allowed.includes(value as WorkCatIntent) ? (value as WorkCatIntent) : "HUMAN";
 }
 

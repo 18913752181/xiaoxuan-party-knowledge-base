@@ -10,7 +10,7 @@ export const WORK_CAT_CATEGORIES = [
 
 export type WorkCatCategory = (typeof WORK_CAT_CATEGORIES)[number];
 
-export const WORK_CAT_INTENTS = ["CHAT", "RESOURCE", "TOOL", "PARTY_AFFAIRS", "HUMAN"] as const;
+export const WORK_CAT_INTENTS = ["CHAT", "RESOURCE", "TOOL", "REMINDER", "PARTY_AFFAIRS", "HUMAN"] as const;
 export type WorkCatIntent = (typeof WORK_CAT_INTENTS)[number];
 
 export type Classification = {

@@ -114,7 +114,7 @@ async function encryptedMessage(content, msgId) {
 await verifyUrl();
 
 const welcome = await subscribe();
-if (!/嗨，我是 Dimmo/.test(welcome) || !/喵喵工作台/.test(welcome)) {
+if (!/嗨，我是 Dimmo/.test(welcome) || !/xiaoxuanvip\.com\/dimmo/.test(welcome) || !/xiaoxuanvip\.com\/membership\/payment/.test(welcome)) {
   throw new Error(`关注欢迎语不符合预期：${welcome}`);
 }
 console.log("✓ 关注事件返回 Dimmo 欢迎语");
