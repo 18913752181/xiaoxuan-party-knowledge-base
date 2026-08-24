@@ -69,7 +69,10 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
       }),
       signal: AbortSignal.timeout(3200)
     });
-    if (!response.ok) return fallbackProfessional(content);
+    if (!response.ok) {
+      console.warn("[work-cat] intent classification failed", { status: response.status, provider: baseUrl });
+      return fallbackProfessional(content);
+    }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const raw = payload.choices?.[0]?.message?.content || "";
     const parsed = JSON.parse(stripJsonFence(raw)) as Record<string, unknown>;
@@ -89,7 +92,11 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
       source: "ai"
     };
     return result;
-  } catch {
+  } catch (error) {
+    console.warn("[work-cat] intent classification error", {
+      error: error instanceof Error ? error.message : "unknown error",
+      provider: baseUrl
+    });
     return fallbackProfessional(content);
   }
 }

@@ -86,11 +86,13 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   }
 
   const identified = await classifyWithAi(content, context);
+  // DeepSeek 已明确判为提醒时，先校验其结构化时间和事项；
+  // 短句提醒不再被通用的 0.8 置信度阈值误转给小宣。
+  if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid);
+
   if (identified.confidence < HUMAN_CONFIDENCE_THRESHOLD || identified.intent === "HUMAN") {
     return { ...fallbackProfessional(content), confidence: identified.confidence, summary: identified.summary || `意图不确定：${content.slice(0, 120)}` };
   }
-
-  if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid);
 
   if (identified.intent === "RESOURCE") {
     const results = await searchWorkCatLibrary(content);
