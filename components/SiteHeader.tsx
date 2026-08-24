@@ -36,7 +36,7 @@ export function SiteHeader() {
   // 感知登录状态：已登录用户显示账号入口而不是“登录”按钮。
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/profile", { cache: "no-store" })
+    const loadSessionProfile = () => fetch("/api/auth/profile", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (cancelled) return;
@@ -46,8 +46,11 @@ export function SiteHeader() {
       .catch(() => {
         if (!cancelled) setSessionChecked(true);
       });
+    loadSessionProfile();
+    window.addEventListener("profile-avatar-updated", loadSessionProfile);
     return () => {
       cancelled = true;
+      window.removeEventListener("profile-avatar-updated", loadSessionProfile);
     };
   }, [pathname]);
 

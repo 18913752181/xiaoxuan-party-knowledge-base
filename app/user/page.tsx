@@ -5,10 +5,12 @@ import Link from "next/link";
 import { listMyFavorites, type FavoriteRow } from "@/lib/favorites";
 import { maskAccountEmail, WECHAT_EMAIL_SUFFIX } from "@/lib/display";
 import { AVATAR_OPTIONS, ProfileAvatar, resolveAvatarKey, type AvatarKey } from "@/components/ProfileAvatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 type PageState = "loading" | "guest" | "ready" | "error";
 
 export default function UserPage() {
+  const { refreshProfile } = useAuth();
   const [state, setState] = useState<PageState>("loading");
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
@@ -130,6 +132,9 @@ export default function UserPage() {
       return;
     }
     setAvatarKey(pendingAvatarKey);
+    await refreshProfile();
+    window.dispatchEvent(new CustomEvent("profile-avatar-updated"));
+    setMessage("头像已更新。");
   }
 
   return (
