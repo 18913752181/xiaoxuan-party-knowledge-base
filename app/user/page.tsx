@@ -22,6 +22,7 @@ export default function UserPage() {
   const [wechatMessageKind, setWechatMessageKind] = useState<"ok" | "error">("ok");
   const [unbinding, setUnbinding] = useState(false);
   const [avatarKey, setAvatarKey] = useState<AvatarKey | null>(null);
+  const [pendingAvatarKey, setPendingAvatarKey] = useState<AvatarKey | null>(null);
   const [savingAvatar, setSavingAvatar] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -66,7 +67,9 @@ export default function UserPage() {
             setMemberStatus(profileData.profile.member_status || "free");
             setMemberExpiresAt(profileData.profile.member_expires_at || null);
             setWechatBound(Boolean(profileData.profile.wechat_bound));
-            setAvatarKey(resolveAvatarKey(data.user.id, profileData.profile.avatar_key));
+            const resolvedAvatarKey = resolveAvatarKey(data.user.id, profileData.profile.avatar_key);
+            setAvatarKey(resolvedAvatarKey);
+            setPendingAvatarKey(resolvedAvatarKey);
           }
         })
         .catch(() => undefined);
@@ -107,22 +110,26 @@ export default function UserPage() {
     setWechatMessage("已解绑微信。");
   }
 
-  async function chooseAvatar(nextKey: AvatarKey) {
-    if (!userId || savingAvatar) return;
-    const previousKey = avatarKey;
-    setAvatarKey(nextKey);
+  function chooseAvatar(nextKey: AvatarKey) {
+    if (savingAvatar) return;
+    setPendingAvatarKey(nextKey);
+  }
+
+  async function saveAvatar() {
+    if (!userId || !pendingAvatarKey || pendingAvatarKey === avatarKey || savingAvatar) return;
     setSavingAvatar(true);
     const response = await fetch("/api/auth/avatar", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ avatar_key: nextKey })
+      body: JSON.stringify({ avatar_key: pendingAvatarKey })
     });
     setSavingAvatar(false);
     if (!response.ok) {
-      setAvatarKey(previousKey);
       const data = await response.json().catch(() => ({}));
       setMessage(data.error || "头像保存失败，请稍后重试。");
+      return;
     }
+    setAvatarKey(pendingAvatarKey);
   }
 
   return (
@@ -154,7 +161,7 @@ export default function UserPage() {
           <>
             <div className="mt-6 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-5 py-4">
               <div className="flex flex-wrap gap-5">
-                <ProfileAvatar userId={userId} avatarKey={avatarKey} size={76} />
+                <ProfileAvatar userId={userId} avatarKey={pendingAvatarKey || avatarKey} size={76} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-neutral-600">当前用户</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -178,10 +185,10 @@ export default function UserPage() {
               </div>
               <div className="mt-5 border-t border-[#cfe4d5] pt-4">
                 <p className="text-sm font-medium text-brand-ink">选择头像</p>
-                <p className="mt-1 text-xs text-neutral-500">首次登录会随机获得一个；之后可以随时更换。</p>
+                <p className="mt-1 text-xs text-neutral-500">选择后先预览，点击“确认使用”才会保存。</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {AVATAR_OPTIONS.map((avatar) => {
-                    const selected = avatar.key === avatarKey;
+                    const selected = avatar.key === pendingAvatarKey;
                     return (
                       <button
                         key={avatar.key}
@@ -196,6 +203,19 @@ export default function UserPage() {
                       </button>
                     );
                   })}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={saveAvatar}
+                    disabled={!pendingAvatarKey || pendingAvatarKey === avatarKey || savingAvatar}
+                    className="rounded-full bg-brand-ink px-5 py-2 text-sm font-medium text-white transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    {savingAvatar ? "正在保存..." : "确认使用"}
+                  </button>
+                  {pendingAvatarKey && pendingAvatarKey !== avatarKey ? (
+                    <span className="text-xs text-neutral-500">已选择新头像，尚未保存</span>
+                  ) : null}
                 </div>
               </div>
               <button
