@@ -75,6 +75,7 @@ export async function persistInteraction(input: {
     writes.push(admin.from("wechat_reminders").insert({
       openid,
       content: classification.reminderContent || content,
+      source: "dimmo",
       status: classification.reminderAt ? "scheduled" : "pending",
       scheduled_at: classification.reminderAt || null
     }));

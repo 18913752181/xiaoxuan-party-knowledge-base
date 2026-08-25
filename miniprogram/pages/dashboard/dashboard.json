@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "喵喵看板",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "x-tabbar": "/components/x-tabbar/x-tabbar"
+  }
+}
