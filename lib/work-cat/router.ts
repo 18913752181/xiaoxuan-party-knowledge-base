@@ -52,8 +52,8 @@ async function cancelReminderReply(content: string, openid: string): Promise<Cla
     : { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: `未找到要取消的提醒：${target}`, reply: "🐾 咪没有找到这条待提醒。可以先说“查看提醒”，咪帮老大看一眼小本本。" };
 }
 
-async function routeScheduledReminder(identified: Classification, reminderAt: string, reminderContent: string, openid: string): Promise<Classification> {
-  const parsed = validateAiReminder(reminderAt, reminderContent);
+async function routeScheduledReminder(identified: Classification, reminderAt: string, reminderContent: string, openid: string, receivedAt: Date): Promise<Classification> {
+  const parsed = validateAiReminder(reminderAt, reminderContent, receivedAt);
   if (parsed.kind === "invalid") {
     return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
   }
@@ -66,7 +66,7 @@ async function routeScheduledReminder(identified: Classification, reminderAt: st
     };
   }
   const action = /^(去|做|参加|完成|提交|联系|查看)/.test(parsed.content) ? parsed.content : `去${parsed.content}`;
-  const timeText = friendlyReminderTime(new Date(parsed.scheduledAt));
+  const timeText = friendlyReminderTime(new Date(parsed.scheduledAt), receivedAt);
   return {
     ...identified, category: "reminder", intent: "REMINDER", shouldReplyDirectly: true, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
     summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
@@ -74,12 +74,17 @@ async function routeScheduledReminder(identified: Classification, reminderAt: st
   };
 }
 
-async function routeAiReminder(content: string, identified: Classification, openid: string): Promise<Classification> {
-  const parsed = validateAiReminder(identified.reminderAt, identified.reminderContent);
-  if (parsed.kind === "invalid") {
-    return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
+async function routeAiReminder(content: string, identified: Classification, openid: string, receivedAt: Date): Promise<Classification> {
+  // AI 只负责把一句话识别成“提醒”；最终日期、时间和可否创建必须由本地确定性解析器决定。
+  const ruleReminder = parseRuleReminder(content, receivedAt);
+  if (!ruleReminder || ruleReminder.kind === "needs_time" || ruleReminder.kind === "needs_content" || ruleReminder.kind === "needs_confirmation") {
+    return {
+      ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false,
+      summary: `提醒信息需要确认：${content.slice(0, 120)}`,
+      reply: ruleReminder?.reply || "🐾 咪把时间再确认一下：具体哪天几点提醒什么事呀？"
+    };
   }
-  return routeScheduledReminder(identified, parsed.scheduledAt, parsed.content, openid);
+  return routeScheduledReminder(identified, ruleReminder.reminderAt, ruleReminder.reminderContent, openid, receivedAt);
 }
 
 function resourceReply(results: Awaited<ReturnType<typeof searchWorkCatLibrary>>) {
@@ -97,7 +102,7 @@ function humanFromResource(content: string, retrievalSummary: string): Classific
 }
 
 /** 五类意图的唯一入口：硬规则优先，低置信度和所有不确定结果一律 HUMAN。 */
-export async function routeWorkCatMessage(content: string, context: ConversationRow[], openid: string): Promise<Classification> {
+export async function routeWorkCatMessage(content: string, context: ConversationRow[], openid: string, receivedAt = new Date()): Promise<Classification> {
   if (MEMBERSHIP_STATUS_PATTERN.test(content.trim())) {
     return membershipStatusReply(await getMembershipForOpenid(openid));
   }
@@ -106,9 +111,9 @@ export async function routeWorkCatMessage(content: string, context: Conversation
 
   // 到点提醒必须在专业问题和通用人工兜底之前处理。常见表达由本地解析兜住，
   // 不受大模型超时、置信度或 JSON 格式影响；复杂说法再交由 DeepSeek 识别。
-  const ruleReminder = parseRuleReminder(content);
+  const ruleReminder = parseRuleReminder(content, receivedAt);
   if (ruleReminder) {
-    if (ruleReminder.kind === "needs_time" || ruleReminder.kind === "needs_content") {
+    if (ruleReminder.kind === "needs_time" || ruleReminder.kind === "needs_content" || ruleReminder.kind === "needs_confirmation") {
       return {
         category: "reception", intent: "CHAT", confidence: 1, source: "rule",
         shouldReplyDirectly: true, needHuman: false,
@@ -121,7 +126,7 @@ export async function routeWorkCatMessage(content: string, context: Conversation
       shouldReplyDirectly: true, needHuman: false,
       summary: `识别到提醒：${ruleReminder.reminderContent}`,
       reply: "", reminderAt: ruleReminder.reminderAt, reminderContent: ruleReminder.reminderContent
-    }, ruleReminder.reminderAt, ruleReminder.reminderContent, openid);
+    }, ruleReminder.reminderAt, ruleReminder.reminderContent, openid, receivedAt);
   }
 
   const hard = classifyByHardRules(content);
@@ -146,7 +151,7 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   const identified = await classifyWithAi(content, context);
   // DeepSeek 已明确判为提醒时，先校验其结构化时间和事项；
   // 短句提醒不再被通用的 0.8 置信度阈值误转给小宣。
-  if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid);
+  if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid, receivedAt);
 
   if (identified.confidence < HUMAN_CONFIDENCE_THRESHOLD || identified.intent === "HUMAN") {
     return { ...fallbackProfessional(content), confidence: identified.confidence, summary: identified.summary || `意图不确定：${content.slice(0, 120)}` };

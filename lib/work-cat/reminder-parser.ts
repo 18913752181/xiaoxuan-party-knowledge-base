@@ -1,5 +1,6 @@
 export type RuleReminder =
   | { kind: "scheduled"; reminderAt: string; reminderContent: string }
+  | { kind: "needs_confirmation"; reply: string }
   | { kind: "needs_time"; reply: string }
   | { kind: "needs_content"; reply: string };
 
@@ -28,6 +29,20 @@ function toShanghaiIso(date: ChinaDate, hour: number, minute: number) {
   return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+08:00`;
 }
 
+/** 把一个已经确定的瞬间写成带 +08:00 的绝对时间，避免相对时间混入服务器时区。 */
+function instantToShanghaiIso(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  }).formatToParts(value);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || "00";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}:${part("second")}+08:00`;
+}
+
+function displayClock(hour: number, minute: number) {
+  return `${hour}:${String(minute).padStart(2, "0")}`;
+}
+
 function weekdayOf(date: ChinaDate) {
   const day = new Date(Date.UTC(date.year, date.month - 1, date.day)).getUTCDay();
   return day === 0 ? 7 : day;
@@ -35,7 +50,7 @@ function weekdayOf(date: ChinaDate) {
 
 function removeTimeWords(value: string) {
   return value
-    .replace(/(?:(?:下|本|这)?(?:周|星期))?[一二三四五六日天]/g, "")
+    .replace(/(?:下|本|这)?(?:周|星期)[一二三四五六日天]/g, "")
     .replace(/(?:今(?:天|晚)|明(?:天|早|晚)|后天|大后天|早上|上午|中午|下午|晚上|夜里)/g, "")
     .replace(/(?:\d+|两|一|三|半)\s*(?:小时|分钟)后/g, "")
     .replace(/(?:[0-2]?\d)(?:[:：][0-5]?\d|点(?:半|[0-5]?\d分?)?|时(?:[0-5]?\d分?)?)/g, "")
@@ -64,7 +79,7 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
   if (!text) return null;
 
   const hasReminderVerb = /提醒|叫(?:醒)?我|到点|待办|帮.*记/.test(text);
-  const hasTimeHint = /(?:今天|今晚|明天|明早|明晚|后天|大后天|早上|上午|中午|下午|晚上|夜里|(?:下|本|这)?(?:周|星期)?[一二三四五六日天]|\d{1,2}(?::\d{1,2}|点|时)|(?:\d+|两|一|三|半)\s*(?:小时|分钟)后)/.test(text);
+  const hasTimeHint = /(?:今天|今晚|明天|明早|明晚|后天|大后天|早上|上午|中午|下午|晚上|夜里|(?:下|本|这)?(?:周|星期)[一二三四五六日天]|\d{1,2}(?::\d{1,2}|点|时)|(?:\d+|两|一|三|半)\s*(?:小时|分钟)后)/.test(text);
   if (!hasReminderVerb && !hasTimeHint) return null;
 
   const content = removeTimeWords(text);
@@ -76,7 +91,7 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
     const count = numberText === "两" ? 2 : numberText === "一" ? 1 : numberText === "三" ? 3 : numberText === "半" ? 0.5 : Number(numberText);
     const milliseconds = relative[2] === "小时" ? count * 3600_000 : count * 60_000;
     const date = new Date(now.getTime() + milliseconds);
-    return { kind: "scheduled", reminderAt: date.toISOString(), reminderContent: content };
+    return { kind: "scheduled", reminderAt: instantToShanghaiIso(date), reminderContent: content };
   }
 
   const clock = text.match(/([01]?\d|2[0-3])(?::([0-5]\d)|点(半|([0-5]?\d)分?)?|时([0-5]?\d分?)?)/);
@@ -97,10 +112,13 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
   if (hour > 23 || minute > 59) return { kind: "needs_time", reply: "🐾 这个时间咪没有看明白，再说一次几点提醒好吗？" };
 
   let date = chinaDate(now);
-  if (/后天/.test(text)) date = addDays(date, 2);
+  const hasExplicitToday = /今天|今晚/.test(text);
+  const hasExplicitFutureDate = /后天|大后天|明天|明早|明晚/.test(text);
+  if (/大后天/.test(text)) date = addDays(date, 3);
+  else if (/后天/.test(text)) date = addDays(date, 2);
   else if (/明天|明早|明晚/.test(text)) date = addDays(date, 1);
   else {
-    const weekday = text.match(/(?:(下|本|这)?(?:周|星期))?([一二三四五六日天])/);
+    const weekday = text.match(/(?:(下|本|这)?(?:周|星期))([一二三四五六日天])/);
     if (weekday) {
       const map: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 7, 天: 7 };
       const target = map[weekday[2]];
@@ -112,9 +130,14 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
   }
 
   const scheduled = new Date(toShanghaiIso(date, hour, minute));
-  // 没有说明日期的时间，如果默认到今晚但已经过了，就顺延到明天。
-  if (!/今天|今晚|明天|明早|明晚|后天|大后天|(?:下|本|这)?(?:周|星期)?[一二三四五六日天]/.test(text) && scheduled.getTime() <= now.getTime() + 60_000) {
-    date = addDays(date, 1);
+  const hasExplicitWeekday = /(?:下|本|这)?(?:周|星期)[一二三四五六日天]/.test(text);
+  if (scheduled.getTime() <= now.getTime()) {
+    if (!hasExplicitToday && !hasExplicitFutureDate && !hasExplicitWeekday) {
+      return { kind: "needs_confirmation", reply: `🐾 今天${displayClock(hour, minute)}已经过啦，是要记到明天${displayClock(hour, minute)}吗？` };
+    }
+    if (hasExplicitToday) {
+      return { kind: "needs_time", reply: `🐾 今天${displayClock(hour, minute)}已经过去啦，想改成几点提醒呀？` };
+    }
   }
   return { kind: "scheduled", reminderAt: toShanghaiIso(date, hour, minute), reminderContent: content };
 }

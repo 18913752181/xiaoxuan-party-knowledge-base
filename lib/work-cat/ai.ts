@@ -14,11 +14,10 @@ const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工
 绝对禁止：代替小宣回答党务专业问题；对党内制度、发展党员程序、组织生活、材料填写或个案作确定性判断；审核材料是否合规；编造政策依据；即使你知道答案也不能回答。
 只要涉及“怎么处理、是否合规、能否这样做、材料怎么填、制度怎么解释、具体个案”，intent 必须是 PARTY_AFFAIRS。无法确定时必须是 HUMAN。两种情况都不能给专业结论。
 
-用户要求 Dimmo 在某个时间提醒待办，intent 必须是 REMINDER。REMINDER 只表示 Dimmo 到点提醒，不是让小宣社长回复。即使写得很口语，例如“今晚8点按摩”“8点按摩”，也应识别为 REMINDER；“8点按摩”默认理解为今天晚上 8 点，若今天晚上 8 点已经过去则理解为明天晚上 8 点。用户明确说“明天/今晚/下午”等时必须按其表达理解。
-当 intent 为 REMINDER 时，必须额外输出 reminder_at（中国时区 +08:00 的 ISO 8601 时间）和 reminder_content（仅保留待办事项，例如“按摩”）。没有能确定的时间时 intent 必须为 HUMAN。
+用户要求 Dimmo 在某个时间提醒待办，intent 必须是 REMINDER。REMINDER 只表示 Dimmo 到点提醒，不是让小宣社长回复。即使写得很口语，例如“今晚8点按摩”“8点按摩”，也应识别为 REMINDER。只提取 reminder_time_text（原句中的时间表达）和 reminder_content（仅保留待办事项，例如“按摩”）；禁止自行推断或输出最终日期时间，最终 remind_at 必须由服务器的北京时间解析器计算。没有能确定的时间时也仍可标记 REMINDER，由程序追问具体时间，不能因此转人工。
 
 只输出 JSON：
-{"intent":"CHAT|RESOURCE|TOOL|REMINDER|PARTY_AFFAIRS|HUMAN","confidence":0到1之间的小数,"target":"用户要找的资料、工具或问题对象","summary":"给小宣看的简短摘要","reminder_at":"仅 REMINDER 时填写，例如 2026-08-24T20:00:00+08:00","reminder_content":"仅 REMINDER 时填写，例如 按摩"}
+{"intent":"CHAT|RESOURCE|TOOL|REMINDER|PARTY_AFFAIRS|HUMAN","confidence":0到1之间的小数,"target":"用户要找的资料、工具或问题对象","summary":"给小宣看的简短摘要","reminder_time_text":"仅 REMINDER 时复制用户时间表达，例如 今晚8点","reminder_content":"仅 REMINDER 时填写，例如 按摩"}
 
 不得给专业党建问题生成答案。无法确认意图或置信度低于 0.8 时，intent 必须是 HUMAN。`;
 
@@ -83,7 +82,8 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
       intent,
       confidence,
       target: String(parsed.target || "").slice(0, 160),
-      reminderAt: typeof parsed.reminder_at === "string" ? parsed.reminder_at.slice(0, 80) : undefined,
+      // 最终 reminderAt 不接受模型产出；router 会按固定接收时间用本地规则生成。
+      reminderAt: undefined,
       reminderContent: typeof parsed.reminder_content === "string" ? parsed.reminder_content.slice(0, 240) : undefined,
       shouldReplyDirectly: (intent === "CHAT" || intent === "REMINDER") && confidence >= 0.8,
       needHuman: (intent !== "CHAT" && intent !== "REMINDER") || confidence < 0.8,

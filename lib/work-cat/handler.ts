@@ -5,6 +5,8 @@ import { getProcessedReply, getRecentConversation, persistInteraction } from "@/
 import { routeWorkCatMessage } from "@/lib/work-cat/router";
 
 export async function handleWorkCatMessage(input: { openid: string; content: string; msgId: string }) {
+  // 在进入数据库、AI 和网络调用前立刻固定接收时刻；整个提醒链路共用它。
+  const receivedAt = new Date();
   const content = input.content.trim().slice(0, 2000);
   if (!content) return { reply: "咪只看到了空消息，可以再说一次吗？", duplicate: false };
 
@@ -14,7 +16,7 @@ export async function handleWorkCatMessage(input: { openid: string; content: str
       getRecentConversation(input.openid, 8)
     ]);
     if (cachedReply) return { reply: cachedReply, duplicate: true };
-    const classification = await routeWorkCatMessage(content, context, input.openid);
+    const classification = await routeWorkCatMessage(content, context, input.openid, receivedAt);
     console.info("[work-cat] reply prepared", {
       category: classification.category,
       intent: classification.intent,
