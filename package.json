@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "export:miniprogram": "node scripts/export-miniprogram-materials.js",
+    "seed:education-bases": "node scripts/seed-education-bases.mjs",
     "test:work-cat": "node scripts/test-work-cat-webhook.mjs"
   },
   "dependencies": {

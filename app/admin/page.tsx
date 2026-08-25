@@ -7,6 +7,11 @@ const links = [
     description: "查看 Dimmo 今日接待、待小宣回复的专业问题与用户留言。"
   },
   {
+    href: "/admin/education-bases",
+    title: "教育基地",
+    description: "维护红色教育基地的分类、介绍、地址、坐标和发布状态。"
+  },
+  {
     href: "/admin/new",
     title: "新增资料",
     description: "上传资料文件，补充知识说明，保存为可下载、可检索、可关联的资料节点。"
