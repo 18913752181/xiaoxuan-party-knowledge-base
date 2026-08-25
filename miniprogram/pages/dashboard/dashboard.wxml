@@ -1,0 +1,40 @@
+<view class="board-page"><view class="board-shell">
+  <view class="board-hero"><view class="hero-kicker">MEMBER · DIMMO</view><view class="hero-row"><view><view class="hero-title">喵喵看板</view><view class="hero-subtitle">Dimmo 和小程序共用同一本任务清单。</view></view><view class="member-tag">会员专属</view></view></view>
+
+  <view wx:if="{{loading}}" class="state-card">正在同步任务…</view>
+  <view wx:elif="{{errorText}}" class="state-card error-card"><view>{{errorText}}</view><button class="secondary-button" bindtap="loadTasks">重新加载</button></view>
+  <view wx:elif="{{!bound}}" class="binding-card">
+    <view class="section-kicker">LINK DIMMO</view><view class="section-title">先和 Dimmo 对上暗号</view>
+    <view class="binding-copy">在服务号聊天中发送“绑定小程序”，再把 Dimmo 回复的 8 位绑定码填在这里。绑定码 10 分钟内有效。</view>
+    <input class="binding-input" type="number" maxlength="8" value="{{bindingCode}}" placeholder="输入 8 位绑定码" bindinput="onBindingCodeInput" />
+    <button class="primary-button" loading="{{submitting}}" disabled="{{bindingCode.length !== 8 || submitting}}" bindtap="bindAccount">绑定并同步任务</button>
+  </view>
+  <view wx:elif="{{!active}}" class="state-card">当前会员状态已失效，续费后即可继续查看和管理任务。</view>
+
+  <block wx:else>
+    <view class="progress-card"><view class="section-heading-row"><view><view class="section-kicker">TASK PROGRESS</view><view class="section-title">任务进展</view></view><view class="progress-mark">✓</view></view><view class="progress-grid">
+      <view class="progress-item"><text class="progress-number">{{weekCount}}</text><text class="progress-label">本周任务</text></view><view class="progress-item"><text class="progress-number">{{pendingCount}}</text><text class="progress-label">待完成</text></view><view class="progress-item"><text class="progress-number">{{completedCount}}</text><text class="progress-label">已完成</text></view>
+    </view></view>
+
+    <view class="create-card"><view class="section-kicker">NEW TASK</view><view class="section-title">新增事项</view>
+      <input class="task-input" maxlength="60" value="{{taskTitle}}" placeholder="例如：交材料" bindinput="onTaskTitleInput" />
+      <view class="schedule-row"><picker class="schedule-picker" mode="date" value="{{taskDate}}" bindchange="onTaskDateChange"><view>{{taskDate}}</view></picker><picker class="schedule-picker" mode="time" value="{{taskTime}}" bindchange="onTaskTimeChange"><view>{{taskTime}}</view></picker></view>
+      <button class="primary-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="createTask">加入喵喵看板</button>
+    </view>
+
+    <view class="today-section"><view class="section-heading-row"><view><view class="section-kicker">THIS WEEK</view><view class="section-title">选择日期</view></view><view class="calendar-mark">日</view></view><view class="week-row">
+      <view wx:for="{{week}}" wx:key="key" class="date-cell {{selectedKey === item.key ? 'is-selected' : ''}}" data-key="{{item.key}}" bindtap="selectDate"><text class="weekday">{{item.weekday}}</text><text class="day-number">{{item.day}}</text><view wx:if="{{item.isToday}}" class="today-dot"></view></view>
+    </view></view>
+
+    <view class="task-section"><view class="section-heading-row"><view><view class="section-kicker">TASKS</view><view class="section-title">{{selectedLabel}}事项</view></view><view class="task-count">{{visibleTasks.length}} 件</view></view>
+      <view wx:if="{{visibleTasks.length}}" class="reminder-list"><view wx:for="{{visibleTasks}}" wx:key="id" class="reminder-row {{item.isDone ? 'is-done' : ''}}">
+        <view class="reminder-check">{{item.isDone ? '✓' : ''}}</view><view class="reminder-main"><view class="reminder-content">{{item.content}}</view><view class="reminder-meta">{{item.timeText}} · {{item.statusText}}</view><view class="reminder-detail">来自 {{item.sourceText}} · 创建于 {{item.createdText}}</view>
+          <view wx:if="{{item.isPending}}" class="task-actions"><button class="task-action complete-action" data-id="{{item.id}}" data-action="complete" bindtap="updateTask">完成</button><button class="task-action" data-id="{{item.id}}" data-action="cancel" bindtap="updateTask">取消</button></view>
+        </view>
+      </view></view>
+      <view wx:else class="empty-state"><view class="empty-mark">✓</view><view class="empty-title">这一天还没有事项</view><view class="empty-copy">可以在上方新增，也可以直接在服务号聊天里告诉 Dimmo。</view></view>
+    </view>
+    <view class="sync-note"><view class="sync-dot"></view><text>两端更新的是同一条任务记录，不会分别保存两份。</text></view>
+  </block>
+</view></view>
+<x-tabbar active="board"></x-tabbar>
