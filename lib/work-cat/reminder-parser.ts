@@ -80,7 +80,11 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
 
   const hasReminderVerb = /提醒|叫(?:醒)?我|到点|待办|帮.*记/.test(text);
   const hasTimeHint = /(?:今天|今晚|明天|明早|明晚|后天|大后天|早上|上午|中午|下午|晚上|夜里|(?:下|本|这)?(?:周|星期)[一二三四五六日天]|\d{1,2}(?::\d{1,2}|点|时)|(?:\d+|两|一|三|半)\s*(?:小时|分钟)后)/.test(text);
-  if (!hasReminderVerb && !hasTimeHint) return null;
+  // 时间词本身不是提醒意图。“今天有没有好好吃饭”“明天忙不忙”都应作为聊天处理。
+  // 仅保留明确提醒动作，或“时间 + 明确待办动作”的省略式表达（例如“8点按摩”“下午三点开会”）。
+  const isConversation = /(?:有没有|好不好|忙不忙|累不累|怎么样|在干嘛|在做什么|心情|吃饭|我要|我想|想要|想吃|吗|么|呢)/.test(text);
+  const hasImplicitScheduledTask = /(?:开会|按摩|喝水|起床|交材料|关电脑|打电话|吃药|上课|复习|提交|缴费|报到)/.test(text);
+  if (!hasReminderVerb && !(hasTimeHint && hasImplicitScheduledTask && !isConversation)) return null;
 
   const content = removeTimeWords(text);
   if (!content) return { kind: "needs_content", reply: "🐾 要提醒什么事呀？告诉咪，咪记好后到点提醒老大。" };
@@ -97,7 +101,7 @@ export function parseRuleReminder(raw: string, now = new Date()): RuleReminder |
   const clock = text.match(/([01]?\d|2[0-3])(?::([0-5]\d)|点(半|([0-5]?\d)分?)?|时([0-5]?\d分?)?)/);
   const usesPeriodOnly = /明早|早上|上午|中午|下午|今晚|晚上|夜里/.test(text);
   if (!clock && !usesPeriodOnly) {
-    return { kind: "needs_time", reply: "🐾 想在几点提醒呀？把时间告诉咪，咪就记进小本本。" };
+    return { kind: "needs_time", reply: "🐾 好呀老大，想什么时候提醒喵？" };
   }
 
   let hour = clock ? Number(clock[1]) : /中午/.test(text) ? 12 : /下午/.test(text) ? 15 : /今晚|晚上|夜里/.test(text) ? 20 : 8;

@@ -12,7 +12,7 @@ const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
 const MEMBERSHIP_STATUS_PATTERN = /(我(是|是不是|算不算).{0,4}会员|会员(状态|资格|到期|有效期)|查.{0,4}会员|是不是.{0,4}会员)/;
 const REMINDER_LIST_PATTERN = /(?:查看|看看|查询|我的|查一下).{0,4}(?:提醒|待办)|(?:提醒|待办)(?:列表|清单)/;
 const TASK_QUERY_PATTERN = /(?:今天|明天).{0,8}(?:什么事|安排|待办|任务|提醒)|(?:还有|查看|看看|查询|查一下).{0,8}(?:没完成|未完成|待完成)/;
-const REMINDER_CANCEL_PATTERN = /(?:取消掉|取消|删掉|删除|不要了)[。！!]?$/;
+const REMINDER_CANCEL_PATTERN = /^(?:取消掉|取消|删掉|删除|不要)(?:一下)?(?:提醒|待办)?.*|(?:取消掉|取消|删掉|删除|不要了)[。！!]?$/;
 const TASK_COMPLETE_PATTERN = /(?:(?:已经|已)(?:完成|做完|办完)(?:了)?|(?:完成|做完|办完)了)[。！!]?$/;
 const TASK_RESCHEDULE_PATTERN = /^(.{1,80}?)(?:改成|改到|修改为)(.{1,80})$/;
 const MINI_BIND_PATTERN = /(?:绑定|关联)(?:一下)?(?:喵喵看板|小程序)|(?:喵喵看板|小程序)(?:怎么)?绑定/;
@@ -181,7 +181,7 @@ function resourceReply(results: Awaited<ReturnType<typeof searchWorkCatLibrary>>
 }
 function humanFromResource(content: string, retrievalSummary: string): Classification {
   return {
-    category: "human", intent: "HUMAN", confidence: 1, target: content.slice(0, 120),
+    category: "human", intent: "HUMAN_HANDOFF", confidence: 1, target: content.slice(0, 120),
     shouldReplyDirectly: false, needHuman: true,
     summary: `资料库未找到明确结果：${content.slice(0, 120)}`,
     retrievalSummary,
@@ -200,6 +200,11 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   if (REMINDER_CANCEL_PATTERN.test(content.trim())) return cancelReminderReply(content.trim(), openid);
   if (TASK_COMPLETE_PATTERN.test(content.trim())) return completeTaskReply(content.trim(), openid);
   if (TASK_RESCHEDULE_PATTERN.test(content.trim())) return rescheduleTaskReply(content.trim(), openid, receivedAt);
+
+  // 产品说明和“找小宣”先于提醒解析：例如“怎么添加提醒”是在问功能，
+  // “提醒小宣”是在留给社长的话，都不是用户自己的到点提醒。
+  const initialHard = classifyByHardRules(content);
+  if (initialHard?.intent === "PRODUCT_QA" || initialHard?.intent === "HUMAN_HANDOFF") return initialHard;
 
   // 到点提醒必须在专业问题和通用人工兜底之前处理。常见表达由本地解析兜住，
   // 不受大模型超时、置信度或 JSON 格式影响；复杂说法再交由 DeepSeek 识别。
@@ -221,7 +226,7 @@ export async function routeWorkCatMessage(content: string, context: Conversation
     }, ruleReminder.reminderAt, ruleReminder.reminderContent, openid, receivedAt);
   }
 
-  const hard = classifyByHardRules(content);
+  const hard = initialHard;
   if (hard) {
     if (hard.intent === "RESOURCE") {
       const results = await searchWorkCatLibrary(content);
@@ -229,7 +234,7 @@ export async function routeWorkCatMessage(content: string, context: Conversation
       if (!results.length) return humanFromResource(content, retrievalSummary);
       return { ...hard, confidence: 1, retrievalSummary, reply: resourceReply(results) };
     }
-    if (hard.intent === "PARTY_AFFAIRS") {
+    if (hard.intent === "PROFESSIONAL_QA") {
       const results = await searchWorkCatLibrary(content);
       // 当前不让模型从知识条目自行推导党务结论：即使检索命中，也仅附到待办供小宣核对。
       return { ...hard, confidence: 1, retrievalSummary: formatSearchSummary(results), reply: PROFESSIONAL_REPLY };
@@ -245,7 +250,7 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   // 短句提醒不再被通用的 0.8 置信度阈值误转给小宣。
   if (identified.intent === "REMINDER") return routeAiReminder(content, identified, openid, receivedAt);
 
-  if (identified.confidence < HUMAN_CONFIDENCE_THRESHOLD || identified.intent === "HUMAN") {
+  if (identified.confidence < HUMAN_CONFIDENCE_THRESHOLD || identified.intent === "HUMAN_HANDOFF") {
     return { ...fallbackProfessional(content), confidence: identified.confidence, summary: identified.summary || `意图不确定：${content.slice(0, 120)}` };
   }
 
@@ -256,11 +261,17 @@ export async function routeWorkCatMessage(content: string, context: Conversation
       ? { ...identified, category: "resource_navigation", shouldReplyDirectly: true, needHuman: false, retrievalSummary, reply: resourceReply(results) }
       : humanFromResource(content, retrievalSummary);
   }
+  if (identified.intent === "PRODUCT_QA") {
+    return {
+      ...identified, category: "faq", shouldReplyDirectly: true, needHuman: false,
+      reply: "🐾 资料库在 https://xiaoxuanvip.com/；提醒可以直接在这里告诉咪“明天8点提醒咪开会”，想查看就说“查看提醒”。\n\n会员和喵喵工作台入口在 https://xiaoxuanvip.com/membership/payment ，小程序正在准备中。"
+    };
+  }
   if (identified.intent === "TOOL") {
     // AI 未能被硬规则覆盖的工具需求保守转人工，不猜测不存在的入口。
     return { ...fallbackProfessional(content), confidence: identified.confidence, summary: `未识别到可用工具入口：${content.slice(0, 120)}` };
   }
-  if (identified.intent === "PARTY_AFFAIRS") {
+  if (identified.intent === "PROFESSIONAL_QA") {
     const results = await searchWorkCatLibrary(content);
     return { ...identified, category: "professional_question", shouldReplyDirectly: false, needHuman: true, retrievalSummary: formatSearchSummary(results), reply: PROFESSIONAL_REPLY };
   }

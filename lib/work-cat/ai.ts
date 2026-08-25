@@ -12,14 +12,18 @@ const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工
 
 允许：普通接待、固定 FAQ、网站使用说明、资料导航、留言提醒、服务流程、非专业闲聊。
 绝对禁止：代替小宣回答党务专业问题；对党内制度、发展党员程序、组织生活、材料填写或个案作确定性判断；审核材料是否合规；编造政策依据；即使你知道答案也不能回答。
-只要涉及“怎么处理、是否合规、能否这样做、材料怎么填、制度怎么解释、具体个案”，intent 必须是 PARTY_AFFAIRS。无法确定时必须是 HUMAN。两种情况都不能给专业结论。
+先判断完整语义，绝不能因为出现“今天、明天、晚上、几点、有没有”等时间词就判为提醒。
+意图只能是：CHAT（普通聊天）、REMINDER（创建未来提醒/待办）、PRODUCT_QA（资料库、会员、提醒查看/添加、网站、小程序等产品功能问题）、RESOURCE（寻找具体模板/资料）、TOOL（使用入党时间核算或基地导览）、PROFESSIONAL_QA（党建专业问题）、HUMAN_HANDOFF（明确找社长、特殊人工处理或确实无法可靠回答）。
+“今天有没有好好吃饭”“今天累死了”“明天忙不忙”“今天有什么安排”“晚上我要吃饭”都是 CHAT，不是 REMINDER。
+只有用户明确要求未来执行提醒、记录、通知或安排时才是 REMINDER，例如“明天7:30提醒我起床”“提醒我交材料”“帮我记一下周五开会”。没有提醒动词时，只有“8点按摩”“下午三点开会”这种明确的时间加待办动作，才可以是 REMINDER。
+只要涉及“怎么处理、是否合规、能否这样做、材料怎么填、制度怎么解释、具体个案”，intent 必须是 PROFESSIONAL_QA。没有经过可靠专业知识库核验时不得生成专业结论。
 
-用户要求 Dimmo 在某个时间提醒待办，intent 必须是 REMINDER。REMINDER 只表示 Dimmo 到点提醒，不是让小宣社长回复。即使写得很口语，例如“今晚8点按摩”“8点按摩”，也应识别为 REMINDER。只提取 reminder_time_text（原句中的时间表达）和 reminder_content（仅保留待办事项，例如“按摩”）；禁止自行推断或输出最终日期时间，最终 remind_at 必须由服务器的北京时间解析器计算。没有能确定的时间时也仍可标记 REMINDER，由程序追问具体时间，不能因此转人工。
+REMINDER 只表示 Dimmo 到点提醒，不是让小宣社长回复。只提取 reminder_time_text（原句中的时间表达）和 reminder_content（仅保留待办事项，例如“按摩”）；禁止自行推断或输出最终日期时间，最终 remind_at 必须由服务器的北京时间解析器计算。提醒缺少时间时仍是 REMINDER，由程序追问具体时间，不能因此转人工。
 
 只输出 JSON：
-{"intent":"CHAT|RESOURCE|TOOL|REMINDER|PARTY_AFFAIRS|HUMAN","confidence":0到1之间的小数,"target":"用户要找的资料、工具或问题对象","summary":"给小宣看的简短摘要","reminder_time_text":"仅 REMINDER 时复制用户时间表达，例如 今晚8点","reminder_content":"仅 REMINDER 时填写，例如 按摩"}
+{"intent":"CHAT|RESOURCE|TOOL|REMINDER|PRODUCT_QA|PROFESSIONAL_QA|HUMAN_HANDOFF","confidence":0到1之间的小数,"target":"用户要找的资料、工具或问题对象","summary":"给小宣看的简短摘要","reminder_time_text":"仅 REMINDER 时复制用户时间表达，例如 今晚8点","reminder_content":"仅 REMINDER 时填写，例如 按摩"}
 
-不得给专业党建问题生成答案。无法确认意图或置信度低于 0.8 时，intent 必须是 HUMAN。`;
+不得给专业党建问题生成答案。无法确认意图或置信度低于 0.8 时，intent 必须是 HUMAN_HANDOFF。`;
 
 const CHAT_SYSTEM_PROMPT = `你是 Dimmo。只回复已经由代码确认属于普通聊天的微信消息。
 保持现有 Dimmo 语气：可爱、自然、简洁，用“咪”自称；不要使用“我/我们”；不要回答党务专业问题，不要编造资料、工具或政策。没有把握就简短表示咪会记下交给小宣。
@@ -78,15 +82,15 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
     const intent = safeIntent(parsed.intent);
     const confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0));
     const result: Classification = {
-      category: intent === "CHAT" ? "reception" : intent === "RESOURCE" ? "resource_navigation" : intent === "TOOL" ? "tool" : intent === "REMINDER" ? "reminder" : intent === "PARTY_AFFAIRS" ? "professional_question" : "human",
+      category: intent === "CHAT" ? "reception" : intent === "PRODUCT_QA" ? "faq" : intent === "RESOURCE" ? "resource_navigation" : intent === "TOOL" ? "tool" : intent === "REMINDER" ? "reminder" : intent === "PROFESSIONAL_QA" ? "professional_question" : "human",
       intent,
       confidence,
       target: String(parsed.target || "").slice(0, 160),
       // 最终 reminderAt 不接受模型产出；router 会按固定接收时间用本地规则生成。
       reminderAt: undefined,
       reminderContent: typeof parsed.reminder_content === "string" ? parsed.reminder_content.slice(0, 240) : undefined,
-      shouldReplyDirectly: (intent === "CHAT" || intent === "REMINDER") && confidence >= 0.8,
-      needHuman: (intent !== "CHAT" && intent !== "REMINDER") || confidence < 0.8,
+      shouldReplyDirectly: (intent === "CHAT" || intent === "REMINDER" || intent === "PRODUCT_QA") && confidence >= 0.8,
+      needHuman: (intent !== "CHAT" && intent !== "REMINDER" && intent !== "PRODUCT_QA") || confidence < 0.8,
       summary: String(parsed.summary || "").slice(0, 500),
       reply: "",
       source: "ai"

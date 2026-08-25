@@ -2,7 +2,7 @@ import faqRows from "@/data/work-cat-faq.json";
 import type { Classification, WorkCatCategory, WorkCatIntent } from "@/lib/work-cat/types";
 
 const PROFESSIONAL_PATTERNS = [
-  /党(内|务|建|组织|员|支部|委会|小组)/,
+  /党(内|务|建|组织|员|支部|委会|小组)|支委会/,
   /预备党员|发展对象|积极分子|入党|转正|政审|组织生活|民主生活会|三会一课/,
   /发展党员|党费|处分|换届|选举|表决|票决|组织关系|党员档案|支部大会/,
   /合不合规|是否合规|符不符合|能不能这样|可不可以这样|应该怎么(办|处理)|怎么处理/,
@@ -24,7 +24,7 @@ const RECEPTION_PATTERNS = [
 // 明确的日常互动不交给低置信度模型判断，避免“你在干嘛”之类被误转人工。
 const CASUAL_CHAT_PATTERNS = [
   /^(哈哈|哈哈哈|嘿嘿|呵呵|谢谢|谢啦|辛苦了|晚安|早安|午安)[呀啦哦～~!！。 ]*$/,
-  /(你在干嘛|你在做什么|在忙吗|忙不忙|陪咪聊聊|陪我聊聊|今天好累|好累啊|心情不好|吃了吗|想聊天)/
+  /(你在干嘛|你在做什么|在忙吗|忙不忙|陪咪聊聊|陪我聊聊|今天好累|今天累死了|好累啊|心情不好|吃了吗|想聊天|今天.*有没有.*吃饭|今天.*心情怎么样|明天.*忙不忙)/
 ];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
@@ -77,14 +77,14 @@ export function classifyByHardRules(content: string): Classification | null {
   const text = content.trim();
   if (HUMAN_PATTERNS.some((pattern) => pattern.test(text))) {
     return classified({
-      category: "human", intent: "HUMAN", shouldReplyDirectly: false, needHuman: true,
+      category: "human", intent: "HUMAN_HANDOFF", shouldReplyDirectly: false, needHuman: true,
       summary: `用户明确要求小宣社长处理：${text.slice(0, 120)}`,
       reply: HUMAN_REPLY, source: "rule", target: "小宣社长"
     });
   }
   if (isMessageToXiaoxuan(text)) {
     return classified({
-      category: "human", intent: "HUMAN",
+      category: "human", intent: "HUMAN_HANDOFF",
       shouldReplyDirectly: false,
       needHuman: true,
       summary: `用户给小宣的提醒或留言：${text.slice(0, 120)}`,
@@ -107,11 +107,24 @@ export function classifyByHardRules(content: string): Classification | null {
 
   if (isProfessionalByRule(text)) {
     return classified({
-      category: "professional_question", intent: "PARTY_AFFAIRS",
+      category: "professional_question", intent: "PROFESSIONAL_QA",
       shouldReplyDirectly: false,
       needHuman: true,
       summary: `用户咨询专业党务问题：${text.slice(0, 120)}`,
       reply: PROFESSIONAL_REPLY,
+      source: "rule"
+    });
+  }
+
+  // 产品 FAQ 优先于“找资料”检索；“资料库在哪里”是产品入口，不应因没有具体资料名被转人工。
+  const faq = faqRows.find((row) => row.keywords.some((keyword) => text.includes(keyword)));
+  if (faq) {
+    return classified({
+      category: "faq", intent: "PRODUCT_QA",
+      shouldReplyDirectly: true,
+      needHuman: false,
+      summary: `产品功能问题：${faq.id}`,
+      reply: faq.reply,
       source: "rule"
     });
   }
@@ -121,18 +134,6 @@ export function classifyByHardRules(content: string): Classification | null {
       category: "resource_navigation", intent: "RESOURCE", shouldReplyDirectly: true, needHuman: false,
       target: text.slice(0, 120), summary: `用户想查找资料：${text.slice(0, 120)}`,
       reply: "", source: "rule"
-    });
-  }
-
-  const faq = faqRows.find((row) => row.keywords.some((keyword) => text.includes(keyword)));
-  if (faq) {
-    return classified({
-      category: "faq", intent: "CHAT",
-      shouldReplyDirectly: true,
-      needHuman: false,
-      summary: `固定客服问题：${faq.id}`,
-      reply: faq.reply,
-      source: "rule"
     });
   }
 
@@ -172,21 +173,21 @@ export function safeCategory(value: unknown): WorkCatCategory {
 }
 
 export function safeIntent(value: unknown): WorkCatIntent {
-  const allowed: WorkCatIntent[] = ["CHAT", "RESOURCE", "TOOL", "REMINDER", "PARTY_AFFAIRS", "HUMAN"];
-  return allowed.includes(value as WorkCatIntent) ? (value as WorkCatIntent) : "HUMAN";
+  const allowed: WorkCatIntent[] = ["CHAT", "RESOURCE", "TOOL", "REMINDER", "PRODUCT_QA", "PROFESSIONAL_QA", "HUMAN_HANDOFF"];
+  return allowed.includes(value as WorkCatIntent) ? (value as WorkCatIntent) : "HUMAN_HANDOFF";
 }
 
 /** 模型输出后的第二道闸：命中专业规则、分类未知或模型犹豫，一律转人工。 */
 export function enforceSafety(content: string, result: Classification): Classification {
-  if (isProfessionalByRule(content) || result.intent === "PARTY_AFFAIRS" || result.intent === "HUMAN" || !result.shouldReplyDirectly) {
+  if (isProfessionalByRule(content) || result.intent === "PROFESSIONAL_QA" || result.intent === "HUMAN_HANDOFF" || !result.shouldReplyDirectly) {
     return {
       ...result,
-      category: result.intent === "HUMAN" ? "human" : "professional_question",
-      intent: result.intent === "HUMAN" ? "HUMAN" : "PARTY_AFFAIRS",
+      category: result.intent === "HUMAN_HANDOFF" ? "human" : "professional_question",
+      intent: result.intent === "HUMAN_HANDOFF" ? "HUMAN_HANDOFF" : "PROFESSIONAL_QA",
       shouldReplyDirectly: false,
       needHuman: true,
       summary: result.summary || `用户咨询专业问题：${content.slice(0, 120)}`,
-      reply: result.intent === "HUMAN" ? HUMAN_REPLY : PROFESSIONAL_REPLY
+      reply: result.intent === "HUMAN_HANDOFF" ? HUMAN_REPLY : PROFESSIONAL_REPLY
     };
   }
   return { ...result, reply: normalizeCatVoice(result.reply) };
@@ -194,7 +195,7 @@ export function enforceSafety(content: string, result: Classification): Classifi
 
 export function fallbackProfessional(content: string): Classification {
   return classified({
-    category: "human", intent: "HUMAN",
+    category: "human", intent: "HUMAN_HANDOFF",
     shouldReplyDirectly: false,
     needHuman: true,
     summary: `分类不确定，已按专业问题转人工：${content.slice(0, 120)}`,
