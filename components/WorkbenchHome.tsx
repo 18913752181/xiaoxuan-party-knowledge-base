@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 
 type GuidedDestination = {
@@ -63,13 +64,19 @@ function FutureWorkspaceSlots({ state }: { state: WorkbenchFutureState }) {
 }
 
 export function WorkbenchHome() {
+  const router = useRouter();
   const [greeting, setGreeting] = useState("你好");
   const [activeDestination, setActiveDestination] = useState<GuidedDestination | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
+    // 兼容资料库旧首页的“提问”锚点链接。
+    if (window.location.hash === "#submit-question") {
+      router.replace("/questions");
+      return;
+    }
     setGreeting(greetingFor(new Date().getHours()));
-  }, []);
+  }, [router]);
 
   const recentSection = useMemo(() => {
     if (!recentUses.length) return null;
