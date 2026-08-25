@@ -496,7 +496,7 @@ export function ResourceLibrary({
   );
 }
 
-function QuestionEntry() {
+export function QuestionEntry() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
