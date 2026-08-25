@@ -8,4 +8,8 @@ dev-*.log
 npm-debug.log*
 DEPLOY_CHINA.md
 README.md
-miniprogram
+miniprogram/*
+!miniprogram/config/
+miniprogram/config/*
+!miniprogram/config/education-bases.js
+!miniprogram/config/education-locations.js
