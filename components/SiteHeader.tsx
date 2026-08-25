@@ -5,17 +5,25 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 
-const navItems = [
+const workbenchNavItems = [
   { href: "/", label: "首页" },
   { href: "/library", label: "资料" },
-  { href: "/questions", label: "提问" },
+  { href: "/library#submit-question", label: "提问" },
+  { href: "/me", label: "我的" }
+];
+
+const libraryNavItems = [
+  { href: "/library", label: "首页" },
+  { href: "/library/materials", label: "资料" },
+  { href: "/library#submit-question", label: "提问" },
   { href: "/me", label: "我的" }
 ];
 
 function navItemActive(href: string, pathname: string, hash: string) {
   if (href === "/") return pathname === "/";
-  if (href === "/library") return pathname === "/library" || pathname.startsWith("/materials/");
-  if (href === "/questions") return pathname === "/questions" || pathname.startsWith("/questions/");
+  if (href === "/library") return pathname === "/library" && hash !== "#submit-question";
+  if (href === "/library/materials") return pathname === "/library/materials" || pathname.startsWith("/materials/");
+  if (href === "/library#submit-question") return pathname === "/library" && hash === "#submit-question";
   if (href === "/me") return pathname === "/me" || pathname.startsWith("/me/");
   return pathname === href;
 }
@@ -25,6 +33,8 @@ export function SiteHeader() {
   const [hash, setHash] = useState("");
   const [sessionProfile, setSessionProfile] = useState<{ id: string; email: string; avatar_key?: string | null } | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const isLibrarySurface = pathname === "/library" || pathname.startsWith("/library/") || pathname.startsWith("/materials/") || pathname.startsWith("/questions/");
+  const navItems = isLibrarySurface ? libraryNavItems : workbenchNavItems;
 
   useEffect(() => {
     const updateHash = () => setHash(window.location.hash);
@@ -58,8 +68,8 @@ export function SiteHeader() {
     <>
       <header className="sticky top-0 z-40 border-b border-brand-line bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label="小宣资料库首页">
-          小宣资料库
+        <Link href={isLibrarySurface ? "/library" : "/"} className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label={isLibrarySurface ? "小宣资料库首页" : "喵喵工作台首页"}>
+          {isLibrarySurface ? "小宣资料库" : "喵喵工作台"}
         </Link>
         <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
           {navItems.map((item) => {
@@ -97,10 +107,7 @@ export function SiteHeader() {
         </div>
       </header>
       <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-brand-line bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(35,43,52,0.055)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
-        <MobileNavItem href="/" label="首页" active={pathname === "/"} />
-        <MobileNavItem href="/library" label="资料" active={pathname === "/library" || pathname.startsWith("/materials/")} />
-        <MobileNavItem href="/questions" label="提问" active={pathname === "/questions" || pathname.startsWith("/questions/")} />
-        <MobileNavItem href="/me" label="我的" active={pathname === "/me" || pathname.startsWith("/me/")} />
+        {navItems.map((item) => <MobileNavItem key={item.href} href={item.href} label={item.label} active={navItemActive(item.href, pathname, hash)} />)}
       </nav>
     </>
   );
@@ -119,9 +126,9 @@ function MobileNavItem({ href, label, active }: { href: string; label: string; a
         href={href}
         className={className}
         onClick={(event) => {
-          if (window.location.pathname !== "/") return;
+          const [basePath, targetId] = href.split("#");
+          if (window.location.pathname !== basePath) return;
 
-          const targetId = href.split("#")[1];
           const target = document.getElementById(targetId);
           if (!target) return;
 

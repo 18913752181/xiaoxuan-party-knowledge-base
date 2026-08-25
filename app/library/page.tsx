@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 
 export default async function LibraryPage() {
   const materials = (await listContentUnits()).map(contentUnitToMaterialSummary);
-  return <ResourceLibrary initialMaterials={materials} libraryOnly />;
+  return <ResourceLibrary initialMaterials={materials} />;
 }

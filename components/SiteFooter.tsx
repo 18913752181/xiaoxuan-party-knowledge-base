@@ -15,7 +15,7 @@ export function SiteFooter() {
           <p className="text-sm font-semibold text-brand-ink">快速入口</p>
           <ul className="mt-3 grid gap-2 text-sm text-neutral-500">
             <li><Link href="/library" className="xuan-hover-highlight transition hover:text-[#9a4650]">资料库</Link></li>
-            <li><Link href="/questions" className="xuan-hover-highlight transition hover:text-[#9a4650]">提交问题</Link></li>
+            <li><Link href="/library#submit-question" className="xuan-hover-highlight transition hover:text-[#9a4650]">提交问题</Link></li>
             <li><Link href="/membership" className="xuan-hover-highlight transition hover:text-[#9a4650]">会员服务</Link></li>
             <li><Link href="/dimmo" className="xuan-hover-highlight transition hover:text-[#9a4650]">关于我们</Link></li>
           </ul>

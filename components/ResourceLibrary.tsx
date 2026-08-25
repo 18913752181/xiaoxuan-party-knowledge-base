@@ -335,14 +335,14 @@ export function ResourceLibrary({
                 <button
                   key={name}
                   type="button"
-                  onClick={() => router.push(`/library?topic=${encodeURIComponent(name)}`)}
+                  onClick={() => router.push(`/library/materials?topic=${encodeURIComponent(name)}`)}
                   className="group inline-flex min-h-11 items-center rounded-xl border border-brand-line bg-white px-4 py-2.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#d9dde2] hover:bg-[#fff8f8] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.98]"
                 >
                   <span className="text-sm font-medium text-brand-ink transition-colors duration-150 group-hover:text-brand-red">{name}</span>
                 </button>
               ))}
               <Link
-                href="/library"
+                href="/library/materials"
                 className="group inline-flex min-h-11 items-center rounded-xl border border-brand-line bg-white px-4 py-2.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#d9dde2] hover:bg-[#fff8f8] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.98]"
               >
                 <span className="text-sm font-medium text-brand-ink transition-colors duration-150 group-hover:text-brand-red">更多</span>
@@ -363,7 +363,7 @@ export function ResourceLibrary({
                     {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
                   </select>
                 </>
-              ) : <Link href="/library" className="group inline-flex min-h-11 items-center rounded-xl border border-brand-line bg-white px-4 py-2.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#d9dde2] hover:bg-[#fff8f8] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.98]"><span className="text-sm font-medium text-brand-ink transition-colors duration-150 group-hover:text-brand-red">全部专题</span></Link>}
+              ) : <Link href="/library/materials" className="group inline-flex min-h-11 items-center rounded-xl border border-brand-line bg-white px-4 py-2.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#d9dde2] hover:bg-[#fff8f8] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.98]"><span className="text-sm font-medium text-brand-ink transition-colors duration-150 group-hover:text-brand-red">全部专题</span></Link>}
               {libraryOnly ? (
                 <>
                   <label htmlFor="sort-filter" className="sr-only">资料排序</label>
@@ -481,7 +481,7 @@ export function ResourceLibrary({
           {!libraryOnly && !isLoading && filteredMaterials.length ? (
             <p className="mt-4 text-center text-xs text-neutral-400">
               首页仅展示最新 3 份，全部资料请前往
-              <Link href="/library" className="ml-1 text-[#9a4650] hover:underline">资料库</Link>
+              <Link href="/library/materials" className="ml-1 text-[#9a4650] hover:underline">资料库</Link>
               。
             </p>
           ) : null}
@@ -496,7 +496,7 @@ export function ResourceLibrary({
   );
 }
 
-export function QuestionEntry() {
+function QuestionEntry() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");

@@ -41,7 +41,7 @@ export default function QuestionDetailPage() {
   if (!question) return <main className="mx-auto min-h-[60vh] max-w-3xl px-5 py-12 text-sm text-neutral-500">{message}</main>;
 
   return <main className="mx-auto max-w-3xl px-5 py-10">
-    <Link href="/questions" className="text-sm text-[#6f8b7b]">返回提问</Link>
+    <Link href="/library#submit-question" className="text-sm text-[#6f8b7b]">返回资料库首页</Link>
     <article className="mt-5 rounded-3xl border border-[#e3d8cf] bg-white p-6 md:p-8">
       <p className="text-sm font-medium text-[#9a4650]">问题</p>
       <h1 className="mt-3 text-2xl font-semibold leading-10 text-brand-ink">{question.question}</h1>
