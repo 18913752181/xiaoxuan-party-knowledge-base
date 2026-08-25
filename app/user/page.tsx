@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listMyFavorites, type FavoriteRow } from "@/lib/favorites";
 import { maskAccountEmail, WECHAT_EMAIL_SUFFIX } from "@/lib/display";
-import { AVATAR_OPTIONS, ProfileAvatar, resolveAvatarKey, type AvatarKey } from "@/components/ProfileAvatar";
+import { AVATAR_OPTIONS, isAvatarKey, ProfileAvatar, resolveAvatarKey, type AvatarKey } from "@/components/ProfileAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 
 type PageState = "loading" | "guest" | "ready" | "error";
@@ -26,6 +26,8 @@ export default function UserPage() {
   const [avatarKey, setAvatarKey] = useState<AvatarKey | null>(null);
   const [pendingAvatarKey, setPendingAvatarKey] = useState<AvatarKey | null>(null);
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState("");
+  const [avatarMessageKind, setAvatarMessageKind] = useState<"ok" | "error">("ok");
 
   const today = new Date().toISOString().slice(0, 10);
   const memberActive = memberStatus === "member" && Boolean(memberExpiresAt && memberExpiresAt >= today);
@@ -115,26 +117,45 @@ export default function UserPage() {
   function chooseAvatar(nextKey: AvatarKey) {
     if (savingAvatar) return;
     setPendingAvatarKey(nextKey);
+    setAvatarMessage("");
   }
 
   async function saveAvatar() {
     if (!userId || !pendingAvatarKey || pendingAvatarKey === avatarKey || savingAvatar) return;
+    const nextAvatarKey = pendingAvatarKey;
     setSavingAvatar(true);
-    const response = await fetch("/api/auth/avatar", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ avatar_key: pendingAvatarKey })
-    });
-    setSavingAvatar(false);
-    if (!response.ok) {
+    setAvatarMessage("");
+
+    try {
+      const response = await fetch("/api/auth/avatar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar_key: nextAvatarKey })
+      });
       const data = await response.json().catch(() => ({}));
-      setMessage(data.error || "头像保存失败，请稍后重试。");
-      return;
+      if (!response.ok || !isAvatarKey(data.avatar_key)) {
+        throw new Error(data.error || "头像保存失败，请稍后重试。");
+      }
+
+      // 保存后立即从服务器重新读取，避免只更新了页面预览却没有真正写入数据库。
+      const verifyResponse = await fetch("/api/auth/profile", { cache: "no-store" });
+      const verifyData = await verifyResponse.json().catch(() => ({}));
+      if (!verifyResponse.ok || verifyData?.profile?.avatar_key !== data.avatar_key) {
+        throw new Error("头像尚未成功保存，请刷新页面后重试。");
+      }
+
+      setAvatarKey(data.avatar_key);
+      setPendingAvatarKey(data.avatar_key);
+      await refreshProfile();
+      window.dispatchEvent(new CustomEvent("profile-avatar-updated"));
+      setAvatarMessageKind("ok");
+      setAvatarMessage("头像已保存。");
+    } catch (error) {
+      setAvatarMessageKind("error");
+      setAvatarMessage(error instanceof Error ? error.message : "头像保存失败，请稍后重试。");
+    } finally {
+      setSavingAvatar(false);
     }
-    setAvatarKey(pendingAvatarKey);
-    await refreshProfile();
-    window.dispatchEvent(new CustomEvent("profile-avatar-updated"));
-    setMessage("头像已更新。");
   }
 
   return (
@@ -190,7 +211,7 @@ export default function UserPage() {
               </div>
               <div className="mt-5 border-t border-[#cfe4d5] pt-4">
                 <p className="text-sm font-medium text-brand-ink">选择头像</p>
-                <p className="mt-1 text-xs text-neutral-500">选择后先预览，点击“确认使用”才会保存。</p>
+                <p className="mt-1 text-xs text-neutral-500">选择头像后，点击“保存”即可生效。</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {AVATAR_OPTIONS.map((avatar) => {
                     const selected = avatar.key === pendingAvatarKey;
@@ -216,10 +237,15 @@ export default function UserPage() {
                     disabled={!pendingAvatarKey || pendingAvatarKey === avatarKey || savingAvatar}
                     className="rounded-full bg-brand-ink px-5 py-2 text-sm font-medium text-white transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-35"
                   >
-                    {savingAvatar ? "正在保存..." : "确认使用"}
+                    {savingAvatar ? "正在保存..." : "保存"}
                   </button>
                   {pendingAvatarKey && pendingAvatarKey !== avatarKey ? (
-                    <span className="text-xs text-neutral-500">已选择新头像，尚未保存</span>
+                    <span className="text-xs text-neutral-500">已选择新头像，点击保存后生效</span>
+                  ) : null}
+                  {avatarMessage ? (
+                    <span className={`text-xs ${avatarMessageKind === "ok" ? "text-brand-sageDark" : "text-[#9a5245]"}`}>
+                      {avatarMessage}
+                    </span>
                   ) : null}
                 </div>
               </div>
