@@ -52,7 +52,7 @@ export async function dispatchDueMemberReminders(limit = 20): Promise<DispatchRe
       .eq("status", "scheduled");
     if (claimError) throw claimError;
 
-    const sent = await sendCustomerServiceText(item.openid, `🐾 「${item.content}」时间到了喵！`, appId, appSecret);
+    const sent = await sendCustomerServiceText(item.openid, `🛸「${item.content}」的时间到了喵！`, appId, appSecret);
     if (sent) {
       const { error: sentError } = await admin
         .from("wechat_reminders")
