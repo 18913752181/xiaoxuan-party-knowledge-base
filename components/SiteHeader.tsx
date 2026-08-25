@@ -6,16 +6,16 @@ import { useEffect, useState } from "react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 
 const navItems = [
-  { href: "/", label: "首页" },
+  { href: "/", label: "工作台" },
   { href: "/library", label: "资料" },
-  { href: "/#submit-question", label: "提问" },
+  { href: "/dimmo", label: "Dimmo" },
   { href: "/me", label: "我的" }
 ];
 
 function navItemActive(href: string, pathname: string, hash: string) {
   if (href === "/") return pathname === "/" && hash !== "#submit-question";
-  if (href === "/#submit-question") return pathname === "/" && hash === "#submit-question";
   if (href === "/library") return pathname === "/library" || pathname.startsWith("/materials/");
+  if (href === "/dimmo") return pathname === "/dimmo";
   if (href === "/me") return pathname === "/me" || pathname.startsWith("/me/");
   return pathname === href;
 }
@@ -58,8 +58,8 @@ export function SiteHeader() {
     <>
       <header className="sticky top-0 z-40 border-b border-brand-line bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label="小宣资料库首页">
-          小宣资料库
+        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label="喵喵工作台首页">
+          喵喵工作台
         </Link>
         <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
           {navItems.map((item) => {
@@ -97,9 +97,9 @@ export function SiteHeader() {
         </div>
       </header>
       <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-brand-line bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 text-center text-[11px] text-neutral-500 shadow-[0_-8px_24px_rgba(35,43,52,0.055)] backdrop-blur-xl lg:hidden" aria-label="移动端导航">
-        <MobileNavItem href="/" label="首页" active={pathname === "/" && hash !== "#submit-question"} />
+        <MobileNavItem href="/" label="工作台" active={pathname === "/"} />
         <MobileNavItem href="/library" label="资料" active={pathname === "/library" || pathname.startsWith("/materials/")} />
-        <MobileNavItem href="/#submit-question" label="提问" active={pathname === "/" && hash === "#submit-question"} />
+        <MobileNavItem href="/dimmo" label="Dimmo" active={pathname === "/dimmo"} />
         <MobileNavItem href="/me" label="我的" active={pathname === "/me" || pathname.startsWith("/me/")} />
       </nav>
     </>
