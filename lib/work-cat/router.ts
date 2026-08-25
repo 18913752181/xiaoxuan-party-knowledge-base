@@ -3,11 +3,14 @@ import "server-only";
 import { classifyWithAi, generateChatReply } from "@/lib/work-cat/ai";
 import { HUMAN_REPLY, PROFESSIONAL_REPLY, classifyByHardRules, fallbackProfessional, normalizeCatVoice } from "@/lib/work-cat/guardrails";
 import { formatSearchSummary, searchWorkCatLibrary } from "@/lib/work-cat/library-search";
-import { friendlyReminderTime, getMembershipForOpenid, openidHasActiveMembership, validateAiReminder } from "@/lib/work-cat/member-reminders";
+import { cancelUpcomingReminder, friendlyReminderTime, getMembershipForOpenid, listUpcomingReminders, openidHasActiveMembership, validateAiReminder } from "@/lib/work-cat/member-reminders";
+import { parseRuleReminder } from "@/lib/work-cat/reminder-parser";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
 const MEMBERSHIP_STATUS_PATTERN = /(我(是|是不是|算不算).{0,4}会员|会员(状态|资格|到期|有效期)|查.{0,4}会员|是不是.{0,4}会员)/;
+const REMINDER_LIST_PATTERN = /(?:查看|看看|查询|我的|查一下).{0,4}(?:提醒|待办)|(?:提醒|待办)(?:列表|清单)/;
+const REMINDER_CANCEL_PATTERN = /^(?:取消|删掉|删除|不要)(?:一下)?(?:提醒|待办)?/;
 
 function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembershipForOpenid>>): Classification {
   if (membership.active) {
@@ -25,8 +28,32 @@ function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembersh
   };
 }
 
-async function routeAiReminder(content: string, identified: Classification, openid: string): Promise<Classification> {
-  const parsed = validateAiReminder(identified.reminderAt, identified.reminderContent);
+async function listReminderReply(openid: string): Promise<Classification> {
+  const reminders = await listUpcomingReminders(openid);
+  if (!reminders.length) {
+    return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: "用户查看提醒，暂无待办", reply: "🐾 小本本里暂时没有待提醒的事。" };
+  }
+  const lines = reminders.map((item, index) => `${index + 1}. ${friendlyReminderTime(new Date(item.scheduled_at))} ${item.content}`);
+  return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: `用户查看 ${reminders.length} 条待提醒`, reply: `🐾 小本本里有这些：\n${lines.join("\n")}\n\n想取消的话，告诉咪“取消 + 事项”就好。` };
+}
+
+async function cancelReminderReply(content: string, openid: string): Promise<Classification> {
+  const target = content.replace(REMINDER_CANCEL_PATTERN, "").replace(/(?:提醒|待办)/g, "").replace(/[，,。！？!；;、\s]/g, "");
+  if (!target) {
+    return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: "用户要求取消提醒但未说明事项", reply: "🐾 想取消哪一条呀？例如说“取消明天8点按摩”，咪就能找到它。" };
+  }
+  const reminderKeyword = target.replace(/(?:今天|今晚|明天|明早|明晚|后天|(?:下|本|这)?(?:周|星期)?[一二三四五六日天]|\d{1,2}(?::\d{1,2}|点|时))/g, "");
+  if (!reminderKeyword) {
+    return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: "用户取消提醒但缺少事项", reply: "🐾 咪还需要这条提醒的事项，例如“取消明天8点按摩”。" };
+  }
+  const cancelled = await cancelUpcomingReminder(openid, reminderKeyword);
+  return cancelled
+    ? { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: `已取消提醒：${cancelled.content}`, reply: `🐾 已把“${cancelled.content}”从小本本里划掉啦。` }
+    : { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: `未找到要取消的提醒：${target}`, reply: "🐾 咪没有找到这条待提醒。可以先说“查看提醒”，咪帮老大看一眼小本本。" };
+}
+
+async function routeScheduledReminder(identified: Classification, reminderAt: string, reminderContent: string, openid: string): Promise<Classification> {
+  const parsed = validateAiReminder(reminderAt, reminderContent);
   if (parsed.kind === "invalid") {
     return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
   }
@@ -41,10 +68,18 @@ async function routeAiReminder(content: string, identified: Classification, open
   const action = /^(去|做|参加|完成|提交|联系|查看)/.test(parsed.content) ? parsed.content : `去${parsed.content}`;
   const timeText = friendlyReminderTime(new Date(parsed.scheduledAt));
   return {
-    ...identified, category: "reminder", shouldReplyDirectly: true, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
+    ...identified, category: "reminder", intent: "REMINDER", shouldReplyDirectly: true, needHuman: false, target: "会员到点提醒", reminderAt: parsed.scheduledAt, reminderContent: parsed.content,
     summary: `会员定时提醒：${parsed.displayTime}，${parsed.content}`,
     reply: `🐾 记好啦，${timeText}提醒老大${action}喵`
   };
+}
+
+async function routeAiReminder(content: string, identified: Classification, openid: string): Promise<Classification> {
+  const parsed = validateAiReminder(identified.reminderAt, identified.reminderContent);
+  if (parsed.kind === "invalid") {
+    return { ...identified, category: "reception", intent: "CHAT", shouldReplyDirectly: true, needHuman: false, summary: `定时提醒未创建：${parsed.reason}`, reply: `🐾 ${parsed.reason}。把时间和要记的事再说一次，咪就能帮老大记好。` };
+  }
+  return routeScheduledReminder(identified, parsed.scheduledAt, parsed.content, openid);
 }
 
 function resourceReply(results: Awaited<ReturnType<typeof searchWorkCatLibrary>>) {
@@ -66,6 +101,29 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   if (MEMBERSHIP_STATUS_PATTERN.test(content.trim())) {
     return membershipStatusReply(await getMembershipForOpenid(openid));
   }
+  if (REMINDER_LIST_PATTERN.test(content.trim())) return listReminderReply(openid);
+  if (REMINDER_CANCEL_PATTERN.test(content.trim())) return cancelReminderReply(content.trim(), openid);
+
+  // 到点提醒必须在专业问题和通用人工兜底之前处理。常见表达由本地解析兜住，
+  // 不受大模型超时、置信度或 JSON 格式影响；复杂说法再交由 DeepSeek 识别。
+  const ruleReminder = parseRuleReminder(content);
+  if (ruleReminder) {
+    if (ruleReminder.kind === "needs_time" || ruleReminder.kind === "needs_content") {
+      return {
+        category: "reception", intent: "CHAT", confidence: 1, source: "rule",
+        shouldReplyDirectly: true, needHuman: false,
+        summary: `提醒信息不完整：${content.slice(0, 120)}`,
+        reply: ruleReminder.reply
+      };
+    }
+    return routeScheduledReminder({
+      category: "reminder", intent: "REMINDER", confidence: 1, source: "rule",
+      shouldReplyDirectly: true, needHuman: false,
+      summary: `识别到提醒：${ruleReminder.reminderContent}`,
+      reply: "", reminderAt: ruleReminder.reminderAt, reminderContent: ruleReminder.reminderContent
+    }, ruleReminder.reminderAt, ruleReminder.reminderContent, openid);
+  }
+
   const hard = classifyByHardRules(content);
   if (hard) {
     if (hard.intent === "RESOURCE") {

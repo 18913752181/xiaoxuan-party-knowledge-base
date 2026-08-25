@@ -43,13 +43,13 @@ rollback() {
   echo "Deployment failed; restoring previous image."
   if docker image inspect xiaoxuan-site:rollback >/dev/null 2>&1; then
     docker tag xiaoxuan-site:rollback xiaoxuan-site:latest
-    docker compose --env-file "$ENV_FILE" up -d --no-build --force-recreate web
+    docker compose --env-file "$ENV_FILE" up -d --no-build --force-recreate web reminder-dispatcher
   fi
 }
 trap rollback ERR
 
 docker compose --env-file "$ENV_FILE" build --pull web
-docker compose --env-file "$ENV_FILE" up -d --no-deps web
+docker compose --env-file "$ENV_FILE" up -d --no-deps web reminder-dispatcher
 
 for attempt in {1..30}; do
   if curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/dev/null; then

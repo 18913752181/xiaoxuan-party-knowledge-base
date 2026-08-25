@@ -34,10 +34,10 @@ export function friendlyReminderTime(value: Date, now = new Date()) {
   const pick = (type: string) => Number(timeParts.find((part) => part.type === type)?.value || 0);
   const hour = pick("hour");
   const minute = pick("minute");
-  const clock = `${hour}点${minute ? `${minute}分` : ""}`;
-  if (isToday) return `${hour >= 19 ? "今晚" : "今天"}${clock}`;
-  if (isTomorrow) return `明天${clock}`;
-  return `${target.month}月${target.day}日${clock}`;
+  const clock = `${hour}:${String(minute).padStart(2, "0")}`;
+  if (isToday) return `${hour >= 19 ? "今晚" : "今天"} ${clock}`;
+  if (isTomorrow) return `明天 ${clock}`;
+  return `${target.month}月${target.day}日 ${clock}`;
 }
 
 /** DeepSeek 负责理解自然时间；这里仅校验其结构化结果，避免程序猜测用户本意。 */
@@ -70,4 +70,37 @@ export async function getMembershipForOpenid(openid: string) {
 
 export async function openidHasActiveMembership(openid: string) {
   return (await getMembershipForOpenid(openid)).active;
+}
+
+export type UpcomingReminder = { id: string; content: string; scheduled_at: string };
+
+export async function listUpcomingReminders(openid: string, limit = 5): Promise<UpcomingReminder[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("wechat_reminders")
+    .select("id,content,scheduled_at")
+    .eq("openid", openid)
+    .eq("status", "scheduled")
+    .gte("scheduled_at", new Date().toISOString())
+    .order("scheduled_at", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).filter((item): item is UpcomingReminder => Boolean(item.scheduled_at));
+}
+
+/** 只关闭该微信最早的一条匹配待办，避免“取消提醒”误删多条记录。 */
+export async function cancelUpcomingReminder(openid: string, keyword: string) {
+  const reminders = await listUpcomingReminders(openid, 20);
+  const normalized = keyword.replace(/[，,。！？!；;、\s]/g, "");
+  const item = reminders.find((row) => row.content.replace(/[，,。！？!；;、\s]/g, "").includes(normalized));
+  if (!item) return null;
+  const { data, error } = await getSupabaseAdmin()
+    .from("wechat_reminders")
+    .update({ status: "closed" })
+    .eq("id", item.id)
+    .eq("openid", openid)
+    .eq("status", "scheduled")
+    .select("id,content,scheduled_at")
+    .maybeSingle();
+  if (error) throw error;
+  return data as UpcomingReminder | null;
 }

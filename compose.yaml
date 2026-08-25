@@ -32,3 +32,20 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+  # 每分钟扫描一次到期提醒；只调用容器内部受密钥保护的接口，不暴露公网端口。
+  reminder-dispatcher:
+    image: xiaoxuan-site:latest
+    restart: unless-stopped
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    env_file:
+      - ${APP_ENV_FILE:-/srv/xiaoxuan/shared/app.env}
+    environment:
+      NODE_ENV: production
+    depends_on:
+      web:
+        condition: service_healthy
+    entrypoint: ["node", "-e"]
+    command:
+      - >-
+        const secret=process.env.REMINDER_CRON_SECRET||''; const url='http://web:3000/api/internal/reminders/dispatch'; async function run(){if(!secret){console.warn('[member-reminders] REMINDER_CRON_SECRET is not configured');return;}try{const r=await fetch(url,{headers:{authorization:'Bearer '+secret}});if(!r.ok)console.warn('[member-reminders] dispatch failed',r.status);}catch(e){console.warn('[member-reminders] dispatch unavailable',e instanceof Error?e.message:String(e));}}run();setInterval(run,60000);

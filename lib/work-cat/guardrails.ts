@@ -9,7 +9,8 @@ const PROFESSIONAL_PATTERNS = [
   /制度|条例|规定|办法|程序|流程|审核|审查|材料.*(怎么填|填写|有问题|合规)/
 ];
 
-const REMINDER_PATTERNS = [
+// 这是“转告小宣”的人工留言，不是用户自己的到点提醒。
+const MESSAGE_TO_XIAOXUAN_PATTERNS = [
   /提醒.*小宣|留(个)?言|传(个)?话|回来.*回复|让(她|社长).*回复|转告/
 ];
 const RESOURCE_PATTERNS = [/模板|资料|材料.*哪里|有没有.*(记录|表|范文)|想找|下载/];
@@ -45,8 +46,8 @@ export function normalizeCatVoice(reply: string) {
   });
 }
 
-function isReminder(content: string) {
-  return REMINDER_PATTERNS.some((pattern) => pattern.test(content));
+function isMessageToXiaoxuan(content: string) {
+  return MESSAGE_TO_XIAOXUAN_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 function isToolRequest(content: string) {
@@ -68,7 +69,7 @@ function isPureResourceNavigation(content: string) {
 }
 
 export function isProfessionalByRule(content: string) {
-  if (isReminder(content) || isPureResourceNavigation(content)) return false;
+  if (isMessageToXiaoxuan(content) || isPureResourceNavigation(content)) return false;
   return PROFESSIONAL_PATTERNS.some((pattern) => pattern.test(content));
 }
 
@@ -81,14 +82,13 @@ export function classifyByHardRules(content: string): Classification | null {
       reply: HUMAN_REPLY, source: "rule", target: "小宣社长"
     });
   }
-  if (isReminder(text)) {
+  if (isMessageToXiaoxuan(text)) {
     return classified({
-      category: "reminder", intent: "CHAT",
-      shouldReplyDirectly: true,
+      category: "human", intent: "HUMAN",
+      shouldReplyDirectly: false,
       needHuman: true,
       summary: `用户给小宣的提醒或留言：${text.slice(0, 120)}`,
-      reply: "好哒，咪已经记进社长的待办小本本啦 🐾",
-      source: "rule"
+      reply: HUMAN_REPLY, source: "rule", target: "小宣社长"
     });
   }
 
