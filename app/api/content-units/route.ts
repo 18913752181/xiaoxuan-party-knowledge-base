@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-units";
 
 export const runtime = "nodejs";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const units = await listContentUnits();
   return NextResponse.json(units.map(contentUnitToMaterialSummary), {
-    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" }
+    headers: { "Cache-Control": "no-store, max-age=0" }
   });
 }

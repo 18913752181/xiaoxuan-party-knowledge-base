@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta, updateContentUnitOrder } from "@/lib/content-units";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function revalidatePublicMaterialLists() {
+  revalidatePath("/library");
+  revalidatePath("/library/materials");
+}
 
 export async function GET() {
   const check = await requireAdmin();
@@ -36,6 +42,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "没有找到可修改的资料。" }, { status: 404 });
   }
 
+  revalidatePublicMaterialLists();
   return withAuthCookies(check.session, NextResponse.json({ ok: true, materials: updated }));
 }
 
@@ -65,5 +72,6 @@ export async function PUT(request: Request) {
   }
 
   const units = await updateContentUnitOrder(requestedSlugs);
+  revalidatePublicMaterialLists();
   return withAuthCookies(check.session, NextResponse.json({ ok: true, materials: units.map(contentUnitToMaterial) }));
 }

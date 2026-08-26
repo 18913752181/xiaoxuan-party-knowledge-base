@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   contentUnitToMaterial,
   deleteContentUnit,
@@ -10,6 +11,12 @@ import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function revalidatePublicMaterial(slug: string) {
+  revalidatePath("/library");
+  revalidatePath("/library/materials");
+  revalidatePath(`/materials/${slug}`);
+}
 
 const splitList = (value: FormDataEntryValue | null) =>
   String(value || "")
@@ -74,6 +81,7 @@ export async function PUT(request: Request, { params }: { params: { slug: string
   });
 
   if (!unit) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
+  revalidatePublicMaterial(params.slug);
   return withAuthCookies(check.session, NextResponse.json({ ok: true, material: contentUnitToMaterial(unit) }));
 }
 
@@ -83,6 +91,7 @@ export async function DELETE(_request: Request, { params }: { params: { slug: st
 
   const deleted = await deleteContentUnit(params.slug);
   if (!deleted) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
+  revalidatePublicMaterial(params.slug);
   return withAuthCookies(check.session, NextResponse.json({ ok: true }));
 }
 
@@ -106,5 +115,6 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
 
   const unit = await updateContentUnit(params.slug, updates);
   if (!unit) return NextResponse.json({ error: "未找到资料。" }, { status: 404 });
+  revalidatePublicMaterial(params.slug);
   return withAuthCookies(check.session, NextResponse.json({ ok: true, material: contentUnitToMaterial(unit) }));
 }
