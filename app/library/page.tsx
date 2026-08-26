@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { ResourceLibrary } from "@/components/ResourceLibrary";
 import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-units";
 
-export const revalidate = 300;
+// Production materials live in the shared content volume, not in the image
+// used at build time. Render at request time so this page never falls back to
+// the repository's smaller seed set after a deployment.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "工作资料库",
