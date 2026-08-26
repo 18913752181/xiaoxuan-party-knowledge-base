@@ -59,6 +59,11 @@ function removeTimeWords(value: string) {
     .trim();
 }
 
+/** 仅提取旧消息里的待办事项，供“改成9点”“对”等上下文短回复续接。 */
+export function extractReminderContent(raw: string) {
+  return removeTimeWords(normalizeChineseClock(raw.trim().replace(/：/g, ":")));
+}
+
 function normalizeChineseClock(value: string) {
   const single: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 零: 0 };
   return value.replace(/(二十[一二三]|十[一二三四五六七八九]?|[一二三四五六七八九十零])(?=(?:点|时))/g, (match) => {

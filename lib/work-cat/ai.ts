@@ -1,6 +1,6 @@
 import "server-only";
 
-import { fallbackProfessional, normalizeCatVoice, safeIntent } from "@/lib/work-cat/guardrails";
+import { fallbackChat, normalizeCatVoice, safeIntent } from "@/lib/work-cat/guardrails";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const SYSTEM_PROMPT = `你是 Dimmo，一只住在「喵喵工作台」里的工作小猫，也是小宣社长的微信工作助手。
@@ -54,7 +54,7 @@ export function isWorkCatAiConfigured() {
 
 export async function classifyWithAi(content: string, context: ConversationRow[]): Promise<Classification> {
   const { apiKey, baseUrl, model } = aiConfig();
-  if (!apiKey) return fallbackProfessional(content);
+  if (!apiKey) return fallbackChat(content);
 
   const recent = context.slice(-6).map((row) => `${row.role}: ${row.content}`).join("\n");
   try {
@@ -74,7 +74,7 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
     });
     if (!response.ok) {
       console.warn("[work-cat] intent classification failed", { status: response.status, provider: baseUrl });
-      return fallbackProfessional(content);
+      return fallbackChat(content);
     }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const raw = payload.choices?.[0]?.message?.content || "";
@@ -101,7 +101,7 @@ export async function classifyWithAi(content: string, context: ConversationRow[]
       error: error instanceof Error ? error.message : "unknown error",
       provider: baseUrl
     });
-    return fallbackProfessional(content);
+    return fallbackChat(content);
   }
 }
 

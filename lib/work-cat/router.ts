@@ -4,18 +4,73 @@ import { classifyWithAi, generateChatReply } from "@/lib/work-cat/ai";
 import { HUMAN_REPLY, PROFESSIONAL_REPLY, classifyByHardRules, fallbackProfessional, normalizeCatVoice } from "@/lib/work-cat/guardrails";
 import { formatSearchSummary, searchWorkCatLibrary } from "@/lib/work-cat/library-search";
 import { cancelUpcomingReminder, completeMemberTask, friendlyReminderTime, getMembershipForOpenid, listMemberTasks, openidHasActiveMembership, rescheduleMemberTask, validateAiReminder } from "@/lib/work-cat/member-reminders";
-import { parseRuleReminder } from "@/lib/work-cat/reminder-parser";
+import { extractReminderContent, parseRuleReminder } from "@/lib/work-cat/reminder-parser";
 import { createTaskBindingCode } from "@/lib/work-cat/task-identity";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
 const MEMBERSHIP_STATUS_PATTERN = /(我(是|是不是|算不算).{0,4}会员|会员(状态|资格|到期|有效期)|查.{0,4}会员|是不是.{0,4}会员)/;
 const REMINDER_LIST_PATTERN = /(?:查看|看看|查询|我的|查一下).{0,4}(?:提醒|待办)|(?:提醒|待办)(?:列表|清单)/;
-const TASK_QUERY_PATTERN = /(?:今天|明天).{0,8}(?:什么事|安排|待办|任务|提醒)|(?:还有|查看|看看|查询|查一下).{0,8}(?:没完成|未完成|待完成)/;
+const TASK_QUERY_PATTERN = /(?:今天|明天).{0,8}(?:什么事|有什么|安排|待办|任务|提醒)(?:[？?吗呢]|$)|(?:还有|查看|看看|查询|查一下).{0,8}(?:没完成|未完成|待完成)/;
 const REMINDER_CANCEL_PATTERN = /^(?:取消掉|取消|删掉|删除|不要)(?:一下)?(?:提醒|待办)?.*|(?:取消掉|取消|删掉|删除|不要了)[。！!]?$/;
 const TASK_COMPLETE_PATTERN = /(?:(?:已经|已)(?:完成|做完|办完)(?:了)?|(?:完成|做完|办完)了)[。！!]?$/;
 const TASK_RESCHEDULE_PATTERN = /^(.{1,80}?)(?:改成|改到|修改为)(.{1,80})$/;
 const MINI_BIND_PATTERN = /(?:绑定|关联)(?:一下)?(?:喵喵看板|小程序)|(?:喵喵看板|小程序)(?:怎么)?绑定/;
+const REMINDER_CREATE_PATTERN = /(?:提醒(?:我|咪)?|叫(?:醒)?我|到点|帮.*记)/;
+const SHORT_CONTEXT_REPLY_PATTERN = /^(?:对|嗯|好|好的|好呀|不是|不对|改成\s*(?:\d{1,2}(?::\d{1,2})?|\d{1,2}点(?:半|\d{1,2}分?)?)|(?:\d{1,2}(?::\d{1,2})?|\d{1,2}点(?:半|\d{1,2}分?)?))$/;
+
+function isTaskQuery(content: string) {
+  // “明天早上9点提醒我上班”含有明确创建动作，绝不能抢到查询分支。
+  if (REMINDER_CREATE_PATTERN.test(content)) return false;
+  return TASK_QUERY_PATTERN.test(content) || REMINDER_LIST_PATTERN.test(content);
+}
+
+function lastRow(context: ConversationRow[], role: ConversationRow["role"]) {
+  return [...context].reverse().find((row) => row.role === role);
+}
+
+function previousReminderTask(context: ConversationRow[]) {
+  const previousUser = [...context].reverse().find((row) => row.role === "user" && REMINDER_CREATE_PATTERN.test(row.content));
+  return previousUser ? extractReminderContent(previousUser.content) : "";
+}
+
+async function contextualShortReply(content: string, context: ConversationRow[], openid: string, receivedAt: Date): Promise<Classification | null> {
+  const text = content.trim();
+  if (!SHORT_CONTEXT_REPLY_PATTERN.test(text)) return null;
+
+  const lastCat = lastRow(context, "cat")?.content || "";
+  const task = previousReminderTask(context);
+  const asksReminderTime = /(想在几点提醒|想什么时候提醒|具体哪天几点|时间咪没有看明白|再说一次几点)/.test(lastCat);
+  const asksTomorrowConfirmation = /是要记到明天(\d{1,2}:\d{2})吗/.exec(lastCat);
+
+  if (/^(?:对|嗯|好|好的|好呀)$/.test(text) && asksTomorrowConfirmation && task) {
+    const parsed = parseRuleReminder(`明天${asksTomorrowConfirmation[1]}提醒我${task}`, receivedAt);
+    if (parsed?.kind === "scheduled") {
+      return routeScheduledReminder({
+        category: "reminder", intent: "REMINDER", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false,
+        summary: `确认改为明天提醒：${task}`, reply: "", reminderAt: parsed.reminderAt, reminderContent: parsed.reminderContent
+      }, parsed.reminderAt, parsed.reminderContent, openid, receivedAt);
+    }
+  }
+
+  const suppliedTime = text.replace(/^改成\s*/, "");
+  if (asksReminderTime && task && /(?:\d{1,2}:\d{1,2}|\d{1,2}点)/.test(suppliedTime)) {
+    const parsed = parseRuleReminder(`${suppliedTime}提醒我${task}`, receivedAt);
+    if (parsed?.kind === "scheduled") {
+      return routeScheduledReminder({
+        category: "reminder", intent: "REMINDER", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false,
+        summary: `补全提醒时间：${task}`, reply: "", reminderAt: parsed.reminderAt, reminderContent: parsed.reminderContent
+      }, parsed.reminderAt, parsed.reminderContent, openid, receivedAt);
+    }
+  }
+
+  if (/^(?:不是|不对)$/.test(text) && (asksReminderTime || asksTomorrowConfirmation)) {
+    return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: "用户否认上一条提醒确认", reply: "🐾 好哒，咪先不记这条。想换成什么时间再告诉咪。" };
+  }
+
+  // 短句没有足够的任务上下文时，按聊天续接，不因孤立词语交给社长。
+  return { category: "reception", intent: "CHAT", confidence: 1, source: "rule", shouldReplyDirectly: true, needHuman: false, summary: "短回复缺少可执行上下文，按聊天续接", reply: "🐾 咪在呢，想继续说哪件事呀？" };
+}
 
 function membershipStatusReply(membership: Awaited<ReturnType<typeof getMembershipForOpenid>>): Classification {
   if (membership.active) {
@@ -195,10 +250,13 @@ export async function routeWorkCatMessage(content: string, context: Conversation
     return membershipStatusReply(await getMembershipForOpenid(openid));
   }
   if (MINI_BIND_PATTERN.test(content.trim())) return miniBindingReply(openid);
-  if (TASK_QUERY_PATTERN.test(content.trim())) return queryTaskReply(content.trim(), openid);
-  if (REMINDER_LIST_PATTERN.test(content.trim())) return listReminderReply(openid);
+  if (isTaskQuery(content.trim())) return TASK_QUERY_PATTERN.test(content.trim()) ? queryTaskReply(content.trim(), openid) : listReminderReply(openid);
   if (REMINDER_CANCEL_PATTERN.test(content.trim())) return cancelReminderReply(content.trim(), openid);
   if (TASK_COMPLETE_PATTERN.test(content.trim())) return completeTaskReply(content.trim(), openid);
+
+  const shortReply = await contextualShortReply(content, context, openid, receivedAt);
+  if (shortReply) return shortReply;
+
   if (TASK_RESCHEDULE_PATTERN.test(content.trim())) return rescheduleTaskReply(content.trim(), openid, receivedAt);
 
   // 产品说明和“找小宣”先于提醒解析：例如“怎么添加提醒”是在问功能，

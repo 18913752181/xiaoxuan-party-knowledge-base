@@ -24,7 +24,7 @@ const RECEPTION_PATTERNS = [
 // 明确的日常互动不交给低置信度模型判断，避免“你在干嘛”之类被误转人工。
 const CASUAL_CHAT_PATTERNS = [
   /^(哈哈|哈哈哈|嘿嘿|呵呵|谢谢|谢啦|辛苦了|晚安|早安|午安)[呀啦哦～~!！。 ]*$/,
-  /(你在干嘛|你在做什么|在忙吗|忙不忙|陪咪聊聊|陪我聊聊|今天好累|今天累死了|好累啊|心情不好|吃了吗|想聊天|今天.*有没有.*吃饭|今天.*心情怎么样|明天.*忙不忙)/
+  /(你在干嘛|你在做什么|在忙吗|忙不忙|陪咪聊聊|陪我聊聊|今天好累|今天累死了|好累啊|心情不好|吃了吗|吃饭了吗|想聊天|今天.*有没有.*吃饭|今天.*心情怎么样|明天.*忙不忙)/
 ];
 const PROFESSIONAL_DECISION_PATTERNS = [/怎么填|如何填写|怎么处理|怎么办|合不合规|是否合规|能不能|可不可以|判断|解释|审核|审查|结论|依据/];
 
@@ -200,6 +200,18 @@ export function fallbackProfessional(content: string): Classification {
     needHuman: true,
     summary: `分类不确定，已按专业问题转人工：${content.slice(0, 120)}`,
     reply: HUMAN_REPLY,
+    source: "fallback"
+  });
+}
+
+/** 模型网络错误或 JSON 解析失败时，普通消息默认保持聊天，不把用户无故转给社长。 */
+export function fallbackChat(content: string): Classification {
+  return classified({
+    category: "reception", intent: "CHAT",
+    shouldReplyDirectly: true,
+    needHuman: false,
+    summary: `AI 分类暂不可用，按普通聊天接待：${content.slice(0, 120)}`,
+    reply: "",
     source: "fallback"
   });
 }
