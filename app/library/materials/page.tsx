@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { ResourceLibrary } from "@/components/ResourceLibrary";
 import { contentUnitToMaterialSummary, listContentUnits } from "@/lib/content-units";
 
-export const revalidate = 300;
+// See /library: the public list must read the shared production content at
+// request time rather than the seed files bundled during the image build.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "全部资料",

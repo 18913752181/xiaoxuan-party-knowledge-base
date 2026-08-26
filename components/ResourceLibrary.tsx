@@ -51,20 +51,32 @@ export function ResourceLibrary({
   const [isBatchDownloading, setIsBatchDownloading] = useState(false);
 
   useEffect(() => {
-    if (!initialMaterials.length) {
-      fetch("/api/content-units")
-        .then((response) => {
-          if (!response.ok) throw new Error("资料读取失败");
-          return response.json();
-        })
-        .then((rows) => setMaterials(Array.isArray(rows) ? rows : []))
-        .catch((error) => setMessage(`资料读取失败：${error.message}`))
-        .finally(() => setIsLoading(false));
-    }
+    let active = true;
+
+    // Keep a visible page aligned with shared production content after an
+    // admin edit or a deployment; initial data still gives an immediate render.
+    fetch("/api/content-units", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("资料读取失败");
+        return response.json();
+      })
+      .then((rows) => {
+        if (active) setMaterials(Array.isArray(rows) ? rows : []);
+      })
+      .catch((error) => {
+        if (active && !initialMaterials.length) setMessage(`资料读取失败：${error.message}`);
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
 
     listMyFavorites().then(({ rows, error }) => {
-      if (!error) setFavoriteSlugs(rows.map((row) => row.article_slug));
+      if (!error && active) setFavoriteSlugs(rows.map((row) => row.article_slug));
     });
+
+    return () => {
+      active = false;
+    };
   }, [initialMaterials.length]);
 
   useEffect(() => {
