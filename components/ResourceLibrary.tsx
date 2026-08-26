@@ -75,10 +75,10 @@ export function ResourceLibrary({
     setTopic(initialTopic || params.get("topic") || topicAllOption);
   }, [initialKeyword, initialTopic]);
 
-  const sortedMaterials = useMemo(
-    () => [...materials].sort((a, b) => dateValue(b.updated_at || b.uploaded_at) - dateValue(a.updated_at || a.uploaded_at)),
-    [materials]
-  );
+  // The server already returns the persisted admin order, falling back to
+  // update time before a manual order exists. Sorting again here used to hide
+  // a saved drag-and-drop order on the public site.
+  const sortedMaterials = materials;
   const popularMaterials = useMemo(
     () => [...materials].sort((a, b) => popularity(b) - popularity(a)),
     [materials]
@@ -558,11 +558,6 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 
 function popularity(material: Material) {
   return Number(material.download_count || 0) + Number(material.favorite_count || 0) * 2;
-}
-
-function dateValue(value?: string) {
-  const timestamp = value ? new Date(value).getTime() : 0;
-  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function meaningful(value?: string) {
