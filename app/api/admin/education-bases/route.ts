@@ -12,6 +12,9 @@ export const dynamic = "force-dynamic";
 
 function databaseError(error: unknown) {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message || "数据库操作失败");
+  if (["has_guided_tour", "guide_fee", "guide_service_note", "guide_source_url", "guide_verified_at"].some((field) => message.includes(field))) {
+    return "教育基地讲解字段尚未建立，请先执行 supabase/017_education_base_guides.sql。";
+  }
   if (message.includes("education_bases") || message.includes("schema cache")) {
     return "教育基地数据表尚未建立，请先执行 supabase/012_education_bases.sql 并导入初始数据。";
   }

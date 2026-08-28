@@ -1,5 +1,6 @@
 import rawBases from "@/miniprogram/config/education-bases";
 import rawLocations from "@/miniprogram/config/education-locations";
+import rawGuideServices from "@/miniprogram/config/education-guide-services";
 
 export type EducationBaseRow = {
   id: number;
@@ -12,6 +13,11 @@ export type EducationBaseRow = {
   icon: string;
   contact: string;
   source_url: string | null;
+  has_guided_tour: boolean | null;
+  guide_fee: string | null;
+  guide_service_note: string | null;
+  guide_source_url: string | null;
+  guide_verified_at: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -47,6 +53,14 @@ type LegacyLocation = {
   confidence?: "verified" | "probable";
 };
 
+type GuideService = {
+  hasGuidedTour: boolean | null;
+  guideFee?: string | null;
+  guideServiceNote?: string | null;
+  guideSourceUrl?: string | null;
+  guideVerifiedAt?: string | null;
+};
+
 const SUZHOU_DISTRICTS: Record<string, string> = {
   "常熟": "常熟市",
   "高新区": "高新区",
@@ -60,7 +74,7 @@ const SUZHOU_DISTRICTS: Record<string, string> = {
   "张家港": "张家港市"
 };
 
-export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
+export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim() : fallback;
@@ -92,8 +106,10 @@ function legacyRegion(base: LegacyBase, location?: LegacyLocation) {
 
 export function getFallbackEducationBases(): EducationBaseRow[] {
   const locations = rawLocations as Record<string, LegacyLocation>;
+  const guideServices = rawGuideServices as Record<string, GuideService>;
   return (rawBases as LegacyBase[]).map((base, index) => {
     const location = locations[String(base.id)];
+    const guide = guideServices[String(base.id)];
     return {
       id: base.id,
       name: base.name,
@@ -104,6 +120,11 @@ export function getFallbackEducationBases(): EducationBaseRow[] {
       icon: base.icon || "⌖",
       contact: base.contact || "联系信息待核实",
       source_url: base.source || null,
+      has_guided_tour: guide?.hasGuidedTour ?? null,
+      guide_fee: guide?.guideFee || null,
+      guide_service_note: guide?.guideServiceNote || null,
+      guide_source_url: guide?.guideSourceUrl || null,
+      guide_verified_at: guide?.guideVerifiedAt || null,
       address: location?.address || null,
       latitude: location?.latitude ?? null,
       longitude: location?.longitude ?? null,
@@ -145,6 +166,11 @@ export function normalizeEducationBaseInput(input: Record<string, unknown>, curr
     icon: text(input.icon, current?.icon || "⌖"),
     contact: text(input.contact, current?.contact || "联系信息待核实"),
     source_url: nullableText(input.source_url ?? current?.source_url),
+    has_guided_tour: typeof input.has_guided_tour === "boolean" ? input.has_guided_tour : input.has_guided_tour === null ? null : current?.has_guided_tour ?? null,
+    guide_fee: nullableText(input.guide_fee ?? current?.guide_fee),
+    guide_service_note: nullableText(input.guide_service_note ?? current?.guide_service_note),
+    guide_source_url: nullableText(input.guide_source_url ?? current?.guide_source_url),
+    guide_verified_at: nullableText(input.guide_verified_at ?? current?.guide_verified_at),
     address: nullableText(input.address ?? current?.address),
     latitude,
     longitude,
@@ -170,6 +196,13 @@ export function toPublicEducationBase(row: EducationBaseRow) {
     icon: row.icon,
     contact: row.contact,
     source: row.source_url,
+    guideService: row.has_guided_tour !== null || Boolean(row.guide_fee || row.guide_service_note) ? {
+      available: row.has_guided_tour,
+      fee: row.guide_fee,
+      note: row.guide_service_note,
+      sourceUrl: row.guide_source_url,
+      verifiedAt: row.guide_verified_at
+    } : null,
     location: hasLocation ? {
       address: row.address || "地址待补充",
       latitude: row.latitude,

@@ -12,6 +12,7 @@
 - `014_dimmo_expressions.sql`：创建 Dimmo 表情库数据表、公开读取策略、图片存储桶，并写入首批表情数据。
 - `015_dimmo_expression_library_v2.sql`：补充第二版 Dimmo 表情图集数据。
 - `016_dimmo_task_expression_library.sql`：补充任务协作场景下的成年 Dimmo 与煤球表情数据。
+- `017_education_base_guides.sql`：增加教育基地讲解服务、费用、公开来源和核验日期字段，并导入首批已核实资料；未查到的信息保持为空。
 
 ## 如何执行 SQL
 

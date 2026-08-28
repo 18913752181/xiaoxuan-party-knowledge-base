@@ -13,3 +13,4 @@ miniprogram/*
 miniprogram/config/*
 !miniprogram/config/education-bases.js
 !miniprogram/config/education-locations.js
+!miniprogram/config/education-guide-services.js

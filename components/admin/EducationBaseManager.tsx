@@ -14,6 +14,11 @@ type EducationBase = {
   icon: string;
   contact: string;
   source_url: string | null;
+  has_guided_tour: boolean | null;
+  guide_fee: string | null;
+  guide_service_note: string | null;
+  guide_source_url: string | null;
+  guide_verified_at: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -38,6 +43,11 @@ const EMPTY_DRAFT: Draft = {
   icon: "⌖",
   contact: "联系信息待核实",
   source_url: null,
+  has_guided_tour: null,
+  guide_fee: null,
+  guide_service_note: null,
+  guide_source_url: null,
+  guide_verified_at: null,
   address: null,
   latitude: null,
   longitude: null,
@@ -247,6 +257,18 @@ export default function EducationBaseManager() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="联系信息"><input value={draft.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} /></Field>
               <Field label="资料来源网址"><input type="url" value={optional(draft.source_url)} onChange={(event) => update("source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
+            </div>
+
+            <div className="border-t border-[#ece6dc] pt-5">
+              <h3 className="font-semibold">讲解服务</h3>
+              <p className="mt-1 text-xs leading-5 text-[#858b86]">没有可靠公开信息时请选择“尚未核实”并留空，不要根据免费参观推断免费讲解。</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Field label="是否提供讲解"><select value={draft.has_guided_tour === null ? "unknown" : draft.has_guided_tour ? "yes" : "no"} onChange={(event) => update("has_guided_tour", event.target.value === "yes" ? true : event.target.value === "no" ? false : null)} className={inputClass}><option value="unknown">尚未核实</option><option value="yes">有讲解</option><option value="no">明确无讲解</option></select></Field>
+                <Field label="讲解费用" hint="保留场馆公开口径"><input value={optional(draft.guide_fee)} onChange={(event) => update("guide_fee", event.target.value || null)} className={inputClass} placeholder="未查到时留空" /></Field>
+                <Field label="核验日期"><input type="date" value={optional(draft.guide_verified_at)} onChange={(event) => update("guide_verified_at", event.target.value || null)} className={inputClass} /></Field>
+                <Field label="讲解信息来源"><input type="url" value={optional(draft.guide_source_url)} onChange={(event) => update("guide_source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
+              </div>
+              <div className="mt-4"><Field label="讲解说明" hint="预约、场次、人数等"><textarea value={optional(draft.guide_service_note)} onChange={(event) => update("guide_service_note", event.target.value || null)} className={textareaClass} placeholder="未查到时留空" /></Field></div>
             </div>
 
             <div className="border-t border-[#ece6dc] pt-5">
