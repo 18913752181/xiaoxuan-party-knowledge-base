@@ -7,6 +7,11 @@ const links = [
     description: "查看 Dimmo 今日接待、待小宣回复的专业问题与用户留言。"
   },
   {
+    href: "/admin/dimmo-expressions",
+    title: "Dimmo 表情库",
+    description: "维护成年 Dimmo 与煤球小黑猫的图片、标签、排序和发布状态。"
+  },
+  {
     href: "/admin/education-bases",
     title: "教育基地",
     description: "维护红色教育基地的分类、介绍、地址、坐标和发布状态。"

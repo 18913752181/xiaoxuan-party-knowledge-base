@@ -9,6 +9,9 @@
 - `002_favorites.sql`：当前收藏功能使用的收藏表脚本。收藏只保存本地文章的 `article_slug`、标题和分类，不把文章正文迁移到 Supabase。
 - `007_wechat_binding.sql`：微信登录/绑定支持。为 `profiles` 增加 `wechat_openid` 字段（部分唯一索引），用于微信一键登录与邮箱账号绑定微信。
 - `008_work_cat.sql`：Dimmo「工作小猫」服务号消息、对话、专业问题转人工与提醒留言表。
+- `014_dimmo_expressions.sql`：创建 Dimmo 表情库数据表、公开读取策略、图片存储桶，并写入首批表情数据。
+- `015_dimmo_expression_library_v2.sql`：补充第二版 Dimmo 表情图集数据。
+- `016_dimmo_task_expression_library.sql`：补充任务协作场景下的成年 Dimmo 与煤球表情数据。
 
 ## 如何执行 SQL
 
