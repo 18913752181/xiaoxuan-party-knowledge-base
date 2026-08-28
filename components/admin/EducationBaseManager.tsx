@@ -136,7 +136,7 @@ export default function EducationBaseManager() {
       ? [...SUZHOU_DISTRICT_OPTIONS, ...existing]
       : existing;
     if (draft.district && draft.district !== "区县待确认") values.push(draft.district);
-    return [...new Set(values)].concat("区县待确认");
+    return Array.from(new Set(values)).concat("区县待确认");
   }, [items, draft.city, draft.district]);
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
