@@ -49,6 +49,7 @@ export default function DimmoExpressionManager() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DimmoExpressionRow | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkPublication, setBulkPublication] = useState<"keep" | "published" | "draft">("keep");
   const [bulkForm, setBulkForm] = useState<"keep" | DimmoForm>("keep");
@@ -232,6 +233,39 @@ export default function DimmoExpressionManager() {
     }
   }
 
+  async function removeSelected() {
+    const selected = items.filter((item) => selectedIds.includes(item.id));
+    if (!selected.length) return;
+    const preferredId = draft.id && !selectedIds.includes(draft.id) ? draft.id : undefined;
+    setSaving(true);
+    setMessage(`正在删除 ${selected.length} 个表情…`);
+    try {
+      for (const item of selected) {
+        const response = await fetch("/api/admin/dimmo-expressions", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: item.id })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(`${item.name}：${payload.error || "删除失败"}`);
+      }
+      const count = selected.length;
+      setBulkDeleteOpen(false);
+      setSelectedIds([]);
+      if (!preferredId) setDraft(EMPTY_DRAFT);
+      await load(preferredId);
+      setMessage(`已删除 ${count} 个表情；独立上传的图片也已清理。`);
+    } catch (error) {
+      const failure = error instanceof Error ? `批量删除未全部完成：${error.message}` : "批量删除失败";
+      setBulkDeleteOpen(false);
+      if (!preferredId) setDraft(EMPTY_DRAFT);
+      await load(preferredId);
+      setMessage(failure);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="mt-8">
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="表情库概览">
@@ -252,7 +286,10 @@ export default function DimmoExpressionManager() {
             <select value={bulkPublication} onChange={(event) => setBulkPublication(event.target.value as "keep" | "published" | "draft")} className={inputClass} aria-label="批量发布状态"><option value="keep">发布状态不变</option><option value="published">设为已发布</option><option value="draft">设为草稿</option></select>
             <select value={bulkForm} onChange={(event) => setBulkForm(event.target.value as "keep" | DimmoForm)} className={inputClass} aria-label="批量角色形态"><option value="keep">角色形态不变</option><option value="adult">设为成年 Dimmo</option><option value="coalball">设为煤球小黑猫</option></select>
             <input value={bulkTags} onChange={(event) => setBulkTags(event.target.value)} className={inputClass} placeholder="追加标签，用逗号分隔" aria-label="批量追加标签" />
-            <button type="button" disabled={saving} onClick={() => void applyBulkEdit()} className="h-11 rounded-xl bg-[#607d6d] px-5 text-sm font-medium text-white disabled:opacity-50">{saving ? "保存中…" : "应用修改"}</button>
+            <div className="flex gap-2">
+              <button type="button" disabled={saving} onClick={() => void applyBulkEdit()} className="h-11 rounded-xl bg-[#607d6d] px-5 text-sm font-medium text-white disabled:opacity-50">{saving ? "处理中…" : "应用修改"}</button>
+              <button type="button" disabled={saving} onClick={() => setBulkDeleteOpen(true)} className="h-11 rounded-xl border border-[#dfbcbc] bg-white px-4 text-sm font-medium text-[#a34850] disabled:opacity-50">批量删除</button>
+            </div>
           </div>
         </section>
       ) : null}
@@ -329,6 +366,7 @@ export default function DimmoExpressionManager() {
       </div>
 
       <ConfirmDialog open={Boolean(deleteTarget)} title={`确定删除“${deleteTarget?.name || ""}”吗？`} description="删除记录后无法恢复；独立上传的图片也会一并清理。角色总表不会受影响。" busy={saving} onConfirm={() => void remove()} onCancel={() => setDeleteTarget(null)} />
+      <ConfirmDialog open={bulkDeleteOpen} title={`确定删除选中的 ${selectedIds.length} 个表情吗？`} description="删除后无法恢复；对应的独立上传图片也会一并清理，角色总表不会受影响。" busy={saving} onConfirm={() => void removeSelected()} onCancel={() => setBulkDeleteOpen(false)} />
     </div>
   );
 }
