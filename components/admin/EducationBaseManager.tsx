@@ -62,6 +62,19 @@ const EMPTY_DRAFT: Draft = {
 const inputClass = "h-11 w-full rounded-xl border border-[#dcd5c9] bg-white px-3 text-sm outline-none transition focus:border-[#6f8f7e] focus:ring-2 focus:ring-[#6f8f7e]/15";
 const textareaClass = "min-h-24 w-full rounded-xl border border-[#dcd5c9] bg-white px-3 py-2.5 text-sm leading-6 outline-none transition focus:border-[#6f8f7e] focus:ring-2 focus:ring-[#6f8f7e]/15";
 
+const SUZHOU_DISTRICT_OPTIONS = [
+  "姑苏区",
+  "吴中区",
+  "相城区",
+  "吴江区",
+  "工业园区",
+  "高新区",
+  "常熟市",
+  "昆山市",
+  "太仓市",
+  "张家港市"
+];
+
 function optional(value: string | null) {
   return value || "";
 }
@@ -115,6 +128,16 @@ export default function EducationBaseManager() {
   useEffect(() => { void load(); }, [load]);
 
   const cities = useMemo(() => ["全部城市", ...Array.from(new Set(items.map((item) => item.city)))], [items]);
+  const districtOptions = useMemo(() => {
+    const existing = items
+      .filter((item) => item.city === draft.city && item.district && item.district !== "区县待确认")
+      .map((item) => item.district);
+    const values = draft.city === "苏州市"
+      ? [...SUZHOU_DISTRICT_OPTIONS, ...existing]
+      : existing;
+    if (draft.district && draft.district !== "区县待确认") values.push(draft.district);
+    return [...new Set(values)].concat("区县待确认");
+  }, [items, draft.city, draft.district]);
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     return items.filter((item) => {
@@ -248,7 +271,7 @@ export default function EducationBaseManager() {
               <Field label="基地名称"><input value={draft.name} onChange={(event) => update("name", event.target.value)} className={inputClass} /></Field>
               <Field label="基地类型"><input value={draft.type} onChange={(event) => update("type", event.target.value)} className={inputClass} placeholder="例如：红色资源" /></Field>
               <Field label="城市"><input value={draft.city} onChange={(event) => update("city", event.target.value)} className={inputClass} placeholder="例如：苏州市" /></Field>
-              <Field label="区县"><input value={draft.district} onChange={(event) => update("district", event.target.value)} className={inputClass} placeholder="例如：姑苏区" /></Field>
+              <Field label="区县"><select value={draft.district} onChange={(event) => update("district", event.target.value)} className={inputClass}>{districtOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></Field>
               <Field label="联系状态"><input value={draft.status} onChange={(event) => update("status", event.target.value)} className={inputClass} /></Field>
               <Field label="排序"><input type="number" min="0" value={draft.sort_order} onChange={(event) => update("sort_order", Number(event.target.value) || 0)} className={inputClass} /></Field>
             </div>
