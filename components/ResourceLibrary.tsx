@@ -14,6 +14,7 @@ import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
 const libraryPageSize = 12;
+const batchDownloadNoticeSessionKey = "xiaoxuan-batch-download-notice-confirmed";
 type SortMode = "updated" | "popular";
 
 /** 数量按量级展示，不暴露精确值：9 → 9+，67 → 60+，934 → 900+ */
@@ -49,6 +50,7 @@ export function ResourceLibrary({
   const [sortMode, setSortMode] = useState<SortMode>("updated");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [isBatchDownloading, setIsBatchDownloading] = useState(false);
+  const [isBatchDownloadNoticeOpen, setIsBatchDownloadNoticeOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -268,6 +270,21 @@ export function ResourceLibrary({
     }
   }
 
+  function requestBatchDownload() {
+    if (!selectedSlugs.length || isBatchDownloading) return;
+    if (window.sessionStorage.getItem(batchDownloadNoticeSessionKey) === "true") {
+      void batchDownload();
+      return;
+    }
+    setIsBatchDownloadNoticeOpen(true);
+  }
+
+  function confirmBatchDownload() {
+    window.sessionStorage.setItem(batchDownloadNoticeSessionKey, "true");
+    setIsBatchDownloadNoticeOpen(false);
+    void batchDownload();
+  }
+
   return (
     <div className="xuan-shell">
       <section className={libraryOnly ? "bg-white" : "bg-brand-paper"}>
@@ -413,9 +430,31 @@ export function ResourceLibrary({
                 <span className="text-neutral-500" aria-live="polite">已选 <b className="font-semibold text-brand-ink">{selectedSlugs.length}</b> 份</span>
                 {selectedSlugs.length ? <button type="button" onClick={() => setSelectedSlugs([])} className="min-h-10 px-1 text-neutral-500 hover:text-brand-red">清空选择</button> : null}
               </div>
-              <button type="button" onClick={batchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="min-h-11 shrink-0 rounded-xl bg-brand-red px-5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#c9b8b9]">
-                {isBatchDownloading ? "正在打包..." : `批量下载${selectedSlugs.length ? `（${selectedSlugs.length}）` : ""}`}
-              </button>
+              <div className="w-full shrink-0 sm:w-80">
+                <button type="button" onClick={requestBatchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="min-h-11 w-full rounded-xl bg-brand-red px-5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#c9b8b9]">
+                  {isBatchDownloading ? "正在打包..." : `批量下载${selectedSlugs.length ? `（${selectedSlugs.length}）` : ""}`}
+                </button>
+                <p className="mt-2 text-xs leading-5 text-neutral-400">仅限本人工作使用，请勿转售、公开传播或异常高频下载。</p>
+              </div>
+            </div>
+          ) : null}
+
+          {isBatchDownloadNoticeOpen ? (
+            <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#172f35]/20 p-4 sm:items-center" role="presentation" onMouseDown={() => setIsBatchDownloadNoticeOpen(false)}>
+              <section role="dialog" aria-modal="true" aria-labelledby="batch-download-notice-title" aria-describedby="batch-download-notice-description" className="w-full max-w-md rounded-2xl border border-[#dfe3e7] bg-white p-6 shadow-[0_20px_60px_rgba(35,43,52,0.18)]" onMouseDown={(event) => event.stopPropagation()}>
+                <p className="text-sm font-medium text-[#6c757d]">使用提示</p>
+                <h2 id="batch-download-notice-title" className="mt-2 text-xl font-semibold text-brand-ink">确认批量下载用途</h2>
+                <p id="batch-download-notice-description" className="mt-3 text-sm leading-6 text-neutral-600">为了保护原创资料和正常会员体验，批量下载仅限本人正常工作使用。</p>
+                <ul className="mt-4 space-y-2 rounded-xl bg-[#f7f8f9] px-4 py-3 text-sm leading-6 text-neutral-600">
+                  <li>仅限本人工作使用</li>
+                  <li>请勿转售、公开传播、批量复制或用于搭建同类资料库</li>
+                  <li>系统会识别异常高频下载行为，必要时可能暂时限制下载权限</li>
+                </ul>
+                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={() => setIsBatchDownloadNoticeOpen(false)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-white px-4 text-sm font-medium text-neutral-600 transition-colors hover:bg-[#f7f8f9] active:scale-[0.98]">取消</button>
+                  <button type="button" onClick={confirmBatchDownload} className="min-h-11 rounded-xl bg-brand-red px-4 text-sm font-medium text-white transition-[background-color,transform] hover:bg-brand-darkRed active:scale-[0.98]">确认并下载</button>
+                </div>
+              </section>
             </div>
           ) : null}
 
