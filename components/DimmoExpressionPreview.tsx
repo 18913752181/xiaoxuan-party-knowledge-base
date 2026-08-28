@@ -31,7 +31,7 @@ export default function DimmoExpressionPreview({ item, className = "" }: { item:
       style={{
         backgroundImage: `url(${sheet})`,
         backgroundSize: "500% 500%",
-        backgroundPosition: `${col * 25}% ${row * 23.75}%`
+        backgroundPosition: `${col * 25}% ${row * 25}%`
       }}
     />
   );
