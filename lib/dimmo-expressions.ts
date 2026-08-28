@@ -22,8 +22,8 @@ export type DimmoExpressionRow = {
 export const DIMMO_EXPRESSION_SELECT = "id,name,slug,form,image_url,storage_path,sprite_sheet_url,sprite_row,sprite_col,alt_text,tags,usage_note,sort_order,is_published,created_at,updated_at";
 export const DIMMO_SPRITE_SHEET = "/images/dimmo-expression-library-v1.png";
 export const DIMMO_SPRITE_SHEET_V2 = "/images/dimmo-expression-library-v2.png";
-export const DIMMO_TASK_SPRITE_ADULT = "/images/dimmo-task-expression-adult-v1.png";
-export const DIMMO_TASK_SPRITE_COALBALL = "/images/dimmo-task-expression-coalball-v1.png";
+export const DIMMO_TASK_SPRITE_ADULT = "/images/dimmo-task-expression-adult-transparent-v2.png";
+export const DIMMO_TASK_SPRITE_COALBALL = "/images/dimmo-task-expression-coalball-transparent-v2.png";
 export const DIMMO_SPRITE_SHEETS = [
   { value: DIMMO_TASK_SPRITE_ADULT, label: "任务协作 · 成年 Dimmo" },
   { value: DIMMO_TASK_SPRITE_COALBALL, label: "任务协作 · 煤球小黑猫" },

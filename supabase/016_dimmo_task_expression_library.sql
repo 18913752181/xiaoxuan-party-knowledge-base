@@ -30,8 +30,8 @@ with actions(action_order, name, slug, usage_note, tags) as (
     (25, '冲鸭',     'pompom-cheer',     '鼓励用户继续前进',             array['加油','鼓励'])
 ), forms(form, sprite_sheet_url, sort_offset, form_tag) as (
   values
-    ('adult',    '/images/dimmo-task-expression-adult-v1.png',    50, '成年'),
-    ('coalball', '/images/dimmo-task-expression-coalball-v1.png', 75, '煤球')
+    ('adult',    '/images/dimmo-task-expression-adult-transparent-v2.png',    50, '成年'),
+    ('coalball', '/images/dimmo-task-expression-coalball-transparent-v2.png', 75, '煤球')
 )
 insert into public.dimmo_expressions
   (name, slug, form, sprite_sheet_url, sprite_row, sprite_col, alt_text, tags, usage_note, sort_order, is_published)
