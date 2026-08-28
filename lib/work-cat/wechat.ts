@@ -8,6 +8,10 @@ export type WechatMessage = {
   CreateTime: string;
   MsgType: string;
   Content: string;
+  /** 微信语音识别开启后返回的转写文本。V1 仅使用此字段，不下载音频。 */
+  Recognition: string;
+  MediaId: string;
+  Format: string;
   MsgId: string;
   Event: string;
   EventKey: string;
@@ -46,6 +50,9 @@ export function parseWechatMessage(xml: string): WechatMessage {
     CreateTime: xmlValue(xml, "CreateTime"),
     MsgType: xmlValue(xml, "MsgType"),
     Content: xmlValue(xml, "Content"),
+    Recognition: xmlValue(xml, "Recognition"),
+    MediaId: xmlValue(xml, "MediaId"),
+    Format: xmlValue(xml, "Format"),
     MsgId: xmlValue(xml, "MsgId"),
     Event: xmlValue(xml, "Event"),
     EventKey: xmlValue(xml, "EventKey"),
