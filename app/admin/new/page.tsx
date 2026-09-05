@@ -62,11 +62,12 @@ export default function AdminNewPage() {
   const [topics, setTopics] = useState<string[]>([]);
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>(emptyForm);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [isVip, setIsVip] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -109,59 +110,71 @@ export default function AdminNewPage() {
       .catch(() => setAllMaterials([]));
   }, []);
 
-  const fileInfo = useMemo(() => {
-    if (!file) return null;
-    return {
-      name: file.name,
-      type: fileTypeFromName(file.name),
-      size: formatSize(file.size),
-      uploadedAt: new Date().toLocaleString()
-    };
-  }, [file]);
+  const fileInfos = useMemo(() => files.map((file) => ({
+    name: file.name,
+    type: fileTypeFromName(file.name),
+    size: formatSize(file.size)
+  })), [files]);
+  const isBatch = files.length > 1;
 
   function setField(key: string, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function selectFile(nextFile: File | null) {
-    setFile(nextFile);
+  function selectFiles(nextFiles: File[]) {
+    setFiles(nextFiles);
+    setUploadProgress([]);
     setForm((current) => ({
       ...current,
-      title: nextFile ? titleFromFileName(nextFile.name) : ""
+      title: nextFiles.length === 1 ? titleFromFileName(nextFiles[0].name) : ""
     }));
   }
 
   async function submit() {
-    if (!file) return setStatus("请先上传资料文件。");
-    if (!form.title.trim()) return setStatus("请填写标题。");
+    if (!files.length) return setStatus("请先上传资料文件。");
+    if (!isBatch && !form.title.trim()) return setStatus("请填写标题。");
     if (!form.topic.trim()) return setStatus("请选择专题。");
 
     setLoading(true);
-    setStatus("正在保存资料...");
-    try {
-      const body = new FormData();
-      Object.entries(form).forEach(([key, value]) => body.append(key, value));
-      body.append("category", form.topic);
-      body.append("isVip", String(isVip));
-      body.append("seoTitle", form.title);
-      body.append("seoDescription", form.summary);
-      body.append("seoKeywords", "");
-      body.append("file", file);
-      const response = await fetch("/api/admin/generate", { method: "POST", body });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "保存失败");
+    setStatus(`正在上传 0/${files.length} 份资料...`);
+    const results: string[] = [];
+    const failed: string[] = [];
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      const title = isBatch ? titleFromFileName(file.name) : form.title.trim();
+      setStatus(`正在上传 ${index + 1}/${files.length}：${file.name}`);
+      try {
+        const body = new FormData();
+        Object.entries(form).forEach(([key, value]) => body.append(key, value));
+        body.set("title", title);
+        body.append("category", form.topic);
+        body.append("isVip", String(isVip));
+        body.append("seoTitle", title);
+        body.append("seoDescription", form.summary);
+        body.append("seoKeywords", "");
+        body.append("file", file);
+        const response = await fetch("/api/admin/generate", { method: "POST", body });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "保存失败");
+        results.push(`✓ ${file.name}`);
+      } catch (error) {
+        failed.push(`${file.name}：${error instanceof Error ? error.message : "保存失败"}`);
+      }
+      setUploadProgress([...results, ...failed.map((item) => `✕ ${item}`)]);
+    }
+
+    if (!failed.length) {
       const nextTopic = form.topic || topics[0] || "";
       setForm({ ...emptyForm, topic: nextTopic });
-      setFile(null);
+      setFiles([]);
       setFileInputKey((current) => current + 1);
       setIsVip(false);
-      setStatus("保存成功，可继续上传下一份资料。");
+      setStatus(`已成功上传 ${results.length} 份资料。`);
       window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "保存失败");
-    } finally {
-      setLoading(false);
+    } else {
+      setStatus(`已上传 ${results.length} 份，${failed.length} 份失败；失败项未创建，可修正后重新选择上传。`);
     }
+    setLoading(false);
   }
 
   return (
@@ -178,22 +191,21 @@ export default function AdminNewPage() {
         <p className="mt-3 text-sm leading-7 text-[#6d746f]">上传资料文件，补充知识说明，形成可下载、可检索、可关联的资料节点。</p>
 
         <Section title="一、上传资料文件">
-          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT。文件是主体，知识说明是辅助。</p>
-          <input key={fileInputKey} type="file" accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" onChange={(event) => selectFile(event.target.files?.[0] || null)} className="mt-4 block w-full rounded-xl border border-[#ddd5c8] bg-[#fffdf8] px-4 py-3 text-sm" />
-          {fileInfo ? (
-            <div className="mt-4 grid gap-3 rounded-xl bg-[#f7f4ed] p-4 text-sm text-[#59635d] sm:grid-cols-2">
-              <p>文件名：{fileInfo.name}</p>
-              <p>文件类型：{fileInfo.type}</p>
-              <p>文件大小：{fileInfo.size}</p>
-              <p>选择时间：{fileInfo.uploadedAt}</p>
-              <p className="text-[#6f8f7e]">状态：已选择，保存后上传成功</p>
+          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT，可一次选择多份。批量上传会使用下方相同的专题、会员权限和知识说明；每份资料标题自动取文件名。</p>
+          <input key={fileInputKey} type="file" multiple accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" onChange={(event) => selectFiles(Array.from(event.target.files || []))} className="mt-4 block w-full rounded-xl border border-[#ddd5c8] bg-[#fffdf8] px-4 py-3 text-sm" />
+          {fileInfos.length ? (
+            <div className="mt-4 rounded-xl bg-[#f7f4ed] p-4 text-sm text-[#59635d]">
+              <div className="flex flex-wrap items-center justify-between gap-2"><p>已选择 {fileInfos.length} 份资料</p><p className="text-[#6f8f7e]">{isBatch ? "批量上传：标题将自动使用文件名" : "保存后上传成功"}</p></div>
+              <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto">
+                {fileInfos.map((info) => <li key={info.name} className="grid gap-1 rounded-lg bg-white px-3 py-2 sm:grid-cols-[1fr_auto_auto] sm:gap-4"><span className="truncate">{info.name}</span><span>{info.type}</span><span>{info.size}</span></li>)}
+              </ul>
             </div>
           ) : null}
         </Section>
 
         <Section title="二、资料基本信息">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="标题" value={form.title} onChange={(value) => setField("title", value)} placeholder="选择文件后自动显示文件名" />
+            <Input label="标题" value={form.title} onChange={(value) => setField("title", value)} placeholder={isBatch ? "批量上传时自动使用每份文件名" : "选择文件后自动显示文件名"} readOnly={isBatch} />
             <Select label="所属专题" value={form.topic} options={topics} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage} onChange={(value) => setField("stage", value)} />
             <Select label="状态" value={form.status} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
@@ -248,6 +260,7 @@ export default function AdminNewPage() {
           </button>
         </div>
         {status ? <p className="mt-4 text-sm text-[#6d746f]">{status}</p> : null}
+        {uploadProgress.length ? <ul className="mt-3 space-y-1 text-sm text-[#6d746f]">{uploadProgress.map((item) => <li key={item}>{item}</li>)}</ul> : null}
       </div>
     </main>
   );
