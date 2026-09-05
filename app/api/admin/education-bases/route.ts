@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -9,6 +10,10 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function revalidateEducationBases() {
+  revalidatePath("/api/education-bases");
+}
 
 function databaseError(error: unknown) {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message || "数据库操作失败");
@@ -50,6 +55,7 @@ export async function POST(request: Request) {
     const id = Number(last?.id || 0) + 1;
     const { data, error } = await admin.from("education_bases").insert({ id, ...row }).select(EDUCATION_BASE_SELECT).single();
     if (error) throw error;
+    revalidateEducationBases();
     return withAuthCookies(check.session, NextResponse.json({ item: data }, { status: 201 }));
   } catch (error) {
     const status = error instanceof Error && error.message.includes("不能为空") ? 400 : 500;
@@ -70,6 +76,7 @@ export async function PUT(request: Request) {
     const row = normalizeEducationBaseInput(body, current as EducationBaseRow);
     const { data, error } = await admin.from("education_bases").update(row).eq("id", id).select(EDUCATION_BASE_SELECT).single();
     if (error) throw error;
+    revalidateEducationBases();
     return withAuthCookies(check.session, NextResponse.json({ item: data }));
   } catch (error) {
     const message = databaseError(error);
@@ -88,6 +95,7 @@ export async function DELETE(request: Request) {
     const admin = getSupabaseAdmin();
     const { error } = await admin.from("education_bases").delete().eq("id", id);
     if (error) throw error;
+    revalidateEducationBases();
     return withAuthCookies(check.session, NextResponse.json({ ok: true }));
   } catch (error) {
     return withAuthCookies(check.session, NextResponse.json({ error: databaseError(error) }, { status: 500 }));
