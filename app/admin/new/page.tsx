@@ -42,6 +42,7 @@ const emptyForm = {
 
 const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
 const titleFromFileName = (fileName = "") => fileName.replace(/\.(docx?|xlsx?|pdf|pptx?)$/i, "").trim();
+const supportedFilePattern = /\.(docx?|xlsx?|pdf|pptx?)$/i;
 
 function fileTypeFromName(fileName: string) {
   const ext = fileName.split(".").pop()?.toLowerCase();
@@ -68,6 +69,7 @@ export default function AdminNewPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -121,7 +123,29 @@ export default function AdminNewPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function selectFiles(nextFiles: File[]) {
+  function addFiles(nextFiles: File[]) {
+    const supportedFiles = nextFiles.filter((file) => supportedFilePattern.test(file.name));
+    const existingKeys = new Set(files.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
+    const uniqueFiles = supportedFiles.filter((file) => {
+      const key = `${file.name}-${file.size}-${file.lastModified}`;
+      if (existingKeys.has(key)) return false;
+      existingKeys.add(key);
+      return true;
+    });
+    const combinedFiles = [...files, ...uniqueFiles];
+    setFiles(combinedFiles);
+    setUploadProgress([]);
+    setForm((current) => ({
+      ...current,
+      title: combinedFiles.length === 1 ? titleFromFileName(combinedFiles[0].name) : ""
+    }));
+    if (supportedFiles.length !== nextFiles.length) setStatus("已忽略不支持的文件，仅接受 Word、Excel、PDF、PPT。");
+    else if (!uniqueFiles.length && nextFiles.length) setStatus("这些文件已经在上传列表中。");
+    else setStatus("");
+  }
+
+  function removeFile(index: number) {
+    const nextFiles = files.filter((_, currentIndex) => currentIndex !== index);
     setFiles(nextFiles);
     setUploadProgress([]);
     setForm((current) => ({
@@ -191,13 +215,39 @@ export default function AdminNewPage() {
         <p className="mt-3 text-sm leading-7 text-[#6d746f]">上传资料文件，补充知识说明，形成可下载、可检索、可关联的资料节点。</p>
 
         <Section title="一、上传资料文件">
-          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT，可一次选择多份。批量上传会使用下方相同的专题、会员权限和知识说明；每份资料标题自动取文件名。</p>
-          <input key={fileInputKey} type="file" multiple accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx" onChange={(event) => selectFiles(Array.from(event.target.files || []))} className="mt-4 block w-full rounded-xl border border-[#ddd5c8] bg-[#fffdf8] px-4 py-3 text-sm" />
+          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT，可把多份文件直接拖进下方区域，也可以分多次选择追加。批量上传会使用下方相同的专题、会员权限和知识说明。</p>
+          <div
+            onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
+            onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; setIsDragging(true); }}
+            onDragLeave={(event) => { event.preventDefault(); if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDragging(false); }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragging(false);
+              addFiles(Array.from(event.dataTransfer.files));
+            }}
+            className={`mt-4 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition ${isDragging ? "border-[#6f8f7e] bg-[#edf3ef]" : "border-[#d7d0c5] bg-[#fffdf8]"}`}
+          >
+            <p className="font-medium text-[#48524c]">{isDragging ? "松开鼠标，添加这些资料" : "拖动多份资料到这里"}</p>
+            <p className="mt-2 text-xs text-[#8b918d]">或</p>
+            <label htmlFor="batch-material-files" className="mt-3 inline-flex cursor-pointer rounded-full bg-[#6f8f7e] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5d7c6c]">选择多份文件</label>
+            <input
+              key={fileInputKey}
+              id="batch-material-files"
+              type="file"
+              multiple
+              accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
+              onChange={(event) => {
+                addFiles(Array.from(event.target.files || []));
+                event.currentTarget.value = "";
+              }}
+              className="sr-only"
+            />
+          </div>
           {fileInfos.length ? (
             <div className="mt-4 rounded-xl bg-[#f7f4ed] p-4 text-sm text-[#59635d]">
               <div className="flex flex-wrap items-center justify-between gap-2"><p>已选择 {fileInfos.length} 份资料</p><p className="text-[#6f8f7e]">{isBatch ? "批量上传：标题将自动使用文件名" : "保存后上传成功"}</p></div>
               <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto">
-                {fileInfos.map((info) => <li key={info.name} className="grid gap-1 rounded-lg bg-white px-3 py-2 sm:grid-cols-[1fr_auto_auto] sm:gap-4"><span className="truncate">{info.name}</span><span>{info.type}</span><span>{info.size}</span></li>)}
+                {fileInfos.map((info, index) => <li key={`${info.name}-${index}`} className="grid items-center gap-2 rounded-lg bg-white px-3 py-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:gap-4"><span className="truncate">{info.name}</span><span>{info.type}</span><span>{info.size}</span><button type="button" onClick={() => removeFile(index)} disabled={loading} className="justify-self-start text-xs text-[#a6404d] disabled:opacity-40 sm:justify-self-end">移除</button></li>)}
               </ul>
             </div>
           ) : null}
