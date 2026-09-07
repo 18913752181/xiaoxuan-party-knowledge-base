@@ -17,6 +17,12 @@ function revalidateEducationBases() {
 
 function databaseError(error: unknown) {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message || "数据库操作失败");
+  if (["image_url", "image_storage_path", "image_alt", "image_source_url", "image_rights_status"].some((field) => message.includes(field))) {
+    return "教育基地配图字段尚未建立，请先执行 supabase/018_education_base_images.sql。";
+  }
+  if (["opening_info", "reservation_info", "activity_formats", "suitable_audiences", "activity_route", "nearby_base_combinations", "activity_plan", "related_materials"].some((field) => message.includes(field))) {
+    return "会员基地攻略字段尚未建立，请先执行 supabase/019_education_base_member_guides.sql。";
+  }
   if (["has_guided_tour", "guide_fee", "guide_service_note", "guide_source_url", "guide_verified_at"].some((field) => message.includes(field))) {
     return "教育基地讲解字段尚未建立，请先执行 supabase/017_education_base_guides.sql。";
   }

@@ -12,14 +12,20 @@ function defaultSchedule() {
   date.setMinutes(Math.ceil(date.getMinutes() / 10) * 10, 0, 0);
   return { date: dateKey(date), time: `${pad(date.getHours())}:${pad(date.getMinutes())}` };
 }
-function buildWeek() {
+function buildPastMonthRange() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-  return Array.from({ length: 7 }, (_, index) => {
+  return Array.from({ length: 30 }, (_, index) => {
     const date = new Date(today);
-    date.setDate(today.getDate() + index - 3);
-    return { key: dateKey(date), weekday: weekdays[date.getDay()], day: pad(date.getDate()), isToday: index === 3 };
+    date.setDate(today.getDate() - (29 - index));
+    return {
+      key: dateKey(date),
+      anchor: `date-${index}`,
+      weekday: index === 29 ? "今天" : weekdays[date.getDay()],
+      monthDay: `${date.getMonth() + 1}/${date.getDate()}`,
+      isToday: index === 29
+    };
   });
 }
 function formatCreatedAt(value) {
@@ -64,18 +70,18 @@ function apiRequest(path, method, data, allowForbidden) {
 
 Page({
   data: {
-    week: [], selectedKey: "", selectedLabel: "今天", tasks: [], visibleTasks: [],
-    pendingCount: 0, completedCount: 0, weekCount: 0,
+    dates: [], dateScrollTarget: "date-29", selectedKey: "", selectedLabel: "今天", tasks: [], visibleTasks: [],
+    pendingCount: 0, completedCount: 0, monthCount: 0, swipedTaskId: "", submittingTaskId: "",
     loading: true, submitting: false, bound: false, active: false,
     bindingCode: "", taskTitle: "", taskDate: "", taskTime: "", errorText: ""
   },
   onLoad() {
-    const week = buildWeek();
+    const dates = buildPastMonthRange();
     const schedule = defaultSchedule();
-    this.setData({ week, selectedKey: week[3].key, taskDate: schedule.date, taskTime: schedule.time });
+    this.setData({ dates, selectedKey: dates[29].key, taskDate: schedule.date, taskTime: schedule.time });
     this.loadTasks();
   },
-  onShow() { if (this.data.week.length && !this.data.loading) this.loadTasks(); },
+  onShow() { if (this.data.dates.length && !this.data.loading) this.loadTasks(); },
   async onPullDownRefresh() {
     await this.loadTasks();
     wx.stopPullDownRefresh();
@@ -85,14 +91,10 @@ Page({
     try {
       const payload = await apiRequest("", "GET", null, true);
       const tasks = Array.isArray(payload.tasks) ? payload.tasks.map(normalizeTask) : [];
-      const weekKeys = new Set(this.data.week.map((item) => item.key));
       this.setData({
-        bound: Boolean(payload.bound), active: Boolean(payload.active), tasks,
-        pendingCount: tasks.filter((item) => item.status === "pending").length,
-        completedCount: tasks.filter((item) => item.status === "completed").length,
-        weekCount: tasks.filter((item) => weekKeys.has(item.dateKey)).length
+        bound: Boolean(payload.bound), active: Boolean(payload.active), swipedTaskId: ""
       });
-      this.applyDateFilter(this.data.selectedKey, tasks);
+      this.updateTaskState(tasks);
     } catch (error) {
       this.setData({ errorText: error.message || "看板暂时无法同步" });
     } finally { this.setData({ loading: false }); }
@@ -126,30 +128,102 @@ Page({
     } catch (error) { wx.showToast({ title: error.message || "创建失败", icon: "none" }); }
     finally { this.setData({ submitting: false }); }
   },
-  async updateTask(event) {
+  async completeTask(event) {
     const id = event.currentTarget.dataset.id;
-    const action = event.currentTarget.dataset.action;
-    if (!id || !action || this.data.submitting) return;
-    const confirmed = await new Promise((resolve) => wx.showModal({
-      title: action === "complete" ? "标记完成" : "取消事项",
-      content: action === "complete" ? "Dimmo 端也会同步显示为已完成。" : "Dimmo 端也会同步显示为已取消。",
-      success: (result) => resolve(result.confirm)
-    }));
-    if (!confirmed) return;
-    this.setData({ submitting: true });
+    const current = this.data.tasks.find((item) => item.id === id);
+    if (!current || !current.isPending || this.data.submittingTaskId) return;
+    const previousTasks = this.data.tasks;
+    const tasks = previousTasks.map((item) => item.id === id ? {
+      ...item, status: "completed", statusText: "已完成", isPending: false, isDone: true
+    } : item);
+    this.setData({ submittingTaskId: id, swipedTaskId: "" });
+    this.updateTaskState(tasks);
     try {
-      await apiRequest("", "PATCH", { id, action });
-      wx.showToast({ title: action === "complete" ? "已完成" : "已取消", icon: "success" });
-      await this.loadTasks();
-    } catch (error) { wx.showToast({ title: error.message || "更新失败", icon: "none" }); }
-    finally { this.setData({ submitting: false }); }
+      await apiRequest("", "PATCH", { id, action: "complete" });
+      wx.showToast({ title: "已完成", icon: "success" });
+    } catch (error) {
+      this.updateTaskState(previousTasks);
+      wx.showToast({ title: error.message || "更新失败", icon: "none" });
+    } finally { this.setData({ submittingTaskId: "" }); }
+  },
+  onTaskTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (!touch) return;
+    this._taskTouch = {
+      id: event.currentTarget.dataset.id,
+      x: touch.clientX,
+      y: touch.clientY,
+      revealed: false
+    };
+  },
+  onTaskTouchMove(event) {
+    const start = this._taskTouch;
+    const touch = event.touches && event.touches[0];
+    if (!start || !touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (deltaX < -24 && !start.revealed) {
+      start.revealed = true;
+      this.setData({ swipedTaskId: start.id });
+    } else if (deltaX > 24 && this.data.swipedTaskId) {
+      this.setData({ swipedTaskId: "" });
+    }
+  },
+  onTaskTouchEnd(event) {
+    const start = this._taskTouch;
+    const touch = event.changedTouches && event.changedTouches[0];
+    this._taskTouch = null;
+    if (!start || !touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (start.revealed) {
+      this._ignoreNextTaskTap = true;
+      return;
+    }
+    if (Math.abs(deltaX) < 30 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    this._ignoreNextTaskTap = true;
+    this.setData({ swipedTaskId: deltaX < 0 ? start.id : "" });
+  },
+  onTaskTap() {
+    if (this._ignoreNextTaskTap) {
+      this._ignoreNextTaskTap = false;
+      return;
+    }
+    if (this.data.swipedTaskId) this.setData({ swipedTaskId: "" });
+  },
+  async deleteTask(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id || this.data.submittingTaskId) return;
+    const previousTasks = this.data.tasks;
+    const tasks = previousTasks.filter((item) => item.id !== id);
+    this.setData({ submittingTaskId: id, swipedTaskId: "" });
+    this.updateTaskState(tasks);
+    try {
+      await apiRequest("", "DELETE", { id });
+      wx.showToast({ title: "已删除", icon: "success" });
+    } catch (error) {
+      this.updateTaskState(previousTasks);
+      wx.showToast({ title: error.message || "删除失败", icon: "none" });
+    } finally { this.setData({ submittingTaskId: "" }); }
   },
   selectDate(event) {
     const selectedKey = event.currentTarget.dataset.key;
-    const selected = this.data.week.find((item) => item.key === selectedKey);
+    const selected = this.data.dates.find((item) => item.key === selectedKey);
     if (!selected) return;
-    this.setData({ selectedKey, selectedLabel: selected.isToday ? "今天" : `${Number(selected.day)}日` });
+    this.setData({ selectedKey, selectedLabel: selected.isToday ? "今天" : selected.monthDay, swipedTaskId: "" });
     this.applyDateFilter(selectedKey, this.data.tasks);
+  },
+  updateTaskState(tasks) {
+    const monthKeys = new Set(this.data.dates.map((item) => item.key));
+    const monthTasks = tasks.filter((item) => monthKeys.has(item.dateKey));
+    this.setData({
+      tasks,
+      pendingCount: monthTasks.filter((item) => item.status === "pending").length,
+      completedCount: monthTasks.filter((item) => item.status === "completed").length,
+      monthCount: monthTasks.length
+    });
+    this.applyDateFilter(this.data.selectedKey, tasks);
   },
   applyDateFilter(selectedKey, tasks) { this.setData({ visibleTasks: tasks.filter((item) => item.dateKey === selectedKey) }); }
 });

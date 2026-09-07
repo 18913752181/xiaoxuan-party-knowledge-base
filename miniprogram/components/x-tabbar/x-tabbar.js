@@ -7,8 +7,8 @@ Component({
       const page = event.currentTarget.dataset.page;
       const routes = {
         home: "/pages/index/index",
-        bases: "/pages/bases/bases",
-        favorites: "/pages/favorites/favorites"
+        board: "/pages/dashboard/dashboard",
+        bases: "/pages/bases/bases"
       };
       if (!routes[page] || page === this.data.active) return;
       wx.redirectTo({

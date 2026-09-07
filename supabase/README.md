@@ -9,11 +9,10 @@
 - `002_favorites.sql`：当前收藏功能使用的收藏表脚本。收藏只保存本地文章的 `article_slug`、标题和分类，不把文章正文迁移到 Supabase。
 - `007_wechat_binding.sql`：微信登录/绑定支持。为 `profiles` 增加 `wechat_openid` 字段（部分唯一索引），用于微信一键登录与邮箱账号绑定微信。
 - `008_work_cat.sql`：Dimmo「工作小猫」服务号消息、对话、专业问题转人工与提醒留言表。
-- `014_dimmo_expressions.sql`：创建 Dimmo 表情库数据表、公开读取策略、图片存储桶，并写入首批表情数据。
-- `015_dimmo_expression_library_v2.sql`：补充第二版 Dimmo 表情图集数据。
-- `016_dimmo_task_expression_library.sql`：补充任务协作场景下的成年 Dimmo 与煤球表情数据。
-- `017_dimmo_transparent_task_expressions.sql`：把任务场景表情从带棋格底图的旧素材迁移到透明背景素材。
-- `017_education_base_guides.sql`：增加教育基地讲解服务、费用、公开来源和核验日期字段，并导入首批已核实资料；未查到的信息保持为空。
+- `014_dimmo_expressions.sql`：Dimmo 成年与煤球双形态表情库，包含首批 25 个状态、公开读取策略和后台图片存储桶。
+- `017_education_base_guides.sql`：为教育基地增加讲解服务、费用、公开来源和核验日期字段，并导入首批已核实资料；未查到的信息保持为空。
+- `018_education_base_images.sql`：为教育基地增加后台配图、来源与权利状态字段，并建立私有图片存储桶；小程序通过网站同域图片接口读取。
+- `019_education_base_member_guides.sql`：增加开放预约、活动形式、人群、路线、周边组合、活动方案和相关资料等会员基地攻略字段；无可靠信息时保持为空。
 
 ## 如何执行 SQL
 

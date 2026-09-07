@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "宣知工作助手",
+  "navigationBarTitleText": "喵喵工具箱",
   "usingComponents": {
     "x-tabbar": "/components/x-tabbar/x-tabbar"
   }
