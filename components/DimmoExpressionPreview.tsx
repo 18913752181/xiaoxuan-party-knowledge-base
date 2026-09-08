@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type PreviewSource = {
   name: string;
   image_url?: string | null;
@@ -29,9 +31,8 @@ export default function DimmoExpressionPreview({ item, className = "" }: { item:
       style={{
         backgroundImage: `url(${sheet})`,
         backgroundSize: "500% 500%",
-        backgroundPosition: `${col * 25}% ${row * 23.75}%`
+        backgroundPosition: `${col * 25}% ${row * 25}%`
       }}
     />
   );
 }
-import Image from "next/image";

@@ -89,14 +89,24 @@ export async function POST(request: Request) {
     return text(encryptedMode ? buildEncryptedReply(replyXml, token, aesKey, appId) : replyXml);
   }
 
-  if (message.MsgType !== "text") return text("success");
+  const isVoice = message.MsgType === "voice";
+  if (message.MsgType !== "text" && !isVoice) return text("success");
+
+  // V1：优先使用公众号开启语音识别后由微信返回的 Recognition。
+  // 不下载/保存原始音频，也不接入第三方 ASR；转写后的文字复用同一条 Dimmo 路由。
+  const incomingContent = isVoice ? message.Recognition.trim() : message.Content.trim();
+  if (!incomingContent) {
+    const reply = "🐾 咪这次没有听清，可以再说一次，或者直接发文字给咪吗？";
+    const replyXml = buildTextReply(message.FromUserName, message.ToUserName, reply);
+    return text(encryptedMode ? buildEncryptedReply(replyXml, token, aesKey, appId) : replyXml);
+  }
 
   // 先请求微信客户端展示原生“正在输入”。不具备客服接口权限时继续走被动回复，
   // 同时开始消息处理，避免 AI 改写与微信接口串行后超过被动回复窗口。
   const typingStartedAt = Date.now();
   const [typingEnabled, result] = await Promise.all([
     sendCustomerServiceTyping(message.FromUserName, appId, appSecret),
-    handleWorkCatMessage({ openid: message.FromUserName, content: message.Content, msgId: message.MsgId })
+    handleWorkCatMessage({ openid: message.FromUserName, content: incomingContent, msgId: message.MsgId })
   ]);
   if (!result.reply) return text("success");
 

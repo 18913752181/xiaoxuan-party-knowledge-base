@@ -49,6 +49,11 @@ export default function DimmoExpressionManager() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DimmoExpressionRow | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkPublication, setBulkPublication] = useState<"keep" | "published" | "draft">("keep");
+  const [bulkForm, setBulkForm] = useState<"keep" | DimmoForm>("keep");
+  const [bulkTags, setBulkTags] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (preferredId?: number) => {
@@ -60,6 +65,7 @@ export default function DimmoExpressionManager() {
       if (!response.ok) throw new Error(payload.error || "读取失败");
       const expressions = (payload.expressions || []) as DimmoExpressionRow[];
       setItems(expressions);
+      setSelectedIds((current) => current.filter((id) => expressions.some((item) => item.id === id)));
       setDraft((current) => {
         if (preferredId) return draftFrom(expressions.find((item) => item.id === preferredId) || current as DimmoExpressionRow);
         if (!current.id && expressions.length) return draftFrom(expressions[0]);
@@ -90,6 +96,8 @@ export default function DimmoExpressionManager() {
     coalball: items.filter((item) => item.form === "coalball").length,
     published: items.filter((item) => item.is_published).length
   }), [items]);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((item) => selectedIds.includes(item.id));
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -170,6 +178,94 @@ export default function DimmoExpressionManager() {
     }
   }
 
+  function toggleSelected(id: number) {
+    setSelectedIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]);
+  }
+
+  function toggleFilteredSelection() {
+    const filteredIds = filtered.map((item) => item.id);
+    setSelectedIds((current) => {
+      if (allFilteredSelected) return current.filter((id) => !filteredIds.includes(id));
+      return Array.from(new Set([...current, ...filteredIds]));
+    });
+  }
+
+  async function applyBulkEdit() {
+    const tagsToAdd = bulkTags.split(/[,，]/).map((value) => value.trim()).filter(Boolean);
+    if (!selectedIds.length) return;
+    if (bulkPublication === "keep" && bulkForm === "keep" && !tagsToAdd.length) {
+      setMessage("请先选择一项要批量修改的内容。");
+      return;
+    }
+
+    const selected = items.filter((item) => selectedIds.includes(item.id));
+    setSaving(true);
+    setMessage(`正在批量保存 ${selected.length} 个表情…`);
+    try {
+      for (const item of selected) {
+        const next = {
+          ...item,
+          form: bulkForm === "keep" ? item.form : bulkForm,
+          is_published: bulkPublication === "keep" ? item.is_published : bulkPublication === "published",
+          tags: tagsToAdd.length ? Array.from(new Set([...item.tags, ...tagsToAdd])) : item.tags
+        };
+        const response = await fetch("/api/admin/dimmo-expressions", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(next)
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(`${item.name}：${payload.error || "保存失败"}`);
+      }
+      const count = selected.length;
+      setSelectedIds([]);
+      setBulkPublication("keep");
+      setBulkForm("keep");
+      setBulkTags("");
+      await load(draft.id);
+      setMessage(`已批量更新 ${count} 个表情。`);
+    } catch (error) {
+      const failure = error instanceof Error ? `批量编辑未全部完成：${error.message}` : "批量编辑失败";
+      await load(draft.id);
+      setMessage(failure);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeSelected() {
+    const selected = items.filter((item) => selectedIds.includes(item.id));
+    if (!selected.length) return;
+    const preferredId = draft.id && !selectedIds.includes(draft.id) ? draft.id : undefined;
+    setSaving(true);
+    setMessage(`正在删除 ${selected.length} 个表情…`);
+    try {
+      for (const item of selected) {
+        const response = await fetch("/api/admin/dimmo-expressions", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: item.id })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(`${item.name}：${payload.error || "删除失败"}`);
+      }
+      const count = selected.length;
+      setBulkDeleteOpen(false);
+      setSelectedIds([]);
+      if (!preferredId) setDraft(EMPTY_DRAFT);
+      await load(preferredId);
+      setMessage(`已删除 ${count} 个表情；独立上传的图片也已清理。`);
+    } catch (error) {
+      const failure = error instanceof Error ? `批量删除未全部完成：${error.message}` : "批量删除失败";
+      setBulkDeleteOpen(false);
+      if (!preferredId) setDraft(EMPTY_DRAFT);
+      await load(preferredId);
+      setMessage(failure);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="mt-8">
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="表情库概览">
@@ -179,6 +275,24 @@ export default function DimmoExpressionManager() {
       </section>
 
       {message ? <div className="mt-4 rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-sm leading-6 text-[#59635d]" role="status">{message}</div> : null}
+
+      {selectedIds.length ? (
+        <section className="mt-4 rounded-2xl border border-[#cfdacf] bg-[#f3f7f3] p-4 sm:p-5" aria-label="批量编辑表情">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><h2 className="font-semibold text-[#35443b]">批量编辑</h2><p className="mt-1 text-xs text-[#718077]">已选择 {selectedIds.length} 个表情；未设置的字段会保持原样。</p></div>
+            <button type="button" onClick={() => setSelectedIds([])} className="h-9 rounded-lg border border-[#cad4cc] bg-white px-3 text-sm text-[#5f6c64]">清空选择</button>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.4fr_auto]">
+            <select value={bulkPublication} onChange={(event) => setBulkPublication(event.target.value as "keep" | "published" | "draft")} className={inputClass} aria-label="批量发布状态"><option value="keep">发布状态不变</option><option value="published">设为已发布</option><option value="draft">设为草稿</option></select>
+            <select value={bulkForm} onChange={(event) => setBulkForm(event.target.value as "keep" | DimmoForm)} className={inputClass} aria-label="批量角色形态"><option value="keep">角色形态不变</option><option value="adult">设为成年 Dimmo</option><option value="coalball">设为煤球小黑猫</option></select>
+            <input value={bulkTags} onChange={(event) => setBulkTags(event.target.value)} className={inputClass} placeholder="追加标签，用逗号分隔" aria-label="批量追加标签" />
+            <div className="flex gap-2">
+              <button type="button" disabled={saving} onClick={() => void applyBulkEdit()} className="h-11 rounded-xl bg-[#607d6d] px-5 text-sm font-medium text-white disabled:opacity-50">{saving ? "处理中…" : "应用修改"}</button>
+              <button type="button" disabled={saving} onClick={() => setBulkDeleteOpen(true)} className="h-11 rounded-xl border border-[#dfbcbc] bg-white px-4 text-sm font-medium text-[#a34850] disabled:opacity-50">批量删除</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-5 grid items-start gap-5 lg:grid-cols-[390px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-[#e3ddd2] bg-white p-4 lg:sticky lg:top-5">
@@ -192,15 +306,22 @@ export default function DimmoExpressionManager() {
               <select value={formFilter} onChange={(event) => setFormFilter(event.target.value as "all" | DimmoForm)} className={inputClass}><option value="all">全部形态</option><option value="adult">成年 Dimmo</option><option value="coalball">煤球小黑猫</option></select>
               <select value={publication} onChange={(event) => setPublication(event.target.value)} className={inputClass}><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>
             </div>
+            <div className="flex items-center justify-between gap-2 px-1 pt-1">
+              <button type="button" disabled={!filtered.length} onClick={toggleFilteredSelection} className="text-xs font-medium text-[#607d6d] disabled:text-[#a4aaa6]">{allFilteredSelected ? "取消选择当前结果" : "选择当前全部结果"}</button>
+              <span className="text-xs text-[#92978f]">已选 {selectedIds.length}</span>
+            </div>
           </div>
           <div className="mt-3 max-h-[65vh] space-y-2 overflow-y-auto pr-1">
             {loading ? <p className="py-8 text-center text-sm text-[#858b86]">Dimmo 正在翻表情册…</p> : null}
             {!loading && !filtered.length ? <p className="py-8 text-center text-sm text-[#858b86]">没有符合条件的表情。</p> : null}
             {filtered.map((item) => (
-              <button key={item.id} type="button" onClick={() => setDraft(draftFrom(item))} className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition ${draft.id === item.id ? "border-[#789686] bg-[#f0f5f1]" : "border-[#e8e2d8] hover:border-[#a9baaf]"}`}>
-                <span className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#ece7de] bg-white"><DimmoExpressionPreview item={item} /></span>
-                <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><b className="truncate text-sm text-[#343b37]">{item.name}</b><small className={item.is_published ? "text-[#547563]" : "text-[#9a7565]"}>{item.is_published ? "已发布" : "草稿"}</small></span><span className="mt-1 block text-xs text-[#858b86]">{formName(item.form)} · {item.slug}</span></span>
-              </button>
+              <div key={item.id} className={`flex items-center gap-2 rounded-xl border p-2 transition ${selectedIds.includes(item.id) ? "border-[#789686] bg-[#edf4ef]" : draft.id === item.id ? "border-[#a9baaf] bg-[#f7f9f7]" : "border-[#e8e2d8] hover:border-[#a9baaf]"}`}>
+                <label className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center" title={`选择${item.name}`}><input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggleSelected(item.id)} className="h-4 w-4 accent-[#607d6d]" /><span className="sr-only">选择 {item.name}</span></label>
+                <button type="button" onClick={() => setDraft(draftFrom(item))} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <span className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#ece7de] bg-white"><DimmoExpressionPreview item={item} /></span>
+                  <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><b className="truncate text-sm text-[#343b37]">{item.name}</b><small className={item.is_published ? "text-[#547563]" : "text-[#9a7565]"}>{item.is_published ? "已发布" : "草稿"}</small></span><span className="mt-1 block text-xs text-[#858b86]">{formName(item.form)} · {item.slug}</span></span>
+                </button>
+              </div>
             ))}
           </div>
         </aside>
@@ -245,6 +366,7 @@ export default function DimmoExpressionManager() {
       </div>
 
       <ConfirmDialog open={Boolean(deleteTarget)} title={`确定删除“${deleteTarget?.name || ""}”吗？`} description="删除记录后无法恢复；独立上传的图片也会一并清理。角色总表不会受影响。" busy={saving} onConfirm={() => void remove()} onCancel={() => setDeleteTarget(null)} />
+      <ConfirmDialog open={bulkDeleteOpen} title={`确定删除选中的 ${selectedIds.length} 个表情吗？`} description="删除后无法恢复；对应的独立上传图片也会一并清理，角色总表不会受影响。" busy={saving} onConfirm={() => void removeSelected()} onCancel={() => setBulkDeleteOpen(false)} />
     </div>
   );
 }

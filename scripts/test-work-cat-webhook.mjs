@@ -58,6 +58,10 @@ function xml(content, msgId) {
   return `<xml><ToUserName><![CDATA[gh_local_test]]></ToUserName><FromUserName><![CDATA[openid_local_test]]></FromUserName><CreateTime>${Math.floor(Date.now() / 1000)}</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[${content}]]></Content><MsgId>${msgId}</MsgId></xml>`;
 }
 
+function voiceXml(recognition, msgId) {
+  return `<xml><ToUserName><![CDATA[gh_local_test]]></ToUserName><FromUserName><![CDATA[openid_voice_test]]></FromUserName><CreateTime>${Math.floor(Date.now() / 1000)}</CreateTime><MsgType><![CDATA[voice]]></MsgType><MediaId><![CDATA[voice-media-id]]></MediaId><Format><![CDATA[amr]]></Format><Recognition><![CDATA[${recognition}]]></Recognition><MsgId>${msgId}</MsgId></xml>`;
+}
+
 function subscribeXml() {
   return `<xml><ToUserName><![CDATA[gh_local_test]]></ToUserName><FromUserName><![CDATA[openid_subscribe_test]]></FromUserName><CreateTime>${Math.floor(Date.now() / 1000)}</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[subscribe]]></Event></xml>`;
 }
@@ -79,6 +83,18 @@ async function message(content, msgId) {
   });
   const body = await response.text();
   if (!response.ok) throw new Error(`消息请求失败 (${response.status}): ${body}`);
+  return body;
+}
+
+async function voiceMessage(recognition, msgId) {
+  const params = new URLSearchParams(query());
+  const response = await fetch(`${baseUrl}?${params}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/xml" },
+    body: voiceXml(recognition, msgId)
+  });
+  const body = await response.text();
+  if (!response.ok) throw new Error(`语音消息请求失败 (${response.status}): ${body}`);
   return body;
 }
 
@@ -131,6 +147,12 @@ if (!/咪|Dimmo/.test(casualChat) || /交给小宣社长确认|专业判断/.tes
   throw new Error(`日常闲聊被误转人工：${casualChat}`);
 }
 console.log("✓ 日常闲聊不会误转小宣");
+
+const voice = await voiceMessage("你好", `local-voice-${suffix}`);
+if (!/Dimmo|咪|社长/.test(voice) || /具体党务判断/.test(voice)) {
+  throw new Error(`语音转写链路不符合预期：${voice}`);
+}
+console.log("✓ 语音 Recognition 转写后复用 Dimmo 文字路由");
 
 const resource = await message("有没有主题党日模板？", `local-resource-${suffix}`);
 if (!/主题党日|xiaoxuanvip\.com\/materials/.test(resource) || /交给小宣社长确认/.test(resource)) {

@@ -35,7 +35,6 @@ export async function GET() {
     return withAuthCookies(check.session, NextResponse.json({ error: databaseError(error) }, { status: 500 }));
   }
 }
-
 export async function POST(request: Request) {
   const check = await requireAdmin();
   if (!check.ok) return check.response;

@@ -63,12 +63,5 @@ module.exports = {
     guideServiceNote: "全程约45分钟。中文价含1名讲解员及20台接收器，超出每台20元，每团不超过30人；需提前3天预约。",
     guideSourceUrl: "https://www.szyyjzbwg.com/jq.html",
     guideVerifiedAt: "2026-08-28"
-  },
-  "153": {
-    hasGuidedTour: true,
-    guideFee: null,
-    guideServiceNote: "馆方提供纪念馆讲解预约服务；公开公告未说明收费标准。",
-    guideSourceUrl: "https://www.njyh.gov.cn/zt/wyyh/wzyh/202503/t20250310_5091812.html",
-    guideVerifiedAt: "2026-09-08"
   }
 };

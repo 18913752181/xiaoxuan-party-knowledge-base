@@ -33,5 +33,6 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=40 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4; do git fetch --prune origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 8s..."; sleep 8; done; [ "$ok" = 1 ] || { echo "git fetch failed after 4 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh'
+            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4 5 6; do git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 fetch --prune --depth=1 origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 5s..."; sleep 5; done; [ "$ok" = 1 ] || { echo "git fetch failed after 6 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh'

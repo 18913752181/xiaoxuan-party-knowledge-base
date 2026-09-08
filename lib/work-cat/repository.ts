@@ -66,7 +66,7 @@ export async function persistInteraction(input: {
     })
   ];
 
-  if (classification.intent === "PARTY_AFFAIRS" || classification.intent === "HUMAN") {
+  if (classification.intent === "PROFESSIONAL_QA" || classification.intent === "HUMAN_HANDOFF") {
     writes.push(admin.from("pending_questions").insert({
       openid, question: content, context_summary: contextSummary || classification.summary,
       category: classification.category, status: "pending"

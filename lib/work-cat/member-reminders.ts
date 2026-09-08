@@ -44,10 +44,12 @@ export function friendlyReminderTime(value: Date, now = new Date()) {
 export function validateAiReminder(reminderAt: string | undefined, reminderContent: string | undefined, now = new Date()): ParsedReminder {
   const scheduled = reminderAt ? new Date(reminderAt) : new Date(NaN);
   if (Number.isNaN(scheduled.getTime())) return { kind: "invalid", reason: "时间没有看明白" };
-  if (scheduled.getTime() <= now.getTime() + 60_000) return { kind: "invalid", reason: "这个时间已经过去了" };
+  if (scheduled.getTime() <= now.getTime()) return { kind: "invalid", reason: "这个时间已经过去了" };
   // 当前通过公众号客服消息投递。该接口只在用户近期互动窗口内稳定可用，
-  // 因此只开放 47 小时内的提醒，避免给会员创建最终无法送达的长期任务。
-  if (scheduled.getTime() > now.getTime() + 47 * 3600_000) return { kind: "invalid", reason: "当前到点提醒最多可提前设置两天" };
+  // 因此只开放 48 小时内的提醒，避免给会员创建最终无法送达的长期任务。
+  // 这里以“收到消息时”的固定基准比较，不能把分钟、小时或明天的提醒误拦截。
+  const maxDelayMs = 48 * 60 * 60_000;
+  if (scheduled.getTime() - now.getTime() > maxDelayMs) return { kind: "invalid", reason: "这个提醒超过了公众号可稳定送达的 48 小时范围" };
 
   const content = (reminderContent || "").trim().slice(0, 240);
   if (!content) return { kind: "invalid", reason: "还少了要提醒的事情" };
