@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Check out release
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -25,14 +30,23 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Pull, build and restart
+      - name: Package release
+        run: tar --exclude=.git -czf /tmp/xiaoxuan-release.tar.gz .
+
+      - name: Upload, build and restart
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
+          archive="/tmp/xiaoxuan-${GITHUB_SHA}.tar.gz"
+          scp -i ~/.ssh/deploy_key -P "${DEPLOY_PORT:-22}" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=40 \
+            /tmp/xiaoxuan-release.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:$archive"
           ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o ServerAliveInterval=15 -o ServerAliveCountMax=40 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4 5 6; do git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1 -c http.lowSpeedTime=600 fetch --prune --depth=1 origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 5s..."; sleep 5; done; [ "$ok" = 1 ] || { echo "git fetch failed after 6 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh'
+            "set -Eeuo pipefail; release='/srv/xiaoxuan/releases/${GITHUB_SHA}'; mkdir -p \"\$release\"; tar -xzf '$archive' -C \"\$release\"; rm -f '$archive'; COMPOSE_PROJECT_NAME=app APP_DIR=\"\$release\" bash \"\$release/deploy/deploy.sh\""
