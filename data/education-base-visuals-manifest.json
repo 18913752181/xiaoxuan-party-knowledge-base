@@ -1,0 +1,895 @@
+[
+  {
+    "id": 1,
+    "baseName": "沙家浜革命历史纪念馆",
+    "imageUrl": "/images/education-bases/base-1-shajiabang-memorial-cover.jpg",
+    "imageAlt": "沙家浜革命历史纪念馆主题插画",
+    "imageSourceName": "江苏党史网",
+    "imageSourceUrl": "https://www.jsdsw.org.cn/web/detail/detail.html?id=7090",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-1-shajiabang-memorial-postcard.png",
+    "motifFile": "base-1-shajiabang-memorial-motif.png",
+    "motifCrop": {
+      "x": 210,
+      "y": 720,
+      "width": 814,
+      "height": 540
+    },
+    "coverFile": "base-1-shajiabang-memorial-cover.jpg"
+  },
+  {
+    "id": 2,
+    "baseName": "常熟县人民抗日自卫会纪念馆",
+    "imageUrl": "/images/education-bases/base-2-changshu-resistance-cover.jpg",
+    "imageAlt": "常熟县人民抗日自卫会纪念馆主题插画",
+    "imageSourceName": "常熟市人民政府",
+    "imageSourceUrl": "https://www.changshu.gov.cn/zgcs/c108191/201912/a57a61b951f84a0c9c30afab8395f901.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-2-changshu-resistance-postcard.png",
+    "motifFile": "base-2-changshu-resistance-motif.png",
+    "motifCrop": {
+      "x": 160,
+      "y": 925,
+      "width": 864,
+      "height": 505
+    },
+    "coverFile": "base-2-changshu-resistance-cover.jpg"
+  },
+  {
+    "id": 5,
+    "baseName": "常熟市常福街道‘益家营造中心’",
+    "imageUrl": "/images/education-bases/base-5-yijia-community-hub-cover.webp",
+    "imageAlt": "常熟市常福街道‘益家营造中心’主题插画",
+    "imageSourceName": "虞山高新区（常福街道）组织人事（公开转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/734506543_121123700",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-5-yijia-community-hub-postcard-front.png",
+    "motifFile": "base-5-yijia-community-hub-motif.png",
+    "motifCrop": {
+      "x": 35,
+      "y": 700,
+      "width": 980,
+      "height": 525
+    },
+    "coverFile": "base-5-yijia-community-hub-cover.webp"
+  },
+  {
+    "id": 7,
+    "baseName": "常熟城市展示馆",
+    "imageUrl": "/images/education-bases/base-7-changshu-city-gallery-cover.jpg",
+    "imageAlt": "常熟城市展示馆主题插画",
+    "imageSourceName": "常熟市人民政府（常熟市数据局）",
+    "imageSourceUrl": "https://www.changshu.gov.cn/zgcs/c100297/202508/1bf5f06fa135498bb978e133d59185b0.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-7-changshu-city-gallery-postcard.png",
+    "motifFile": "base-7-changshu-city-gallery-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 920,
+      "width": 744,
+      "height": 616
+    },
+    "coverFile": "base-7-changshu-city-gallery-cover.jpg"
+  },
+  {
+    "id": 10,
+    "baseName": "苏州高新区树山2035乡村振兴实践展示馆",
+    "imageUrl": "/images/education-bases/base-10-shushan-2035-cover.webp",
+    "imageAlt": "苏州高新区树山2035乡村振兴实践展示馆主题插画",
+    "imageSourceName": "苏州工业园区服务外包职业学院",
+    "imageSourceUrl": "https://www.siso.edu.cn/info/1023/9029.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-10-shushan-2035-postcard-front.png",
+    "motifFile": "base-10-shushan-2035-motif.png",
+    "motifCrop": {
+      "x": 310,
+      "y": 795,
+      "width": 714,
+      "height": 685
+    },
+    "coverFile": "base-10-shushan-2035-cover.webp"
+  },
+  {
+    "id": 12,
+    "baseName": "苏州智能制造融合发展服务中心",
+    "imageUrl": "/images/education-bases/base-12-smart-manufacturing-center-cover.webp",
+    "imageAlt": "苏州智能制造融合发展服务中心主题插画",
+    "imageSourceName": "中国赛宝（华东）实验室企业公开页面",
+    "imageSourceUrl": "https://www.zhaopin.com/companydetail/CC194296225.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-12-smart-manufacturing-center-postcard-front.png",
+    "motifFile": "base-12-smart-manufacturing-center-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 760,
+      "width": 704,
+      "height": 755
+    },
+    "coverFile": "base-12-smart-manufacturing-center-cover.webp"
+  },
+  {
+    "id": 15,
+    "baseName": "中国南社纪念馆",
+    "imageUrl": "/images/education-bases/base-15-china-nanshe-memorial-cover.webp",
+    "imageAlt": "中国南社纪念馆主题插画",
+    "imageSourceName": "苏州发布内容转载页（搜狐）",
+    "imageSourceUrl": "https://www.sohu.com/a/413856150_120083328",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-15-china-nanshe-memorial-postcard-front.png",
+    "motifFile": "base-15-china-nanshe-memorial-motif.png",
+    "motifCrop": {
+      "x": 290,
+      "y": 565,
+      "width": 734,
+      "height": 885
+    },
+    "coverFile": "base-15-china-nanshe-memorial-cover.webp"
+  },
+  {
+    "id": 22,
+    "baseName": "沧浪街道党群服务1号店",
+    "imageUrl": "/images/education-bases/base-22-canglang-service-no1-cover.webp",
+    "imageAlt": "沧浪街道党群服务1号店主题插画",
+    "imageSourceName": "中国江苏网 / 苏州日报",
+    "imageSourceUrl": "https://jsnews.jschina.com.cn/sz/a/202012/t20201223_2696088.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-22-canglang-service-no1-postcard-front.png",
+    "motifFile": "base-22-canglang-service-no1-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 640,
+      "width": 694,
+      "height": 790
+    },
+    "coverFile": "base-22-canglang-service-no1-cover.webp"
+  },
+  {
+    "id": 23,
+    "baseName": "双塔街道锦帆路社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-23-jinfan-community-hub-cover.webp",
+    "imageAlt": "双塔街道锦帆路社区党群服务中心主题插画",
+    "imageSourceName": "姑苏发布（公开转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/497648500_121117475",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-23-jinfan-community-hub-postcard-front.png",
+    "motifFile": "base-23-jinfan-community-hub-motif.png",
+    "motifCrop": {
+      "x": 150,
+      "y": 700,
+      "width": 874,
+      "height": 680
+    },
+    "coverFile": "base-23-jinfan-community-hub-cover.webp"
+  },
+  {
+    "id": 24,
+    "baseName": "平江街道观前社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-24-guanqian-community-hub-cover.webp",
+    "imageAlt": "平江街道观前社区党群服务中心主题插画",
+    "imageSourceName": "共产党员网",
+    "imageSourceUrl": "https://www.12371.cn/2023/08/18/ARTI1692354828001426.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-24-guanqian-community-hub-postcard-front.png",
+    "motifFile": "base-24-guanqian-community-hub-motif.png",
+    "motifCrop": {
+      "x": 40,
+      "y": 675,
+      "width": 975,
+      "height": 645
+    },
+    "coverFile": "base-24-guanqian-community-hub-cover.webp"
+  },
+  {
+    "id": 25,
+    "baseName": "长三角数字经济双创中心",
+    "imageUrl": "/images/education-bases/base-25-digital-innovation-hub-cover.webp",
+    "imageAlt": "长三角数字经济双创中心主题插画",
+    "imageSourceName": "搜狐焦点苏州站",
+    "imageSourceUrl": "https://www.sohu.com/a/980250839_121342467",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-25-digital-innovation-hub-postcard-front.png",
+    "motifFile": "base-25-digital-innovation-hub-motif.png",
+    "motifCrop": {
+      "x": 45,
+      "y": 675,
+      "width": 970,
+      "height": 615
+    },
+    "coverFile": "base-25-digital-innovation-hub-cover.webp"
+  },
+  {
+    "id": 27,
+    "baseName": "名城集团白居易纪念苑",
+    "imageUrl": "/images/education-bases/base-27-bai-juyi-garden-cover.webp",
+    "imageAlt": "名城集团白居易纪念苑主题插画",
+    "imageSourceName": "去哪儿攻略",
+    "imageSourceUrl": "https://touch.travel.qunar.com/comment/4563545",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-27-bai-juyi-garden-postcard-front.png",
+    "motifFile": "base-27-bai-juyi-garden-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 700,
+      "width": 686,
+      "height": 805
+    },
+    "coverFile": "base-27-bai-juyi-garden-cover.webp"
+  },
+  {
+    "id": 29,
+    "baseName": "苏州革命博物馆",
+    "imageUrl": "/images/education-bases/base-29-suzhou-revolution-museum-cover.webp",
+    "imageAlt": "苏州革命博物馆主题插画",
+    "imageSourceName": "苏州革命博物馆",
+    "imageSourceUrl": "https://www.szgmbwg.org.cn/szgmbwg/sjdt/202305/735132d3d0fa44f795cdf0bcbf3ac8c8.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-29-suzhou-revolution-museum-postcard-front.png",
+    "motifFile": "base-29-suzhou-revolution-museum-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 730,
+      "width": 704,
+      "height": 705
+    },
+    "coverFile": "base-29-suzhou-revolution-museum-cover.webp"
+  },
+  {
+    "id": 31,
+    "baseName": "苏州大运河遗产馆",
+    "imageUrl": "/images/education-bases/base-31-grand-canal-heritage-cover.webp",
+    "imageAlt": "苏州大运河遗产馆主题插画",
+    "imageSourceName": "公开图片聚合页",
+    "imageSourceUrl": "https://ecywang.com/pic/%E8%8B%8F%E5%B7%9E%E5%A4%A7%E8%BF%90%E6%B2%B3%E9%81%97%E4%BA%A7%E5%B1%95%E7%A4%BA%E9%A6%86/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-31-grand-canal-heritage-postcard-front.png",
+    "motifFile": "base-31-grand-canal-heritage-motif.png",
+    "motifCrop": {
+      "x": 315,
+      "y": 600,
+      "width": 690,
+      "height": 865
+    },
+    "coverFile": "base-31-grand-canal-heritage-cover.webp"
+  },
+  {
+    "id": 32,
+    "baseName": "苏州博物馆",
+    "imageUrl": "/images/education-bases/base-32-suzhou-museum-cover.webp",
+    "imageAlt": "苏州博物馆主题插画",
+    "imageSourceName": "CGTN",
+    "imageSourceUrl": "https://news.cgtn.com/news/2023-07-07/The-charm-of-Venice-of-the-East--1lf2w8ZUz9S/index.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-32-suzhou-museum-postcard-front.png",
+    "motifFile": "base-32-suzhou-museum-motif.png",
+    "motifCrop": {
+      "x": 285,
+      "y": 630,
+      "width": 739,
+      "height": 880
+    },
+    "coverFile": "base-32-suzhou-museum-cover.webp"
+  },
+  {
+    "id": 33,
+    "baseName": "苏州商会博物馆",
+    "imageUrl": "/images/education-bases/base-33-suzhou-chamber-museum-cover.webp",
+    "imageAlt": "苏州商会博物馆主题插画",
+    "imageSourceName": "苏州市工商业联合会（身份核验）/去哪儿攻略（可下载实景）",
+    "imageSourceUrl": "https://szsgsl.suzhou.com.cn/szsgsl/tpxw/202503/e73f476e4df94c78a60dc6ec520b4f7a.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-33-suzhou-chamber-museum-postcard-front.png",
+    "motifFile": "base-33-suzhou-chamber-museum-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 900,
+      "width": 686,
+      "height": 615
+    },
+    "coverFile": "base-33-suzhou-chamber-museum-cover.webp"
+  },
+  {
+    "id": 34,
+    "baseName": "南湖革命纪念馆",
+    "imageUrl": "/images/education-bases/base-34-nanhu-revolution-memorial-cover.webp",
+    "imageAlt": "南湖革命纪念馆主题插画",
+    "imageSourceName": "China Daily",
+    "imageSourceUrl": "https://global.chinadaily.com.cn/a/202606/05/WS6a220fe8a310d6866eb4c877.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-34-nanhu-revolution-memorial-postcard-front.png",
+    "motifFile": "base-34-nanhu-revolution-memorial-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 700,
+      "width": 724,
+      "height": 675
+    },
+    "coverFile": "base-34-nanhu-revolution-memorial-cover.webp"
+  },
+  {
+    "id": 35,
+    "baseName": "顾炎武纪念馆",
+    "imageUrl": "/images/education-bases/base-35-gu-yanwu-memorial-cover.webp",
+    "imageAlt": "顾炎武纪念馆主题插画",
+    "imageSourceName": "第一昆山",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/170171",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-35-gu-yanwu-memorial-postcard-front.png",
+    "motifFile": "base-35-gu-yanwu-memorial-motif.png",
+    "motifCrop": {
+      "x": 245,
+      "y": 740,
+      "width": 779,
+      "height": 790
+    },
+    "coverFile": "base-35-gu-yanwu-memorial-cover.webp"
+  },
+  {
+    "id": 36,
+    "baseName": "“与时俱进的昆山之路”成果展",
+    "imageUrl": "/images/education-bases/base-36-kunshan-road-exhibition-cover.webp",
+    "imageAlt": "“与时俱进的昆山之路”成果展主题插画",
+    "imageSourceName": "第一昆山",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/44820",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-36-kunshan-road-exhibition-postcard-front.png",
+    "motifFile": "base-36-kunshan-road-exhibition-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 690,
+      "width": 704,
+      "height": 770
+    },
+    "coverFile": "base-36-kunshan-road-exhibition-cover.webp"
+  },
+  {
+    "id": 44,
+    "baseName": "昆山市党员政治生活馆",
+    "imageUrl": "/images/education-bases/base-44-kunshan-party-life-cover.webp",
+    "imageAlt": "昆山市党员政治生活馆主题插画",
+    "imageSourceName": "复旦大学公共卫生学院",
+    "imageSourceUrl": "https://sph.fudan.edu.cn/a/230",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-44-kunshan-party-life-postcard-front.png",
+    "motifFile": "base-44-kunshan-party-life-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 700,
+      "width": 724,
+      "height": 800
+    },
+    "coverFile": "base-44-kunshan-party-life-cover.webp"
+  },
+  {
+    "id": 53,
+    "baseName": "中共一大纪念馆",
+    "imageUrl": "/images/education-bases/base-53-first-cpc-congress-cover.webp",
+    "imageAlt": "中共一大纪念馆主题插画",
+    "imageSourceName": "中共一大纪念馆",
+    "imageSourceUrl": "https://www.zgyd1921.com/information/news/61668557042042219aa3bd99ccb260c8.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-53-first-cpc-congress-postcard-front.png",
+    "motifFile": "base-53-first-cpc-congress-motif.png",
+    "motifCrop": {
+      "x": 294,
+      "y": 900,
+      "width": 686,
+      "height": 495
+    },
+    "coverFile": "base-53-first-cpc-congress-cover.webp"
+  },
+  {
+    "id": 54,
+    "baseName": "中共二大会址纪念馆",
+    "imageUrl": "/images/education-bases/base-54-second-cpc-congress-cover.webp",
+    "imageAlt": "中共二大会址纪念馆主题插画",
+    "imageSourceName": "上海市静安区人民政府",
+    "imageSourceUrl": "https://www.jingan.gov.cn/rmtzx/003001/20221020/3b41a2d1-c7dd-4ee0-a634-a23763dea448.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-54-second-cpc-congress-postcard-front.png",
+    "motifFile": "base-54-second-cpc-congress-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 900,
+      "width": 686,
+      "height": 600
+    },
+    "coverFile": "base-54-second-cpc-congress-cover.webp"
+  },
+  {
+    "id": 55,
+    "baseName": "淞沪抗战纪念馆",
+    "imageUrl": "/images/education-bases/base-55-songhu-war-memorial-cover.webp",
+    "imageAlt": "淞沪抗战纪念馆主题插画",
+    "imageSourceName": "上海市人民政府",
+    "imageSourceUrl": "https://www.shanghai.gov.cn/hsly/20260625/c7cee09ac49746f5bdf8d5667c231ffe.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-55-songhu-war-memorial-postcard-front.png",
+    "motifFile": "base-55-songhu-war-memorial-motif.png",
+    "motifCrop": {
+      "x": 306,
+      "y": 900,
+      "width": 686,
+      "height": 505
+    },
+    "coverFile": "base-55-songhu-war-memorial-cover.webp"
+  },
+  {
+    "id": 56,
+    "baseName": "中国社会主义青年团中央机关旧址纪念馆",
+    "imageUrl": "/images/education-bases/base-56-yuyangli-cover.webp",
+    "imageAlt": "中国社会主义青年团中央机关旧址纪念馆主题插画",
+    "imageSourceName": "上海市文化和旅游局",
+    "imageSourceUrl": "https://www.meet-in-shanghai.net/cn/museums/the-memorial-hall-of-the-former-site-of-the-central-organ-of-the-chinese-socialist-youth-league-410375/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-56-yuyangli-postcard-front.png",
+    "motifFile": "base-56-yuyangli-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 700,
+      "width": 700,
+      "height": 815
+    },
+    "coverFile": "base-56-yuyangli-cover.webp"
+  },
+  {
+    "id": 57,
+    "baseName": "中共三大后中央局机关历史纪念馆",
+    "imageUrl": "/images/education-bases/base-57-central-bureau-cover.webp",
+    "imageAlt": "中共三大后中央局机关历史纪念馆主题插画",
+    "imageSourceName": "中共上海市纪律检查委员会、上海市监察委员会",
+    "imageSourceUrl": "https://www.shjjjc.gov.cn/2015jjw/n2346/n2349/u1ai64394.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-57-central-bureau-postcard-front.png",
+    "motifFile": "base-57-central-bureau-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 730,
+      "width": 724,
+      "height": 806
+    },
+    "coverFile": "base-57-central-bureau-cover.webp"
+  },
+  {
+    "id": 58,
+    "baseName": "中共四大纪念馆",
+    "imageUrl": "/images/education-bases/base-58-fourth-cpc-congress-cover.webp",
+    "imageAlt": "中共四大纪念馆主题插画",
+    "imageSourceName": "上海市虹口区人民政府",
+    "imageSourceUrl": "https://www.shhk.gov.cn/qyfwy/030002/030002002/030002002005/20181215/9d721f93-87eb-41a0-9ee4-1582e46e3edf.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-58-fourth-cpc-congress-postcard-front.png",
+    "motifFile": "base-58-fourth-cpc-congress-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 930,
+      "width": 686,
+      "height": 606
+    },
+    "coverFile": "base-58-fourth-cpc-congress-cover.webp"
+  },
+  {
+    "id": 59,
+    "baseName": "上海毛泽东旧居陈列馆",
+    "imageUrl": "/images/education-bases/base-59-mao-shanghai-residence-cover.webp",
+    "imageAlt": "上海毛泽东旧居陈列馆主题插画",
+    "imageSourceName": "上海市静安区人民政府",
+    "imageSourceUrl": "https://www.jingan.gov.cn/rmtzx/003001/20201014/e3dbcaa5-d63b-4782-9229-bc58c2a0f410.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-59-mao-shanghai-residence-postcard-front.png",
+    "motifFile": "base-59-mao-shanghai-residence-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 720,
+      "width": 694,
+      "height": 816
+    },
+    "coverFile": "base-59-mao-shanghai-residence-cover.webp"
+  },
+  {
+    "id": 60,
+    "baseName": "上海孙中山故居纪念馆",
+    "imageUrl": "/images/education-bases/base-60-sun-yat-sen-residence-cover.webp",
+    "imageAlt": "上海孙中山故居纪念馆主题插画",
+    "imageSourceName": "上海市人民政府",
+    "imageSourceUrl": "https://english.shanghai.gov.cn/en-MuseumsGalleries/20240717/c12d1b709741429ebcada33563c3623f.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-60-sun-yat-sen-residence-postcard-front.png",
+    "motifFile": "base-60-sun-yat-sen-residence-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 850,
+      "width": 694,
+      "height": 686
+    },
+    "coverFile": "base-60-sun-yat-sen-residence-cover.webp"
+  },
+  {
+    "id": 61,
+    "baseName": "上海宋庆龄故居纪念馆",
+    "imageUrl": "/images/education-bases/base-61-soong-ching-ling-residence-cover.webp",
+    "imageAlt": "上海宋庆龄故居纪念馆主题插画",
+    "imageSourceName": "上海宋庆龄故居纪念馆",
+    "imageSourceUrl": "https://shsoong-chingling.com/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-61-soong-ching-ling-residence-postcard-front.png",
+    "motifFile": "base-61-soong-ching-ling-residence-motif.png",
+    "motifCrop": {
+      "x": 335,
+      "y": 1040,
+      "width": 689,
+      "height": 496
+    },
+    "coverFile": "base-61-soong-ching-ling-residence-cover.webp"
+  },
+  {
+    "id": 62,
+    "baseName": "陈云故居、陈云纪念馆",
+    "imageUrl": "/images/education-bases/base-62-chen-yun-memorial-cover.webp",
+    "imageAlt": "陈云故居、陈云纪念馆主题插画",
+    "imageSourceName": "陈云纪念馆",
+    "imageSourceUrl": "https://www.cyjng.net/h-nd-137.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-62-chen-yun-memorial-postcard-front.png",
+    "motifFile": "base-62-chen-yun-memorial-motif.png",
+    "motifCrop": {
+      "x": 310,
+      "y": 820,
+      "width": 686,
+      "height": 680
+    },
+    "coverFile": "base-62-chen-yun-memorial-cover.webp"
+  },
+  {
+    "id": 63,
+    "baseName": "中国上海地下组织斗争史陈列馆",
+    "imageUrl": "/images/education-bases/base-63-shanghai-underground-cover.webp",
+    "imageAlt": "中国上海地下组织斗争史陈列馆主题插画",
+    "imageSourceName": "中共上海市纪律检查委员会、上海市监察委员会",
+    "imageSourceUrl": "https://www.shjjjc.gov.cn/2015jjw/n2346/n2349/u1ai63691.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-63-shanghai-underground-postcard-front.png",
+    "motifFile": "base-63-shanghai-underground-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 800,
+      "width": 694,
+      "height": 635
+    },
+    "coverFile": "base-63-shanghai-underground-cover.webp"
+  },
+  {
+    "id": 65,
+    "baseName": "上海凝聚力工程博物馆",
+    "imageUrl": "/images/education-bases/base-65-ningjuli-museum-cover.webp",
+    "imageAlt": "上海凝聚力工程博物馆主题插画",
+    "imageSourceName": "上海市长宁区人民政府",
+    "imageSourceUrl": "https://www.shcn.gov.cn/col3991/20230703/1239373.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-65-ningjuli-museum-postcard-front.png",
+    "motifFile": "base-65-ningjuli-museum-motif.png",
+    "motifCrop": {
+      "x": 360,
+      "y": 850,
+      "width": 664,
+      "height": 686
+    },
+    "coverFile": "base-65-ningjuli-museum-cover.webp"
+  },
+  {
+    "id": 69,
+    "baseName": "江南制造总局旧址（江南造船厂工人革命斗争地旧址）",
+    "imageUrl": "/images/education-bases/base-69-jiangnan-manufacturing-bureau-cover.webp",
+    "imageAlt": "江南制造总局旧址（江南造船厂工人革命斗争地旧址）主题插画",
+    "imageSourceName": "上海市文旅推广网",
+    "imageSourceUrl": "https://www.meet-in-shanghai.net/cn/shanghai-cultural-relics-protection-unit/the-former-site-of-the-jiangnan-manufacturing-bureau-286306/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-69-jiangnan-manufacturing-bureau-postcard-front.png",
+    "motifFile": "base-69-jiangnan-manufacturing-bureau-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 920,
+      "width": 744,
+      "height": 580
+    },
+    "coverFile": "base-69-jiangnan-manufacturing-bureau-cover.webp"
+  },
+  {
+    "id": 72,
+    "baseName": "太仓第一个党支部纪念馆",
+    "imageUrl": "/images/education-bases/base-72-taicang-first-branch-cover.webp",
+    "imageAlt": "太仓第一个党支部纪念馆主题插画",
+    "imageSourceName": "苏州市住房和城乡建设局",
+    "imageSourceUrl": "https://www.suzhou.gov.cn/tetyxcjs/sdfc/202201/8bf5fa85a6bc42d9a8640e0b1d33e170.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-72-taicang-first-branch-postcard-front.png",
+    "motifFile": "base-72-taicang-first-branch-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 780,
+      "width": 704,
+      "height": 756
+    },
+    "coverFile": "base-72-taicang-first-branch-cover.webp"
+  },
+  {
+    "id": 78,
+    "baseName": "新四军六师师部旧址纪念馆",
+    "imageUrl": "/images/education-bases/base-78-sixth-division-cover.webp",
+    "imageAlt": "新四军六师师部旧址纪念馆主题插画",
+    "imageSourceName": "无锡市锡山区人民政府办公室",
+    "imageSourceUrl": "https://www.jsxishan.gov.cn/doc/2025/08/26/4636731.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-78-sixth-division-postcard-front.png",
+    "motifFile": "base-78-sixth-division-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 880,
+      "width": 744,
+      "height": 656
+    },
+    "coverFile": "base-78-sixth-division-cover.webp"
+  },
+  {
+    "id": 83,
+    "baseName": "吴江党史馆",
+    "imageUrl": "/images/education-bases/base-83-wujiang-history-cover.webp",
+    "imageAlt": "吴江党史馆主题插画",
+    "imageSourceName": "苏州市吴江区人民政府",
+    "imageSourceUrl": "https://www.wujiang.gov.cn/zgwj/bmdt/202407/af2f191b295b4bcea2db8e12aba1328c.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-83-wujiang-history-postcard-front.png",
+    "motifFile": "base-83-wujiang-history-motif.png",
+    "motifCrop": {
+      "x": 285,
+      "y": 720,
+      "width": 739,
+      "height": 785
+    },
+    "coverFile": "base-83-wujiang-history-cover.webp"
+  },
+  {
+    "id": 84,
+    "baseName": "柳亚子纪念馆",
+    "imageUrl": "/images/education-bases/base-84-liu-yazi-cover.webp",
+    "imageAlt": "柳亚子纪念馆主题插画",
+    "imageSourceName": "国务院参事室",
+    "imageSourceUrl": "https://www.counsellor.gov.cn/2021-07/07/c_1211231144.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-84-liu-yazi-postcard-front.png",
+    "motifFile": "base-84-liu-yazi-motif.png",
+    "motifCrop": {
+      "x": 304,
+      "y": 800,
+      "width": 686,
+      "height": 670
+    },
+    "coverFile": "base-84-liu-yazi-cover.webp"
+  },
+  {
+    "id": 85,
+    "baseName": "南社通讯处旧址",
+    "imageUrl": "/images/education-bases/base-85-nanshe-office-cover.webp",
+    "imageAlt": "南社通讯处旧址主题插画",
+    "imageSourceName": "苏州市园林和绿化管理局",
+    "imageSourceUrl": "https://ylj.suzhou.gov.cn/szsylj/ylml/201912/097988765cc8496dadf1b363139c0566.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-85-nanshe-office-postcard-front.png",
+    "motifFile": "base-85-nanshe-office-motif.png",
+    "motifCrop": {
+      "x": 250,
+      "y": 700,
+      "width": 774,
+      "height": 820
+    },
+    "coverFile": "base-85-nanshe-office-cover.webp"
+  },
+  {
+    "id": 88,
+    "baseName": "费孝通江村纪念馆",
+    "imageUrl": "/images/education-bases/base-88-fei-xiaotong-cover.webp",
+    "imageAlt": "费孝通江村纪念馆主题插画",
+    "imageSourceName": "江苏统一战线（来源：苏州市委统战部）",
+    "imageSourceUrl": "https://www.jstz.gov.cn/a/20210324/1616553951909.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-88-fei-xiaotong-postcard-front.png",
+    "motifFile": "base-88-fei-xiaotong-motif.png",
+    "motifCrop": {
+      "x": 315,
+      "y": 760,
+      "width": 709,
+      "height": 776
+    },
+    "coverFile": "base-88-fei-xiaotong-cover.webp"
+  },
+  {
+    "id": 90,
+    "baseName": "吴江区融入式党建展示馆",
+    "imageUrl": "/images/education-bases/base-90-wujiang-party-exhibition-cover.webp",
+    "imageAlt": "吴江区融入式党建展示馆主题插画",
+    "imageSourceName": "北京高校现代远程教育研究",
+    "imageSourceUrl": "https://cmscdn.chinaedu.net/uploadfile/2021/0830/20210830021347611.pdf",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-90-wujiang-party-exhibition-postcard-front.png",
+    "motifFile": "base-90-wujiang-party-exhibition-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 700,
+      "width": 724,
+      "height": 560
+    },
+    "coverFile": "base-90-wujiang-party-exhibition-cover.webp"
+  },
+  {
+    "id": 96,
+    "baseName": "暴式昭纪念馆",
+    "imageUrl": "/images/education-bases/base-96-bao-shizhao-cover.webp",
+    "imageAlt": "暴式昭纪念馆主题插画",
+    "imageSourceName": "苏州市应急管理局",
+    "imageSourceUrl": "https://yjglj.suzhou.gov.cn/szsafety/tpxw/202007/ff7cc5c306e94988ad7f028c5c520892.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-96-bao-shizhao-postcard-front.png",
+    "motifFile": "base-96-bao-shizhao-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 800,
+      "width": 724,
+      "height": 736
+    },
+    "coverFile": "base-96-bao-shizhao-cover.webp"
+  },
+  {
+    "id": 111,
+    "baseName": "苏州市党风廉政警示教育基地",
+    "imageUrl": "/images/education-bases/base-111-suzhou-integrity-education-cover.webp",
+    "imageAlt": "苏州市党风廉政警示教育基地主题插画",
+    "imageSourceName": "苏州市住房和城乡建设局",
+    "imageSourceUrl": "https://zfcjj.suzhou.gov.cn/szszjj/xdsdtxx/202208/08086c49225044999e3ea75c23a6ec46.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-111-suzhou-integrity-education-postcard-front.png",
+    "motifFile": "base-111-suzhou-integrity-education-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 940,
+      "width": 686,
+      "height": 596
+    },
+    "coverFile": "base-111-suzhou-integrity-education-cover.webp"
+  },
+  {
+    "id": 112,
+    "baseName": "李公堤勤廉文化馆",
+    "imageUrl": "/images/education-bases/base-112-ligongdi-integrity-cover.webp",
+    "imageAlt": "李公堤勤廉文化馆主题插画",
+    "imageSourceName": "金鸡湖景区",
+    "imageSourceUrl": "https://jinjilake.sipac.gov.cn/zuixinzixun_article-342-3761.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-112-ligongdi-integrity-postcard-front.png",
+    "motifFile": "base-112-ligongdi-integrity-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 680,
+      "width": 744,
+      "height": 840
+    },
+    "coverFile": "base-112-ligongdi-integrity-cover.webp"
+  },
+  {
+    "id": 114,
+    "baseName": "团结社区“葑水清莲”文化展示馆",
+    "imageUrl": "/images/education-bases/base-114-fengshui-qinglian-cover.webp",
+    "imageAlt": "团结社区“葑水清莲”文化展示馆主题插画",
+    "imageSourceName": "扬子晚报紫牛新闻",
+    "imageSourceUrl": "https://wap.yzwb.net/news_details.html?id=3390389",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-114-fengshui-qinglian-postcard-front.png",
+    "motifFile": "base-114-fengshui-qinglian-motif.png",
+    "motifCrop": {
+      "x": 245,
+      "y": 740,
+      "width": 779,
+      "height": 770
+    },
+    "coverFile": "base-114-fengshui-qinglian-cover.webp"
+  },
+  {
+    "id": 115,
+    "baseName": "葑谊村史展示馆",
+    "imageUrl": "/images/education-bases/base-115-fengyi-village-history-cover.webp",
+    "imageAlt": "葑谊村史展示馆主题插画",
+    "imageSourceName": "公开政务内容转载页",
+    "imageSourceUrl": "https://www.sohu.com/a/841795334_121106832",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-115-fengyi-village-history-postcard-front.png",
+    "motifFile": "base-115-fengyi-village-history-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 750,
+      "width": 704,
+      "height": 786
+    },
+    "coverFile": "base-115-fengyi-village-history-cover.webp"
+  },
+  {
+    "id": 147,
+    "baseName": "沙洲县抗日民主政府纪念馆",
+    "imageUrl": "/images/education-bases/base-147-shazhou-government-cover.webp",
+    "imageAlt": "沙洲县抗日民主政府纪念馆主题插画",
+    "imageSourceName": "遇见张家港（搜狐转载页）",
+    "imageSourceUrl": "https://www.sohu.com/a/700553286_121123811",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-147-shazhou-government-postcard-front.png",
+    "motifFile": "base-147-shazhou-government-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 875,
+      "width": 724,
+      "height": 661
+    },
+    "coverFile": "base-147-shazhou-government-cover.webp"
+  },
+  {
+    "id": 148,
+    "baseName": "红色新沙洲党史教育馆",
+    "imageUrl": "/images/education-bases/base-148-red-xinshazhou-cover.webp",
+    "imageAlt": "红色新沙洲党史教育馆主题插画",
+    "imageSourceName": "张家港市人民政府",
+    "imageSourceUrl": "https://www.zjg.gov.cn/zjg/xcfwxx/202208/b215ba0801de4cc4b776338d67908877.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-148-red-xinshazhou-postcard-front.png",
+    "motifFile": "base-148-red-xinshazhou-motif.png",
+    "motifCrop": {
+      "x": 160,
+      "y": 960,
+      "width": 864,
+      "height": 576
+    },
+    "coverFile": "base-148-red-xinshazhou-cover.webp"
+  }
+]

@@ -1,0 +1,61 @@
+-- education-base-visuals 批量发布：仅绑定已通过四项验收的明信片主插图封面。
+begin;
+
+update public.education_bases as base
+set image_url = visual.image_url,
+    image_storage_path = null,
+    image_alt = visual.image_alt,
+    image_source_url = visual.image_source_url,
+    image_rights_status = visual.image_rights_status
+from (values
+  (1, '/images/education-bases/base-1-shajiabang-memorial-cover.jpg', '沙家浜革命历史纪念馆主题插画', 'https://www.jsdsw.org.cn/web/detail/detail.html?id=7090', 'reference-only'),
+  (2, '/images/education-bases/base-2-changshu-resistance-cover.jpg', '常熟县人民抗日自卫会纪念馆主题插画', 'https://www.changshu.gov.cn/zgcs/c108191/201912/a57a61b951f84a0c9c30afab8395f901.shtml', 'reference-only'),
+  (5, '/images/education-bases/base-5-yijia-community-hub-cover.webp', '常熟市常福街道‘益家营造中心’主题插画', 'https://www.sohu.com/a/734506543_121123700', 'reference-only'),
+  (7, '/images/education-bases/base-7-changshu-city-gallery-cover.jpg', '常熟城市展示馆主题插画', 'https://www.changshu.gov.cn/zgcs/c100297/202508/1bf5f06fa135498bb978e133d59185b0.shtml', 'reference-only'),
+  (10, '/images/education-bases/base-10-shushan-2035-cover.webp', '苏州高新区树山2035乡村振兴实践展示馆主题插画', 'https://www.siso.edu.cn/info/1023/9029.htm', 'reference-only'),
+  (12, '/images/education-bases/base-12-smart-manufacturing-center-cover.webp', '苏州智能制造融合发展服务中心主题插画', 'https://www.zhaopin.com/companydetail/CC194296225.htm', 'reference-only'),
+  (15, '/images/education-bases/base-15-china-nanshe-memorial-cover.webp', '中国南社纪念馆主题插画', 'https://www.sohu.com/a/413856150_120083328', 'reference-only'),
+  (22, '/images/education-bases/base-22-canglang-service-no1-cover.webp', '沧浪街道党群服务1号店主题插画', 'https://jsnews.jschina.com.cn/sz/a/202012/t20201223_2696088.shtml', 'reference-only'),
+  (23, '/images/education-bases/base-23-jinfan-community-hub-cover.webp', '双塔街道锦帆路社区党群服务中心主题插画', 'https://www.sohu.com/a/497648500_121117475', 'reference-only'),
+  (24, '/images/education-bases/base-24-guanqian-community-hub-cover.webp', '平江街道观前社区党群服务中心主题插画', 'https://www.12371.cn/2023/08/18/ARTI1692354828001426.shtml', 'reference-only'),
+  (25, '/images/education-bases/base-25-digital-innovation-hub-cover.webp', '长三角数字经济双创中心主题插画', 'https://www.sohu.com/a/980250839_121342467', 'reference-only'),
+  (27, '/images/education-bases/base-27-bai-juyi-garden-cover.webp', '名城集团白居易纪念苑主题插画', 'https://touch.travel.qunar.com/comment/4563545', 'reference-only'),
+  (29, '/images/education-bases/base-29-suzhou-revolution-museum-cover.webp', '苏州革命博物馆主题插画', 'https://www.szgmbwg.org.cn/szgmbwg/sjdt/202305/735132d3d0fa44f795cdf0bcbf3ac8c8.shtml', 'reference-only'),
+  (31, '/images/education-bases/base-31-grand-canal-heritage-cover.webp', '苏州大运河遗产馆主题插画', 'https://ecywang.com/pic/%E8%8B%8F%E5%B7%9E%E5%A4%A7%E8%BF%90%E6%B2%B3%E9%81%97%E4%BA%A7%E5%B1%95%E7%A4%BA%E9%A6%86/', 'reference-only'),
+  (32, '/images/education-bases/base-32-suzhou-museum-cover.webp', '苏州博物馆主题插画', 'https://news.cgtn.com/news/2023-07-07/The-charm-of-Venice-of-the-East--1lf2w8ZUz9S/index.html', 'reference-only'),
+  (33, '/images/education-bases/base-33-suzhou-chamber-museum-cover.webp', '苏州商会博物馆主题插画', 'https://szsgsl.suzhou.com.cn/szsgsl/tpxw/202503/e73f476e4df94c78a60dc6ec520b4f7a.shtml', 'reference-only'),
+  (34, '/images/education-bases/base-34-nanhu-revolution-memorial-cover.webp', '南湖革命纪念馆主题插画', 'https://global.chinadaily.com.cn/a/202606/05/WS6a220fe8a310d6866eb4c877.html', 'reference-only'),
+  (35, '/images/education-bases/base-35-gu-yanwu-memorial-cover.webp', '顾炎武纪念馆主题插画', 'https://www.ksrmtzx.com/news/detail/170171', 'reference-only'),
+  (36, '/images/education-bases/base-36-kunshan-road-exhibition-cover.webp', '“与时俱进的昆山之路”成果展主题插画', 'https://www.ksrmtzx.com/news/detail/44820', 'reference-only'),
+  (44, '/images/education-bases/base-44-kunshan-party-life-cover.webp', '昆山市党员政治生活馆主题插画', 'https://sph.fudan.edu.cn/a/230', 'reference-only'),
+  (53, '/images/education-bases/base-53-first-cpc-congress-cover.webp', '中共一大纪念馆主题插画', 'https://www.zgyd1921.com/information/news/61668557042042219aa3bd99ccb260c8.html', 'reference-only'),
+  (54, '/images/education-bases/base-54-second-cpc-congress-cover.webp', '中共二大会址纪念馆主题插画', 'https://www.jingan.gov.cn/rmtzx/003001/20221020/3b41a2d1-c7dd-4ee0-a634-a23763dea448.html', 'reference-only'),
+  (55, '/images/education-bases/base-55-songhu-war-memorial-cover.webp', '淞沪抗战纪念馆主题插画', 'https://www.shanghai.gov.cn/hsly/20260625/c7cee09ac49746f5bdf8d5667c231ffe.html', 'reference-only'),
+  (56, '/images/education-bases/base-56-yuyangli-cover.webp', '中国社会主义青年团中央机关旧址纪念馆主题插画', 'https://www.meet-in-shanghai.net/cn/museums/the-memorial-hall-of-the-former-site-of-the-central-organ-of-the-chinese-socialist-youth-league-410375/', 'reference-only'),
+  (57, '/images/education-bases/base-57-central-bureau-cover.webp', '中共三大后中央局机关历史纪念馆主题插画', 'https://www.shjjjc.gov.cn/2015jjw/n2346/n2349/u1ai64394.html', 'reference-only'),
+  (58, '/images/education-bases/base-58-fourth-cpc-congress-cover.webp', '中共四大纪念馆主题插画', 'https://www.shhk.gov.cn/qyfwy/030002/030002002/030002002005/20181215/9d721f93-87eb-41a0-9ee4-1582e46e3edf.html', 'reference-only'),
+  (59, '/images/education-bases/base-59-mao-shanghai-residence-cover.webp', '上海毛泽东旧居陈列馆主题插画', 'https://www.jingan.gov.cn/rmtzx/003001/20201014/e3dbcaa5-d63b-4782-9229-bc58c2a0f410.html', 'reference-only'),
+  (60, '/images/education-bases/base-60-sun-yat-sen-residence-cover.webp', '上海孙中山故居纪念馆主题插画', 'https://english.shanghai.gov.cn/en-MuseumsGalleries/20240717/c12d1b709741429ebcada33563c3623f.html', 'reference-only'),
+  (61, '/images/education-bases/base-61-soong-ching-ling-residence-cover.webp', '上海宋庆龄故居纪念馆主题插画', 'https://shsoong-chingling.com/', 'reference-only'),
+  (62, '/images/education-bases/base-62-chen-yun-memorial-cover.webp', '陈云故居、陈云纪念馆主题插画', 'https://www.cyjng.net/h-nd-137.html', 'reference-only'),
+  (63, '/images/education-bases/base-63-shanghai-underground-cover.webp', '中国上海地下组织斗争史陈列馆主题插画', 'https://www.shjjjc.gov.cn/2015jjw/n2346/n2349/u1ai63691.html', 'reference-only'),
+  (65, '/images/education-bases/base-65-ningjuli-museum-cover.webp', '上海凝聚力工程博物馆主题插画', 'https://www.shcn.gov.cn/col3991/20230703/1239373.html', 'reference-only'),
+  (69, '/images/education-bases/base-69-jiangnan-manufacturing-bureau-cover.webp', '江南制造总局旧址（江南造船厂工人革命斗争地旧址）主题插画', 'https://www.meet-in-shanghai.net/cn/shanghai-cultural-relics-protection-unit/the-former-site-of-the-jiangnan-manufacturing-bureau-286306/', 'reference-only'),
+  (72, '/images/education-bases/base-72-taicang-first-branch-cover.webp', '太仓第一个党支部纪念馆主题插画', 'https://www.suzhou.gov.cn/tetyxcjs/sdfc/202201/8bf5fa85a6bc42d9a8640e0b1d33e170.shtml', 'reference-only'),
+  (78, '/images/education-bases/base-78-sixth-division-cover.webp', '新四军六师师部旧址纪念馆主题插画', 'https://www.jsxishan.gov.cn/doc/2025/08/26/4636731.shtml', 'reference-only'),
+  (83, '/images/education-bases/base-83-wujiang-history-cover.webp', '吴江党史馆主题插画', 'https://www.wujiang.gov.cn/zgwj/bmdt/202407/af2f191b295b4bcea2db8e12aba1328c.shtml', 'reference-only'),
+  (84, '/images/education-bases/base-84-liu-yazi-cover.webp', '柳亚子纪念馆主题插画', 'https://www.counsellor.gov.cn/2021-07/07/c_1211231144.htm', 'reference-only'),
+  (85, '/images/education-bases/base-85-nanshe-office-cover.webp', '南社通讯处旧址主题插画', 'https://ylj.suzhou.gov.cn/szsylj/ylml/201912/097988765cc8496dadf1b363139c0566.shtml', 'reference-only'),
+  (88, '/images/education-bases/base-88-fei-xiaotong-cover.webp', '费孝通江村纪念馆主题插画', 'https://www.jstz.gov.cn/a/20210324/1616553951909.shtml', 'reference-only'),
+  (90, '/images/education-bases/base-90-wujiang-party-exhibition-cover.webp', '吴江区融入式党建展示馆主题插画', 'https://cmscdn.chinaedu.net/uploadfile/2021/0830/20210830021347611.pdf', 'reference-only'),
+  (96, '/images/education-bases/base-96-bao-shizhao-cover.webp', '暴式昭纪念馆主题插画', 'https://yjglj.suzhou.gov.cn/szsafety/tpxw/202007/ff7cc5c306e94988ad7f028c5c520892.shtml', 'reference-only'),
+  (111, '/images/education-bases/base-111-suzhou-integrity-education-cover.webp', '苏州市党风廉政警示教育基地主题插画', 'https://zfcjj.suzhou.gov.cn/szszjj/xdsdtxx/202208/08086c49225044999e3ea75c23a6ec46.shtml', 'reference-only'),
+  (112, '/images/education-bases/base-112-ligongdi-integrity-cover.webp', '李公堤勤廉文化馆主题插画', 'https://jinjilake.sipac.gov.cn/zuixinzixun_article-342-3761.html', 'reference-only'),
+  (114, '/images/education-bases/base-114-fengshui-qinglian-cover.webp', '团结社区“葑水清莲”文化展示馆主题插画', 'https://wap.yzwb.net/news_details.html?id=3390389', 'reference-only'),
+  (115, '/images/education-bases/base-115-fengyi-village-history-cover.webp', '葑谊村史展示馆主题插画', 'https://www.sohu.com/a/841795334_121106832', 'reference-only'),
+  (147, '/images/education-bases/base-147-shazhou-government-cover.webp', '沙洲县抗日民主政府纪念馆主题插画', 'https://www.sohu.com/a/700553286_121123811', 'reference-only'),
+  (148, '/images/education-bases/base-148-red-xinshazhou-cover.webp', '红色新沙洲党史教育馆主题插画', 'https://www.zjg.gov.cn/zjg/xcfwxx/202208/b215ba0801de4cc4b776338d67908877.shtml', 'reference-only')
+) as visual(id, image_url, image_alt, image_source_url, image_rights_status)
+where base.id = visual.id;
+
+commit;
