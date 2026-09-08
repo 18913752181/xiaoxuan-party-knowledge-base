@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import type { Material } from "@/lib/types";
 import { WorkClassificationFields } from "@/components/WorkClassificationFields";
 
@@ -43,6 +43,43 @@ const emptyForm = {
 const splitList = (value = "") => value.split(/[,，、\n]/).map((item) => item.trim()).filter(Boolean);
 const titleFromFileName = (fileName = "") => fileName.replace(/\.(docx?|xlsx?|pdf|pptx?)$/i, "").trim();
 const supportedFilePattern = /\.(docx?|xlsx?|pdf|pptx?)$/i;
+
+type FileSystemEntryLike = {
+  isFile: boolean;
+  isDirectory: boolean;
+  file?: (success: (file: File) => void, failure?: (error: DOMException) => void) => void;
+  createReader?: () => {
+    readEntries: (success: (entries: FileSystemEntryLike[]) => void, failure?: (error: DOMException) => void) => void;
+  };
+};
+
+type DataTransferItemWithEntry = DataTransferItem & {
+  webkitGetAsEntry?: () => FileSystemEntryLike | null;
+};
+
+async function readEntry(entry: FileSystemEntryLike): Promise<File[]> {
+  if (entry.isFile && entry.file) {
+    return new Promise((resolve, reject) => entry.file?.((file) => resolve([file]), reject));
+  }
+  if (!entry.isDirectory || !entry.createReader) return [];
+
+  const reader = entry.createReader();
+  const children: FileSystemEntryLike[] = [];
+  while (true) {
+    const batch = await new Promise<FileSystemEntryLike[]>((resolve, reject) => reader.readEntries(resolve, reject));
+    if (!batch.length) break;
+    children.push(...batch);
+  }
+  return (await Promise.all(children.map(readEntry))).flat();
+}
+
+async function readDroppedFiles(dataTransfer: DataTransfer) {
+  const entries = Array.from(dataTransfer.items)
+    .map((item) => (item as DataTransferItemWithEntry).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined)
+    .filter(Boolean) as FileSystemEntryLike[];
+  if (!entries.length) return Array.from(dataTransfer.files);
+  return (await Promise.all(entries.map(readEntry))).flat();
+}
 
 function fileTypeFromName(fileName: string) {
   const ext = fileName.split(".").pop()?.toLowerCase();
@@ -113,7 +150,7 @@ export default function AdminNewPage() {
   }, []);
 
   const fileInfos = useMemo(() => files.map((file) => ({
-    name: file.name,
+    name: file.webkitRelativePath || file.name,
     type: fileTypeFromName(file.name),
     size: formatSize(file.size)
   })), [files]);
@@ -125,9 +162,9 @@ export default function AdminNewPage() {
 
   function addFiles(nextFiles: File[]) {
     const supportedFiles = nextFiles.filter((file) => supportedFilePattern.test(file.name));
-    const existingKeys = new Set(files.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
+    const existingKeys = new Set(files.map((file) => `${file.webkitRelativePath || file.name}-${file.size}-${file.lastModified}`));
     const uniqueFiles = supportedFiles.filter((file) => {
-      const key = `${file.name}-${file.size}-${file.lastModified}`;
+      const key = `${file.webkitRelativePath || file.name}-${file.size}-${file.lastModified}`;
       if (existingKeys.has(key)) return false;
       existingKeys.add(key);
       return true;
@@ -139,7 +176,8 @@ export default function AdminNewPage() {
       ...current,
       title: combinedFiles.length === 1 ? titleFromFileName(combinedFiles[0].name) : ""
     }));
-    if (supportedFiles.length !== nextFiles.length) setStatus("已忽略不支持的文件，仅接受 Word、Excel、PDF、PPT。");
+    if (!nextFiles.length) setStatus("文件夹中没有可读取的文件。");
+    else if (supportedFiles.length !== nextFiles.length) setStatus("已忽略不支持的文件，仅接受 Word、Excel、PDF、PPT。");
     else if (!uniqueFiles.length && nextFiles.length) setStatus("这些文件已经在上传列表中。");
     else setStatus("");
   }
@@ -215,27 +253,48 @@ export default function AdminNewPage() {
         <p className="mt-3 text-sm leading-7 text-[#6d746f]">上传资料文件，补充知识说明，形成可下载、可检索、可关联的资料节点。</p>
 
         <Section title="一、上传资料文件">
-          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT，可把多份文件直接拖进下方区域，也可以分多次选择追加。批量上传会使用下方相同的专题、会员权限和知识说明。</p>
+          <p className="text-sm text-[#717b75]">支持 Word、Excel、PDF、PPT，可拖入多份文件或整个文件夹，也可以分多次选择追加。文件夹中的子文件夹会一并读取，批量上传统一使用下方的专题、会员权限和知识说明。</p>
           <div
             onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
             onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; setIsDragging(true); }}
             onDragLeave={(event) => { event.preventDefault(); if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDragging(false); }}
-            onDrop={(event) => {
+            onDrop={async (event) => {
               event.preventDefault();
               setIsDragging(false);
-              addFiles(Array.from(event.dataTransfer.files));
+              setStatus("正在读取文件夹...");
+              try {
+                addFiles(await readDroppedFiles(event.dataTransfer));
+              } catch {
+                setStatus("文件夹读取失败，请改用“选择文件夹”按钮。");
+              }
             }}
             className={`mt-4 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition ${isDragging ? "border-[#6f8f7e] bg-[#edf3ef]" : "border-[#d7d0c5] bg-[#fffdf8]"}`}
           >
-            <p className="font-medium text-[#48524c]">{isDragging ? "松开鼠标，添加这些资料" : "拖动多份资料到这里"}</p>
+            <p className="font-medium text-[#48524c]">{isDragging ? "松开鼠标，读取这些资料" : "拖动多份资料或整个文件夹到这里"}</p>
             <p className="mt-2 text-xs text-[#8b918d]">或</p>
-            <label htmlFor="batch-material-files" className="mt-3 inline-flex cursor-pointer rounded-full bg-[#6f8f7e] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5d7c6c]">选择多份文件</label>
+            <div className="mt-3 flex flex-wrap justify-center gap-3">
+              <label htmlFor="batch-material-files" className="inline-flex cursor-pointer rounded-full bg-[#6f8f7e] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5d7c6c]">选择多份文件</label>
+              <label htmlFor="batch-material-folder" className="inline-flex cursor-pointer rounded-full border border-[#bfc9c2] bg-white px-5 py-2.5 text-sm font-medium text-[#53645a] transition hover:bg-[#f3f6f4]">选择文件夹</label>
+            </div>
             <input
               key={fileInputKey}
               id="batch-material-files"
               type="file"
               multiple
               accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
+              onChange={(event) => {
+                addFiles(Array.from(event.target.files || []));
+                event.currentTarget.value = "";
+              }}
+              className="sr-only"
+            />
+            <input
+              key={`folder-${fileInputKey}`}
+              id="batch-material-folder"
+              type="file"
+              multiple
+              accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
+              {...({ webkitdirectory: "", directory: "" } as InputHTMLAttributes<HTMLInputElement>)}
               onChange={(event) => {
                 addFiles(Array.from(event.target.files || []));
                 event.currentTarget.value = "";
