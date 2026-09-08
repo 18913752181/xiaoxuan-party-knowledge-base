@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/dashboard/dashboard",
     "pages/calculator/calculator",
     "pages/result/result",
     "pages/flow/flow",
@@ -11,12 +12,13 @@
     "pages/favorites/favorites"
   ],
   "window": {
-    "navigationBarTitleText": "宣知工作助手",
-    "navigationBarBackgroundColor": "#faf6f0",
+    "navigationBarTitleText": "喵喵工具箱",
+    "navigationBarBackgroundColor": "#f8f9f7",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#faf6f0",
-    "backgroundTextStyle": "light"
+    "backgroundColor": "#f8f9f7",
+    "backgroundTextStyle": "dark"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
+

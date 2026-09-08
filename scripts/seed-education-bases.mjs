@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const rawBases = require("../miniprogram/config/education-bases.js");
 const rawLocations = require("../miniprogram/config/education-locations.js");
+const rawGuideServices = require("../miniprogram/config/education-guide-services.js");
 
 const districtMap = { "常熟": "常熟市", "高新区": "高新区", "姑苏": "姑苏区", "昆山": "昆山市", "太仓": "太仓市", "吴江": "吴江区", "吴中": "吴中区", "相城": "相城区", "园区": "工业园区", "张家港": "张家港市" };
 function region(base, location) {
@@ -16,6 +17,7 @@ function region(base, location) {
 
 const rows = rawBases.map((base, index) => {
   const location = rawLocations[String(base.id)];
+  const guide = rawGuideServices[String(base.id)];
   return {
     id: base.id,
     name: base.name,
@@ -26,6 +28,11 @@ const rows = rawBases.map((base, index) => {
     icon: base.icon || "⌖",
     contact: base.contact || "联系信息待核实",
     source_url: base.source || null,
+    has_guided_tour: guide?.hasGuidedTour ?? null,
+    guide_fee: guide?.guideFee || null,
+    guide_service_note: guide?.guideServiceNote || null,
+    guide_source_url: guide?.guideSourceUrl || null,
+    guide_verified_at: guide?.guideVerifiedAt || null,
     address: location?.address || null,
     latitude: location?.latitude ?? null,
     longitude: location?.longitude ?? null,

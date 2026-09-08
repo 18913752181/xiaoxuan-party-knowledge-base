@@ -1,9 +1,9 @@
 {
-  "description": "党员发展时间助手第一版",
+  "description": "喵喵工具箱微信小程序",
   "compileType": "miniprogram",
   "libVersion": "3.17.0",
   "miniprogramRoot": "./",
-  "projectname": "党员发展时间助手",
+  "projectname": "喵喵工具箱",
   "appid": "wxfa7b15cdbb16a761",
   "packOptions": {
     "ignore": [
@@ -42,6 +42,22 @@
       {
         "type": "folder",
         "value": "assets/icons/structured3d"
+      },
+      {
+        "type": "file",
+        "value": "assets/education-bases/taihu-guerrilla-memorial-illustration-hd.png"
+      },
+      {
+        "type": "file",
+        "value": "assets/education-bases/park-experience-motif.png"
+      },
+      {
+        "type": "file",
+        "value": "assets/education-bases/taihu-guerrilla-memorial-illustration-hd.webp"
+      },
+      {
+        "type": "file",
+        "value": "assets/education-bases/park-experience-motif.webp"
       }
     ],
     "include": []

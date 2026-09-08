@@ -1,5 +1,6 @@
 const rawBases = require("../config/education-bases");
 const locations = require("../config/education-locations");
+const guideServices = require("../config/education-guide-services");
 
 const PI = Math.PI;
 const EARTH_A = 6378245.0;
@@ -39,13 +40,71 @@ function normalizeLocation(location) {
   return { ...location, ...coordinate, coordinateType: "gcj02" };
 }
 
-const bases = rawBases.map((item) => ({
-  ...item,
-  location: normalizeLocation(locations[String(item.id)]),
-  locationStatus: locations[String(item.id)]
-    ? (locations[String(item.id)].confidence === "verified" ? "位置已核实" : "公开位置已匹配")
-    : "位置待核实"
-}));
+const SUZHOU_DISTRICTS = {
+  "常熟": "常熟市",
+  "高新区": "高新区",
+  "姑苏": "姑苏区",
+  "昆山": "昆山市",
+  "太仓": "太仓市",
+  "吴江": "吴江区",
+  "吴中": "吴中区",
+  "相城": "相城区",
+  "园区": "工业园区",
+  "张家港": "张家港市"
+};
+
+function districtFromAddress(city, address) {
+  if (!address) return "区县待确认";
+  const cityName = city.replace("市", "");
+  const match = address.match(new RegExp(`${cityName}市?([^省市]{1,8}(?:区|县|市))`));
+  return match ? match[1] : "区县待确认";
+}
+
+function normalizeRegion(item, location) {
+  if (SUZHOU_DISTRICTS[item.area]) {
+    return { city: "苏州市", district: SUZHOU_DISTRICTS[item.area] };
+  }
+  const city = item.area.endsWith("市") ? item.area : `${item.area}市`;
+  return { city, district: districtFromAddress(city, location && location.address) };
+}
+
+function normalizeBase(item) {
+  const sourceLocation = locations[String(item.id)];
+  const suppliedLocation = Object.prototype.hasOwnProperty.call(item, "location") ? item.location : sourceLocation;
+  const location = normalizeLocation(suppliedLocation);
+  const region = item.city && item.district
+    ? { city: item.city, district: item.district }
+    : normalizeRegion(item, location);
+  const fallbackGuide = guideServices[String(item.id)];
+  const suppliedGuide = Object.prototype.hasOwnProperty.call(item, "guideService")
+    ? item.guideService
+    : fallbackGuide ? {
+      available: fallbackGuide.hasGuidedTour,
+      fee: fallbackGuide.guideFee || null,
+      note: fallbackGuide.guideServiceNote || null,
+      sourceUrl: fallbackGuide.guideSourceUrl || null,
+      verifiedAt: fallbackGuide.guideVerifiedAt || null
+    } : null;
+  return {
+    ...item,
+    ...region,
+    area: item.area || region.district,
+    location,
+    guideService: suppliedGuide,
+    hasGuideInfo: Boolean(suppliedGuide && (suppliedGuide.available !== null || suppliedGuide.fee || suppliedGuide.note)),
+    locationStatus: location
+      ? (location.confidence === "verified" ? "位置已核实" : location.confidence === "probable" ? "公开位置已匹配" : "位置待核实")
+      : "位置待核实"
+  };
+}
+
+let bases = rawBases.map(normalizeBase);
+
+function replaceBases(items) {
+  if (!Array.isArray(items)) return false;
+  bases = items.map(normalizeBase);
+  return true;
+}
 
 const FAVORITE_KEY = "xiaoxuan_education_favorite_ids";
 const ROUTE_KEY = "xiaoxuan_education_route_ids";
@@ -62,6 +121,22 @@ function getAreas() {
   return [...new Set(bases.map((item) => item.area))];
 }
 
+function getCities() {
+  const preferredOrder = ["苏州市", "上海市", "无锡市", "嘉兴市"];
+  const values = [...new Set(bases.map((item) => item.city))];
+  return preferredOrder.filter((item) => values.includes(item)).concat(values.filter((item) => !preferredOrder.includes(item)));
+}
+
+function getDistricts(city) {
+  if (!city || city === "全部城市") return [];
+  return [...new Set(bases.filter((item) => item.city === city).map((item) => item.district))]
+    .sort((left, right) => {
+      if (left === "区县待确认") return 1;
+      if (right === "区县待确认") return -1;
+      return left.localeCompare(right, "zh-CN");
+    });
+}
+
 function getMappedBases() {
   return bases.filter((item) => item.location);
 }
@@ -71,11 +146,11 @@ function getMapMarkers(items = getMappedBases()) {
     id: Number(item.id),
     latitude: item.location.latitude,
     longitude: item.location.longitude,
-    width: 32,
-    height: 40,
+    width: 22,
+    height: 24,
     anchorX: 0.5,
-    anchorY: 1,
-    iconPath: "/assets/education-map-marker.png",
+    anchorY: 0.92,
+    iconPath: "/assets/education-map-marker-small.png",
     callout: {
       content: item.name,
       color: "#654638",
@@ -92,13 +167,15 @@ function getBaseById(id) {
   return bases.find((item) => String(item.id) === String(id));
 }
 
-function searchBases({ keyword = "", type = "全部", area = "全部" } = {}) {
+function searchBases({ keyword = "", type = "全部", area = "全部", city = "全部城市", district = "全部区县" } = {}) {
   const query = keyword.trim().toLowerCase();
   return bases.filter((item) => {
     const matchesType = type === "全部" || item.type === type;
     const matchesArea = area === "全部" || item.area === area;
-    const haystack = [item.name, item.type, item.area, item.intro, item.status].join(" ").toLowerCase();
-    return matchesType && matchesArea && (!query || haystack.includes(query));
+    const matchesCity = city === "全部城市" || item.city === city;
+    const matchesDistrict = district === "全部区县" || item.district === district;
+    const haystack = [item.name, item.type, item.area, item.city, item.district, item.intro, item.status].join(" ").toLowerCase();
+    return matchesType && matchesArea && matchesCity && matchesDistrict && (!query || haystack.includes(query));
   });
 }
 
@@ -151,9 +228,12 @@ function addRouteStop(id) {
 }
 
 module.exports = {
+  replaceBases,
   getBases,
   getTypes,
   getAreas,
+  getCities,
+  getDistricts,
   getMappedBases,
   getMapMarkers,
   getBaseById,

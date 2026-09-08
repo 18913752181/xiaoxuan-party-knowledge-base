@@ -131,3 +131,26 @@ export async function PATCH(request: Request) {
     return json({ error: "任务更新失败，请稍后重试" }, 500);
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await currentUser(request);
+    if (!user.bound || !user.active) return json({ error: "当前账号不可管理任务" }, 403);
+    const body = await request.json() as Record<string, unknown>;
+    const id = typeof body.id === "string" ? body.id : "";
+    if (!id) return json({ error: "缺少任务编号" }, 400);
+
+    const { data, error } = await getSupabaseAdmin().from("wechat_reminders")
+      .delete()
+      .eq("id", id)
+      .eq("openid", user.officialOpenid)
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return json({ error: "任务不存在或已经删除" }, 404);
+    return json({ deleted: true, id: data.id });
+  } catch (error) {
+    console.error("[mini-tasks] delete failed", error);
+    return json({ error: "任务删除失败，请稍后重试" }, 500);
+  }
+}

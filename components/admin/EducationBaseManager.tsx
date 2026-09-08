@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 
 type EducationBase = {
@@ -14,6 +15,24 @@ type EducationBase = {
   icon: string;
   contact: string;
   source_url: string | null;
+  image_url: string | null;
+  image_storage_path: string | null;
+  image_alt: string | null;
+  image_source_url: string | null;
+  image_rights_status: "owned" | "licensed" | "reference-only" | "unknown" | null;
+  has_guided_tour: boolean | null;
+  guide_fee: string | null;
+  guide_service_note: string | null;
+  guide_source_url: string | null;
+  guide_verified_at: string | null;
+  opening_info: string | null;
+  reservation_info: string | null;
+  activity_formats: string | null;
+  suitable_audiences: string | null;
+  activity_route: string | null;
+  nearby_base_combinations: string | null;
+  activity_plan: string | null;
+  related_materials: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -38,6 +57,24 @@ const EMPTY_DRAFT: Draft = {
   icon: "⌖",
   contact: "联系信息待核实",
   source_url: null,
+  image_url: null,
+  image_storage_path: null,
+  image_alt: null,
+  image_source_url: null,
+  image_rights_status: "unknown",
+  has_guided_tour: null,
+  guide_fee: null,
+  guide_service_note: null,
+  guide_source_url: null,
+  guide_verified_at: null,
+  opening_info: null,
+  reservation_info: null,
+  activity_formats: null,
+  suitable_audiences: null,
+  activity_route: null,
+  nearby_base_combinations: null,
+  activity_plan: null,
+  related_materials: null,
   address: null,
   latitude: null,
   longitude: null,
@@ -76,6 +113,7 @@ export default function EducationBaseManager() {
   const [publication, setPublication] = useState("全部状态");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<EducationBase | null>(null);
 
@@ -146,6 +184,31 @@ export default function EducationBaseManager() {
       setMessage(error instanceof Error ? error.message : "保存失败");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadImage(file?: File) {
+    if (!file) return;
+    setUploadingImage(true);
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("baseId", String(draft.id || "new"));
+      const response = await fetch("/api/admin/education-bases/upload", { method: "POST", body: form });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "上传失败");
+      setDraft((current) => ({
+        ...current,
+        image_url: payload.imageUrl,
+        image_storage_path: payload.storagePath,
+        image_alt: current.image_alt || (current.name ? `${current.name}配图` : "教育基地配图")
+      }));
+      setMessage("图片已上传，请点击“保存”将它绑定到当前基地。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "上传失败");
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -244,9 +307,51 @@ export default function EducationBaseManager() {
             </div>
 
             <Field label="基地简介"><textarea value={draft.intro} onChange={(event) => update("intro", event.target.value)} className={textareaClass} /></Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="联系信息"><input value={draft.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} /></Field>
-              <Field label="资料来源网址"><input type="url" value={optional(draft.source_url)} onChange={(event) => update("source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
+            <div className="border-t border-[#ece6dc] pt-5">
+              <h3 className="font-semibold">基地配图</h3>
+              <p className="mt-1 text-xs leading-5 text-[#858b86]">上传后还需要点击页面右上角“保存”。建议使用横向插图，PNG、WebP 或 JPG，单张不超过 6MB。</p>
+              <div className="mt-4 grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className="overflow-hidden rounded-2xl border border-[#e4ddd1] bg-[#f8f4eb]">
+                  {draft.image_url ? <div className="relative aspect-[4/3]"><Image src={draft.image_url} alt={draft.image_alt || draft.name || "基地配图预览"} fill sizes="220px" className="object-contain" unoptimized /></div> : <div className="flex aspect-[4/3] items-center justify-center px-5 text-center text-sm text-[#96958e]">暂未配置配图</div>}
+                  <div className="flex gap-2 border-t border-[#e4ddd1] bg-white p-3">
+                    <label className="flex h-10 flex-1 cursor-pointer items-center justify-center rounded-xl bg-[#f4cf66] px-3 text-sm font-medium text-[#332d24]">
+                      {uploadingImage ? "上传中..." : draft.image_url ? "更换图片" : "上传图片"}
+                      <input type="file" accept="image/png,image/webp,image/jpeg" disabled={uploadingImage} onChange={(event) => { const file = event.target.files?.[0]; event.currentTarget.value = ""; void uploadImage(file); }} className="sr-only" />
+                    </label>
+                    {draft.image_url ? <button type="button" onClick={() => setDraft((current) => ({ ...current, image_url: null, image_storage_path: null }))} className="h-10 rounded-xl border border-[#e1d8ca] px-3 text-sm text-[#766b5c]">清除</button> : null}
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2"><Field label="图片网址" hint="也可以直接粘贴现有图片地址"><input value={optional(draft.image_url)} onChange={(event) => update("image_url", event.target.value || null)} className={inputClass} placeholder="https:// 或 /images/..." /></Field></div>
+                  <div className="sm:col-span-2"><Field label="图片说明"><input value={optional(draft.image_alt)} onChange={(event) => update("image_alt", event.target.value || null)} className={inputClass} placeholder="例如：苏州市规划展示馆建筑插画" /></Field></div>
+                  <Field label="图片来源网址"><input type="url" value={optional(draft.image_source_url)} onChange={(event) => update("image_source_url", event.target.value || null)} className={inputClass} placeholder="没有来源页面时留空" /></Field>
+                  <Field label="图片权利状态"><select value={draft.image_rights_status || "unknown"} onChange={(event) => update("image_rights_status", event.target.value as Draft["image_rights_status"])} className={inputClass}><option value="unknown">尚未确认</option><option value="owned">自有图片</option><option value="licensed">已获授权</option><option value="reference-only">仅作设计参考</option></select></Field>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-[#ece6dc] pt-5">
+              <h3 className="font-semibold">会员基地攻略</h3>
+              <p className="mt-1 text-xs leading-5 text-[#858b86]">以下内容仅向有效会员完整展示。只填写已核实或有可靠依据的信息；不知道时留空，小程序会显示“待完善”。</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Field label="经核实的联系方式"><input value={draft.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} placeholder="未知时填写：联系信息待核实" /></Field>
+                <Field label="官方来源网址"><input type="url" value={optional(draft.source_url)} onChange={(event) => update("source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
+                <Field label="开放信息"><textarea value={optional(draft.opening_info)} onChange={(event) => update("opening_info", event.target.value || null)} className={textareaClass} placeholder="开放日期、时段、临时闭馆规则等" /></Field>
+                <Field label="预约信息"><textarea value={optional(draft.reservation_info)} onChange={(event) => update("reservation_info", event.target.value || null)} className={textareaClass} placeholder="预约渠道、提前时间、团队人数等" /></Field>
+                <Field label="是否提供讲解"><select value={draft.has_guided_tour === null ? "unknown" : draft.has_guided_tour ? "yes" : "no"} onChange={(event) => update("has_guided_tour", event.target.value === "yes" ? true : event.target.value === "no" ? false : null)} className={inputClass}><option value="unknown">尚未核实</option><option value="yes">有讲解</option><option value="no">明确无讲解</option></select></Field>
+                <Field label="讲解费用" hint="保留场馆公开口径"><input value={optional(draft.guide_fee)} onChange={(event) => update("guide_fee", event.target.value || null)} className={inputClass} placeholder="未查到时留空" /></Field>
+                <Field label="核验日期"><input type="date" value={optional(draft.guide_verified_at)} onChange={(event) => update("guide_verified_at", event.target.value || null)} className={inputClass} /></Field>
+                <Field label="讲解信息来源"><input type="url" value={optional(draft.guide_source_url)} onChange={(event) => update("guide_source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
+              </div>
+              <div className="mt-4"><Field label="讲解说明" hint="预约、场次、人数等"><textarea value={optional(draft.guide_service_note)} onChange={(event) => update("guide_service_note", event.target.value || null)} className={textareaClass} placeholder="未查到时留空" /></Field></div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Field label="适合开展的活动形式"><textarea value={optional(draft.activity_formats)} onChange={(event) => update("activity_formats", event.target.value || null)} className={textareaClass} placeholder="例如现场教学；必须有人工判断依据" /></Field>
+                <Field label="适合人群"><textarea value={optional(draft.suitable_audiences)} onChange={(event) => update("suitable_audiences", event.target.value || null)} className={textareaClass} placeholder="未知时留空" /></Field>
+                <Field label="活动路线"><textarea value={optional(draft.activity_route)} onChange={(event) => update("activity_route", event.target.value || null)} className={textareaClass} placeholder="按真实展陈和入口信息填写" /></Field>
+                <Field label="周边基地组合"><textarea value={optional(draft.nearby_base_combinations)} onChange={(event) => update("nearby_base_combinations", event.target.value || null)} className={textareaClass} placeholder="核对真实距离和开放情况后填写" /></Field>
+                <Field label="活动方案"><textarea value={optional(draft.activity_plan)} onChange={(event) => update("activity_plan", event.target.value || null)} className={textareaClass} placeholder="活动方案正文或摘要" /></Field>
+                <Field label="相关资料"><textarea value={optional(draft.related_materials)} onChange={(event) => update("related_materials", event.target.value || null)} className={textareaClass} placeholder="资料名称和链接，可按行填写" /></Field>
+              </div>
             </div>
 
             <div className="border-t border-[#ece6dc] pt-5">

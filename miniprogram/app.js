@@ -1,5 +1,5 @@
 ﻿App({
   globalData: {
-    appName: "党员发展时间助手"
+    appName: "喵喵工具箱"
   }
 });

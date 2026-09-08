@@ -1492,5 +1492,60 @@ module.exports = [
     "status": "可联系",
     "icon": "⌂",
     "contact": "联系信息待核实"
+  },
+  {
+    "id": 150,
+    "name": "中共淞沪中心县委纪念馆",
+    "type": "红色资源",
+    "area": "昆山",
+    "intro": "位于张浦镇石人潭公园，设浴血而生、敌后斗争、转战浙东、星火传承四个主题展区，展示昆南淀山湖地区抗日斗争历史。",
+    "status": "可联系",
+    "icon": "⌖",
+    "contact": "预约咨询：0512-57229110",
+    "source": "https://www.ks.gov.cn/kss/qzkx/202607/f66d56b11e4a4fca85fdec6d612546e9.shtml"
+  },
+  {
+    "id": 151,
+    "name": "双山岛渡江胜利公园",
+    "type": "红色资源",
+    "area": "张家港",
+    "intro": "以双山渡江战役纪念碑区域为核心，包含纪念广场、胜利之路展示区、渡江战役展示馆等教育空间。",
+    "status": "可联系",
+    "icon": "⌖",
+    "contact": "轮渡班次及团队接待请提前向双山香山旅游度假区确认",
+    "source": "https://www.suzhou.gov.cn/2023symfc/shuangydb/202310/a331e7b6a931423d904a0f79c74af94e.shtml"
+  },
+  {
+    "id": 152,
+    "name": "渡江胜利纪念馆",
+    "type": "红色资源",
+    "area": "南京市",
+    "intro": "围绕渡江战役胜利和南京解放设置基本陈列，由主展馆、下沉式广场和胜利广场等部分组成。",
+    "status": "可联系",
+    "icon": "⌖",
+    "contact": "咨询电话：025-84649423",
+    "source": "https://wlj.nanjing.gov.cn/whcg/bwg/njsdjsljng/201807/t20180731_1078648.html"
+  },
+  {
+    "id": 153,
+    "name": "雨花台烈士纪念馆",
+    "type": "红色资源",
+    "area": "南京市",
+    "intro": "以雨花英烈生平事迹为核心，系统展示新民主主义革命时期雨花英烈的事迹与精神。",
+    "status": "可联系",
+    "icon": "⌖",
+    "contact": "预约咨询：025-68783096",
+    "source": "https://yht.nanjing.gov.cn/"
+  },
+  {
+    "id": 154,
+    "name": "中共代表团梅园新村纪念馆",
+    "type": "红色资源",
+    "area": "南京市",
+    "intro": "由中共代表团办事处旧址、国共南京谈判史料陈列馆、周恩来铜像和周恩来图书馆等组成。",
+    "status": "可联系",
+    "icon": "⌖",
+    "contact": "咨询电话：025-84540739",
+    "source": "https://wlj.nanjing.gov.cn/whcg/bwg/zgdbtmyxcjng/201807/t20180731_1078650.html"
   }
 ];

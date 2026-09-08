@@ -53,6 +53,7 @@ export default function AdminStatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState("");
 
   const load = useCallback(async (fromDate: string, toDate: string) => {
     setLoading(true);
@@ -73,6 +74,32 @@ export default function AdminStatsPage() {
     load(from, to);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const exportDetails = useCallback(async (type: "downloads" | "favorites" | "logins" | "donations") => {
+    setExporting(type);
+    try {
+      const response = await fetch(`/api/admin/stats/export?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&type=${type}`, {
+        cache: "no-store"
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "导出失败，请稍后重试。");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${type}-${from}-${to}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "导出失败，请稍后重试。");
+    } finally {
+      setExporting("");
+    }
+  }, [from, to]);
 
   const tiles = stats
     ? [
@@ -146,16 +173,22 @@ export default function AdminStatsPage() {
               title="下载明细"
               head={["时间", "用户", "资料名称"]}
               rows={stats.details.downloads.map((r) => [formatTime(r.created_at), r.email, r.title])}
+              onExport={() => exportDetails("downloads")}
+              exporting={exporting === "downloads"}
             />
             <DetailTable
               title="收藏明细"
               head={["时间", "用户", "资料名称", "当前是否收藏"]}
               rows={stats.details.favorites.map((r) => [formatTime(r.created_at), r.email, r.title, r.active ? "是" : "否"])}
+              onExport={() => exportDetails("favorites")}
+              exporting={exporting === "favorites"}
             />
             <DetailTable
               title="登录明细"
               head={["时间", "用户", "会员状态"]}
               rows={stats.details.logins.map((r) => [formatTime(r.created_at), r.email, r.member_status === "member" ? "会员" : "免费"])}
+              onExport={() => exportDetails("logins")}
+              exporting={exporting === "logins"}
             />
             <DetailTable
               title="赞赏明细"
@@ -167,6 +200,8 @@ export default function AdminStatsPage() {
                 r.source_title || "全站支持",
                 donationStatusText[r.status] || r.status
               ])}
+              onExport={() => exportDetails("donations")}
+              exporting={exporting === "donations"}
             />
           </>
         ) : null}
@@ -195,10 +230,36 @@ function RankingCard({ title, rows }: { title: string; rows: Array<{ name: strin
   );
 }
 
-function DetailTable({ title, head, rows }: { title: string; head: string[]; rows: string[][] }) {
+function DetailTable({
+  title,
+  head,
+  rows,
+  onExport,
+  exporting
+}: {
+  title: string;
+  head: string[];
+  rows: string[][];
+  onExport: () => void;
+  exporting: boolean;
+}) {
+  const visibleRows = rows.slice(0, 10);
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-semibold">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="mt-1 text-sm text-[#717b75]">页面仅展示最新 10 条，导出包含当前日期范围内的全部条目。</p>
+        </div>
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={exporting}
+          className="rounded-lg border border-[#d9d5ce] bg-white px-4 py-2 text-sm font-medium text-[#4f5b55] transition hover:bg-[#f7f4ed] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {exporting ? "正在导出…" : "导出全部 Excel"}
+        </button>
+      </div>
       <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e4ded2] bg-white shadow-sm">
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead>
@@ -209,14 +270,14 @@ function DetailTable({ title, head, rows }: { title: string; head: string[]; row
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {visibleRows.map((row, index) => (
               <tr key={index} className="border-b border-[#f0ebe1] last:border-0">
                 {row.map((cell, cellIndex) => (
                   <td key={cellIndex} className="px-5 py-3">{cell}</td>
                 ))}
               </tr>
             ))}
-            {rows.length === 0 ? (
+            {visibleRows.length === 0 ? (
               <tr>
                 <td colSpan={head.length} className="px-5 py-8 text-center text-[#9aa39e]">
                   该时间段内暂无数据

@@ -1,0 +1,16 @@
+.next/
+.next-*/
+node_modules/
+backups/
+motion/
+local-preview/
+research/
+design-assets/
+ui-shots/
+miniprogram/
+.workbuddy/
+deploy/
+*.log
+miniprogram-preview-*.png
+miniprogram-preview-*.json
+miniprogram-upload-*.json

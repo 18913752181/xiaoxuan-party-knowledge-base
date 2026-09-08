@@ -1,5 +1,6 @@
 import rawBases from "@/miniprogram/config/education-bases";
 import rawLocations from "@/miniprogram/config/education-locations";
+import rawGuideServices from "@/miniprogram/config/education-guide-services";
 
 export type EducationBaseRow = {
   id: number;
@@ -12,6 +13,24 @@ export type EducationBaseRow = {
   icon: string;
   contact: string;
   source_url: string | null;
+  image_url: string | null;
+  image_storage_path: string | null;
+  image_alt: string | null;
+  image_source_url: string | null;
+  image_rights_status: "owned" | "licensed" | "reference-only" | "unknown" | null;
+  has_guided_tour: boolean | null;
+  guide_fee: string | null;
+  guide_service_note: string | null;
+  guide_source_url: string | null;
+  guide_verified_at: string | null;
+  opening_info: string | null;
+  reservation_info: string | null;
+  activity_formats: string | null;
+  suitable_audiences: string | null;
+  activity_route: string | null;
+  nearby_base_combinations: string | null;
+  activity_plan: string | null;
+  related_materials: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -47,6 +66,14 @@ type LegacyLocation = {
   confidence?: "verified" | "probable";
 };
 
+type GuideService = {
+  hasGuidedTour: boolean | null;
+  guideFee?: string | null;
+  guideServiceNote?: string | null;
+  guideSourceUrl?: string | null;
+  guideVerifiedAt?: string | null;
+};
+
 const SUZHOU_DISTRICTS: Record<string, string> = {
   "常熟": "常熟市",
   "高新区": "高新区",
@@ -60,7 +87,7 @@ const SUZHOU_DISTRICTS: Record<string, string> = {
   "张家港": "张家港市"
 };
 
-export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
+export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,image_url,image_storage_path,image_alt,image_source_url,image_rights_status,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,opening_info,reservation_info,activity_formats,suitable_audiences,activity_route,nearby_base_combinations,activity_plan,related_materials,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim() : fallback;
@@ -92,8 +119,10 @@ function legacyRegion(base: LegacyBase, location?: LegacyLocation) {
 
 export function getFallbackEducationBases(): EducationBaseRow[] {
   const locations = rawLocations as Record<string, LegacyLocation>;
+  const guideServices = rawGuideServices as Record<string, GuideService>;
   return (rawBases as LegacyBase[]).map((base, index) => {
     const location = locations[String(base.id)];
+    const guide = guideServices[String(base.id)];
     return {
       id: base.id,
       name: base.name,
@@ -104,6 +133,24 @@ export function getFallbackEducationBases(): EducationBaseRow[] {
       icon: base.icon || "⌖",
       contact: base.contact || "联系信息待核实",
       source_url: base.source || null,
+      image_url: null,
+      image_storage_path: null,
+      image_alt: null,
+      image_source_url: null,
+      image_rights_status: null,
+      has_guided_tour: guide?.hasGuidedTour ?? null,
+      guide_fee: guide?.guideFee || null,
+      guide_service_note: guide?.guideServiceNote || null,
+      guide_source_url: guide?.guideSourceUrl || null,
+      guide_verified_at: guide?.guideVerifiedAt || null,
+      opening_info: null,
+      reservation_info: null,
+      activity_formats: null,
+      suitable_audiences: null,
+      activity_route: null,
+      nearby_base_combinations: null,
+      activity_plan: null,
+      related_materials: null,
       address: location?.address || null,
       latitude: location?.latitude ?? null,
       longitude: location?.longitude ?? null,
@@ -145,6 +192,27 @@ export function normalizeEducationBaseInput(input: Record<string, unknown>, curr
     icon: text(input.icon, current?.icon || "⌖"),
     contact: text(input.contact, current?.contact || "联系信息待核实"),
     source_url: nullableText(input.source_url ?? current?.source_url),
+    image_url: nullableText(input.image_url ?? current?.image_url),
+    image_storage_path: nullableText(input.image_storage_path ?? current?.image_storage_path),
+    image_alt: nullableText(input.image_alt ?? current?.image_alt),
+    image_source_url: nullableText(input.image_source_url ?? current?.image_source_url),
+    image_rights_status: (() => {
+      const value = text(input.image_rights_status, current?.image_rights_status || "unknown");
+      return value === "owned" || value === "licensed" || value === "reference-only" ? value : "unknown";
+    })(),
+    has_guided_tour: typeof input.has_guided_tour === "boolean" ? input.has_guided_tour : input.has_guided_tour === null ? null : current?.has_guided_tour ?? null,
+    guide_fee: nullableText(input.guide_fee ?? current?.guide_fee),
+    guide_service_note: nullableText(input.guide_service_note ?? current?.guide_service_note),
+    guide_source_url: nullableText(input.guide_source_url ?? current?.guide_source_url),
+    guide_verified_at: nullableText(input.guide_verified_at ?? current?.guide_verified_at),
+    opening_info: nullableText(input.opening_info ?? current?.opening_info),
+    reservation_info: nullableText(input.reservation_info ?? current?.reservation_info),
+    activity_formats: nullableText(input.activity_formats ?? current?.activity_formats),
+    suitable_audiences: nullableText(input.suitable_audiences ?? current?.suitable_audiences),
+    activity_route: nullableText(input.activity_route ?? current?.activity_route),
+    nearby_base_combinations: nullableText(input.nearby_base_combinations ?? current?.nearby_base_combinations),
+    activity_plan: nullableText(input.activity_plan ?? current?.activity_plan),
+    related_materials: nullableText(input.related_materials ?? current?.related_materials),
     address: nullableText(input.address ?? current?.address),
     latitude,
     longitude,
@@ -159,6 +227,8 @@ export function normalizeEducationBaseInput(input: Record<string, unknown>, curr
 
 export function toPublicEducationBase(row: EducationBaseRow) {
   const hasLocation = row.latitude !== null && row.longitude !== null;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://xiaoxuanvip.com").replace(/\/+$/, "");
+  const imageUrl = row.image_url?.startsWith("/") ? `${siteUrl}${row.image_url}` : row.image_url;
   return {
     id: row.id,
     name: row.name,
@@ -168,8 +238,14 @@ export function toPublicEducationBase(row: EducationBaseRow) {
     intro: row.intro,
     status: row.status,
     icon: row.icon,
-    contact: row.contact,
-    source: row.source_url,
+    ...(imageUrl ? {
+      featureImage: imageUrl,
+      coverImageUrl: imageUrl,
+      thumbnailImageUrl: imageUrl,
+      imageAlt: row.image_alt || `${row.name}配图`,
+      imageSourceUrl: row.image_source_url,
+      imageRightsStatus: row.image_rights_status || "unknown"
+    } : {}),
     location: hasLocation ? {
       address: row.address || "地址待补充",
       latitude: row.latitude,

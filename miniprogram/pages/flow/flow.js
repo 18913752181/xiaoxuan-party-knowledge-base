@@ -105,6 +105,7 @@ Page({
     }
     this.resultMap = {};
     calculation.results.forEach((item) => { this.resultMap[item.id] = item.schedule; });
+    const nextStep = calculation.results.length > 1 ? calculation.results[1] : null;
     this.setData({
       hasCalculated: true,
       activeStageId: calculation.selectedStageId,
@@ -113,10 +114,17 @@ Page({
         calculable: calculation.calculableCount,
         pending: calculation.pendingCount,
         selectedTitle: calculation.selectedNode.title,
-        selectedDate: calculation.selectedDate
+        selectedDate: calculation.selectedDate,
+        nextStep: nextStep ? {
+          title: nextStep.title,
+          dateText: nextStep.schedule.dateText,
+          summary: nextStep.schedule.summary,
+          materialText: nextStep.sourceMaterials.length ? `${nextStep.sourceMaterials.length} 项` : "待确认"
+        } : null
       }
     });
     this.refreshGroups();
+    setTimeout(() => wx.pageScrollTo({ selector: "#calculationSummary", duration: 260 }), 80);
   },
 
   selectStage(event) {

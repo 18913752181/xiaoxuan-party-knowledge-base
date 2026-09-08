@@ -2,20 +2,20 @@
 .form-card { margin-top: 36rpx; padding: 10rpx 30rpx; }
 .date-field { position: relative; display: flex; gap: 22rpx; padding: 30rpx 0; }
 .date-field:not(:last-child)::after { position: absolute; left: 72rpx; right: 0; bottom: 0; height: 1rpx; background: rgba(202,177,157,.28); content: ""; }
-.field-order { position: relative; z-index: 1; display: flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 48rpx; height: 48rpx; border-radius: 18rpx; background: #fff0e4; color: #c77c43; font-size: 22rpx; font-weight: 700; }
+.field-order { position: relative; z-index: 1; display: flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 48rpx; height: 48rpx; border-radius: 18rpx; background: #fff4cf; color: #8a6815; font-size: 22rpx; font-weight: 700; }
 .field-main { min-width: 0; flex: 1; }
 .field-label-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12rpx; }
-.field-label { flex: 1; color: #4a3f37; font-size: 27rpx; font-weight: 600; line-height: 1.55; }
-.field-tag { flex: 0 0 auto; margin-top: 2rpx; padding: 7rpx 13rpx; border-radius: 999rpx; background: #f6f0ea; color: #9a9087; font-size: 19rpx; }
-.field-tag.required { background: #ffeadb; color: #bd703b; }
+.field-label { flex: 1; color: #424741; font-size: 27rpx; font-weight: 600; line-height: 1.55; }
+.field-tag { flex: 0 0 auto; margin-top: 2rpx; padding: 7rpx 13rpx; border-radius: 999rpx; background: #f6f0ea; color: #969c95; font-size: 19rpx; }
+.field-tag.required { background: #fff4cf; color: #8a6815; }
 .field-control-row { display: flex; align-items: center; gap: 18rpx; margin-top: 18rpx; }
 .date-picker { min-width: 0; flex: 1; }
 .date-value { height: 76rpx; padding: 0 24rpx; border: 0; border-radius: 22rpx; background: #f9f3ed; color: #ada198; font-size: 26rpx; line-height: 76rpx; transition: transform 140ms cubic-bezier(.23,1,.32,1), background-color 140ms ease; }
 .date-value:active { transform: scale(.985); }
-.date-value.selected { background: #fff0e4; color: #8f572f; font-weight: 600; }
-.clear-date { display: flex; flex: 0 0 auto; align-items: center; min-height: 68rpx; padding: 10rpx 8rpx; color: #b08466; font-size: 24rpx; transition: transform 140ms cubic-bezier(.23,1,.32,1); }
+.date-value.selected { background: #fff4cf; color: #735711; font-weight: 600; }
+.clear-date { display: flex; flex: 0 0 auto; align-items: center; min-height: 68rpx; padding: 10rpx 8rpx; color: #8a6815; font-size: 24rpx; transition: transform 140ms cubic-bezier(.23,1,.32,1); }
 .clear-date:active { transform: scale(.96); }
-.input-notice { margin-top: 26rpx; padding: 28rpx; border-radius: 28rpx; background: linear-gradient(145deg, #fff5e9 0%, #f8eadc 100%); box-shadow: 0 12rpx 32rpx rgba(142,101,66,.06); }
+.input-notice { margin-top: 26rpx; padding: 28rpx; border-radius: 28rpx; background: linear-gradient(145deg, #fff5e9 0%, #f2f4f1 100%); box-shadow: 0 12rpx 32rpx rgba(32,35,31,.035); }
 .notice-title { color: #664b38; font-size: 25rpx; font-weight: 650; }
 .notice-line { position: relative; margin-top: 13rpx; padding-left: 20rpx; color: #8d7c70; font-size: 23rpx; line-height: 1.68; }
 .notice-line::before { position: absolute; left: 0; top: 15rpx; width: 7rpx; height: 7rpx; border-radius: 50%; background: #e8a87c; content: ""; }
@@ -27,3 +27,19 @@
   .date-value, .clear-date, .reset-button { transition-property: background-color; }
   .date-value:active, .clear-date:active, .reset-button:active { transform: none; }
 }
+
+/* Oil visual system */
+.form-card { margin-top: 30rpx; border-radius: 18rpx; }
+.date-field:not(:last-child)::after { background: #e4e8e2; }
+.field-order { border-radius: 9rpx; background: #fff4cf; color: #735711; }
+.field-label { color: #2f332e; }
+.field-tag { border-radius: 8rpx; background: #f2f4f1; color: #7f7a72; }
+.field-tag.required { background: #fff4cf; color: #735711; }
+.date-value { border: 1rpx solid #e4e8e2; border-radius: 12rpx; background: #f2f4f1; color: #969c95; }
+.date-value.selected { border-color: #d6b14a; background: #fff4cf; color: #5f4a10; }
+.clear-date { color: #735711; }
+.input-notice { border: 1rpx solid #e4e8e2; border-left: 4rpx solid #e7b93f; border-radius: 18rpx; background: #ffffff; box-shadow: none; }
+.notice-title { color: #4f3d0d; }
+.notice-line { color: #6f756e; }
+.notice-line::before { background: #c89518; }
+

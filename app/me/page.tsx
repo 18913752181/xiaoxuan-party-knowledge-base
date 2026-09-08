@@ -44,7 +44,7 @@ export default function MePage() {
           <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} size={64} />
           <div>
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className={`mt-2 text-sm ${memberActive ? "text-neutral-400" : "text-neutral-500"}`}>
               {memberActive ? `会员有效期至 ${profile.member_expires_at}` : maskAccountEmail(profile.email) || "已登录"}
             </p>
           </div>

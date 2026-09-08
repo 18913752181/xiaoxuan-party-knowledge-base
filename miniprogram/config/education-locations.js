@@ -34,5 +34,9 @@ module.exports = {
   "136": { "address": "苏州工业园区仁爱路111号", "latitude": 31.272138, "longitude": 120.740448, "coordinateType": "gcj02", "sourceName": "高德地图", "sourceUrl": "https://amap.com/place/B0FFHQJBV5", "confidence": "verified" },
   "137": { "address": "苏州工业园区独墅湖高教区仁爱路158号", "latitude": 31.276918, "longitude": 120.73288, "coordinateType": "gcj02", "sourceName": "高德地图", "sourceUrl": "https://www.amap.com/place/B0FFF4K67H", "confidence": "verified" },
   "145": { "address": "苏州工业园区唯亭街道唯胜路附近", "latitude": 31.3744792, "longitude": 120.7923917, "coordinateType": "wgs84", "sourceName": "OpenStreetMap", "sourceUrl": "https://www.openstreetmap.org/?mlat=31.3744792&mlon=120.7923917", "confidence": "verified" },
-  "149": { "address": "苏州市张家港市永钢大道与妙丰公路交叉口", "latitude": 31.845481, "longitude": 120.710302, "coordinateType": "gcj02", "sourceName": "高德地图", "sourceUrl": "https://ditu.amap.com/place/B02001BEZP", "confidence": "verified" }
+  "149": { "address": "苏州市张家港市永钢大道与妙丰公路交叉口", "latitude": 31.845481, "longitude": 120.710302, "coordinateType": "gcj02", "sourceName": "高德地图", "sourceUrl": "https://ditu.amap.com/place/B02001BEZP", "confidence": "verified" },
+  "151": { "address": "苏州市张家港市双山岛西北主江堤内侧", "latitude": 31.9941969, "longitude": 120.3911573, "coordinateType": "wgs84", "sourceName": "张家港市政府 / OpenStreetMap", "sourceUrl": "https://www.openstreetmap.org/?mlat=31.9941969&mlon=120.3911573", "confidence": "verified" },
+  "152": { "address": "南京市鼓楼区渡江路1号", "latitude": 32.073563, "longitude": 118.73173, "coordinateType": "gcj02", "sourceName": "南京市文旅局 / 高德地图", "sourceUrl": "https://www.amap.com/place/B00190BJ76", "confidence": "verified" },
+  "153": { "address": "南京市雨花台区雨花路215号", "latitude": 31.997211, "longitude": 118.780429, "coordinateType": "gcj02", "sourceName": "雨花台烈士纪念馆 / 高德地图", "sourceUrl": "https://www.amap.com/place/B0019098C1", "confidence": "verified" },
+  "154": { "address": "南京市玄武区汉府街18-1号", "latitude": 32.042379, "longitude": 118.801602, "coordinateType": "gcj02", "sourceName": "南京市文旅局 / 高德地图", "sourceUrl": "https://ditu.amap.com/place/B001907IVB", "confidence": "verified" }
 };

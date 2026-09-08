@@ -1,7 +1,8 @@
-﻿.profile-card {
+.profile-card {
   padding: 32rpx;
   border-radius: 30rpx;
-  background: #fffdf8;
-  border: 1rpx solid #e4ded2;
-  box-shadow: 0 14rpx 40rpx rgba(69, 59, 44, 0.06);
+  background: #f8f9f7;
+  border: 1rpx solid #e4e8e2;
+  box-shadow: 0 14rpx 40rpx rgba(32,35,31,.03);
 }
+

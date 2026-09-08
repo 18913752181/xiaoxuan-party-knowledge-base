@@ -309,7 +309,7 @@ export function ResourceLibrary({
             <label htmlFor="material-search" className="sr-only">搜索资料</label>
             <input id="material-search" type="search" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、发展党员、换届选举……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-500 md:text-base" />
             {submittedKeyword ? <button type="button" onClick={clearSearch} className="h-12 shrink-0 px-3 text-sm text-neutral-400 transition-colors hover:text-brand-red">清除</button> : null}
-            <button type="submit" className="h-12 shrink-0 rounded-2xl bg-brand-red px-5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">开始查找</button>
+            <button type="submit" className="h-12 shrink-0 rounded-2xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">开始查找</button>
           </form>
           {showSearchMode ? (
             <div className="mt-3 overflow-hidden rounded-2xl border border-[#e7ded5] bg-white shadow-lg">
@@ -431,7 +431,7 @@ export function ResourceLibrary({
                 {selectedSlugs.length ? <button type="button" onClick={() => setSelectedSlugs([])} className="min-h-10 px-1 text-neutral-500 hover:text-brand-red">清空选择</button> : null}
               </div>
               <div className="w-full shrink-0 sm:w-80">
-                <button type="button" onClick={requestBatchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="min-h-11 w-full rounded-xl bg-brand-red px-5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#c9b8b9]">
+                <button type="button" onClick={requestBatchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="min-h-11 w-full rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98] disabled:cursor-not-allowed disabled:border-[#e7e9ec] disabled:bg-[#f7f8f9] disabled:text-[#a4abb2]">
                   {isBatchDownloading ? "正在打包..." : `批量下载${selectedSlugs.length ? `（${selectedSlugs.length}）` : ""}`}
                 </button>
                 <p className="mt-2 text-xs leading-5 text-neutral-400">仅限本人工作使用，请勿转售、公开传播或异常高频下载。</p>
@@ -452,7 +452,7 @@ export function ResourceLibrary({
                 </ul>
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button type="button" onClick={() => setIsBatchDownloadNoticeOpen(false)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-white px-4 text-sm font-medium text-neutral-600 transition-colors hover:bg-[#f7f8f9] active:scale-[0.98]">取消</button>
-                  <button type="button" onClick={confirmBatchDownload} className="min-h-11 rounded-xl bg-brand-red px-4 text-sm font-medium text-white transition-[background-color,transform] hover:bg-brand-darkRed active:scale-[0.98]">确认并下载</button>
+                  <button type="button" onClick={confirmBatchDownload} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">确认并下载</button>
                 </div>
               </section>
             </div>
@@ -514,7 +514,7 @@ export function ResourceLibrary({
                   </div>
                   <div className="flex items-center gap-2 md:justify-end">
                     <button type="button" onClick={() => onToggleFavorite(material)} aria-label={isFavorite ? "取消收藏" : "收藏资料"} className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-line text-lg text-[#a7793b] transition-[border-color,background-color,transform] duration-150 ease-out hover:border-[#e2c693] hover:bg-[#fffaf0] active:scale-[0.97]">{isFavorite ? "★" : "☆"}</button>
-                    <button type="button" onClick={() => download(material)} className="min-h-11 rounded-xl border border-[#e8cfd2] bg-[#fff1f2] px-4 py-2.5 text-sm font-medium text-brand-red transition-[background-color,color,transform] duration-150 ease-out hover:bg-brand-red hover:text-white active:scale-[0.97]">下载</button>
+                    <button type="button" onClick={() => download(material)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">下载</button>
                   </div>
                 </article>
               );

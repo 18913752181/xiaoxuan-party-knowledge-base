@@ -1,34 +1,57 @@
 <view class="page-shell flow-page">
   <view class="eyebrow">🧭 发展党员全流程</view>
-  <view class="page-title">从一个已知日期，看清后续工作</view>
-  <view class="page-subtitle">提供完整的 51 个流程节点。选择任一已完成节点并填写日期，系统会展示后续节点的最早、截止或条件参考时间。</view>
+  <view class="page-title">现在做到哪个步骤？<text>我帮你往后捋。</text></view>
+  <view class="page-subtitle">选一个你已经完成的步骤，填入实际日期，就能看到后续要关注的时间节点和下一步工作。</view>
+  <view class="coverage-note">覆盖全流程节点</view>
 
   <view class="input-card surface">
-    <view class="input-label">🪴 已知流程节点</view>
+    <view class="input-card-title">先告诉我你做到哪一步</view>
+    <view class="input-label">已经完成的步骤</view>
     <picker mode="selector" range="{{nodeOptions}}" value="{{selectedNodeIndex}}" bindchange="selectNode">
       <view class="selector-value"><text class="selector-order">{{selectedNodeIndex + 1}}</text><text class="selector-text">{{selectedNodeTitle}}</text><text class="selector-arrow">⌄</text></view>
     </picker>
-    <view class="input-label date-label">🗓️ 该节点实际日期</view>
+    <view class="input-label date-label">这一步的实际完成日期</view>
     <picker mode="date" value="{{selectedDate}}" end="{{maxDate}}" bindchange="selectDate">
       <view class="date-value {{selectedDate ? 'selected' : ''}}">{{selectedDate || '请选择日期'}}</view>
     </picker>
-    <button class="calculate-button" bindtap="calculate">推算后续节点参考时间</button>
-    <view class="input-tip">只需填写一个你确定的日期。无法仅凭日期判断的节点会标为“待确认”，不会擅自补充规则。</view>
+    <button class="calculate-button" bindtap="calculate">开始推算</button>
+    <view class="input-tip"><text>🐾 只填你确定的日期就好。</text><text>有些节点不能只靠日期判断，我会标成「待确认」，不替你乱猜。</text></view>
   </view>
 
-  <view wx:if="{{hasCalculated}}" id="calculationSummary" class="summary-card">
-    <view class="summary-kicker">本次推算</view>
-    <view class="summary-title">从“{{calculationSummary.selectedTitle}}”向后参考</view>
-    <view class="summary-date">已知日期 {{calculationSummary.selectedDate}}</view>
-    <view class="summary-stats">
-      <view class="summary-stat"><text class="stat-value">{{calculationSummary.total}}</text><text class="stat-label">后续及当前节点</text></view>
-      <view class="summary-stat"><text class="stat-value">{{calculationSummary.calculable}}</text><text class="stat-label">有日期或条件参考</text></view>
-      <view class="summary-stat"><text class="stat-value">{{calculationSummary.pending}}</text><text class="stat-label">需人工确认</text></view>
+  <view wx:if="{{hasCalculated}}" id="calculationSummary" class="result-overview">
+    <view class="result-kicker">接下来这样办</view>
+    <view class="known-row">
+      <view><view class="overview-label">当前已知节点</view><view class="known-title">{{calculationSummary.selectedTitle}}</view></view>
+      <view class="known-date">{{calculationSummary.selectedDate}}</view>
+    </view>
+
+    <view wx:if="{{calculationSummary.nextStep}}" class="next-card">
+      <view class="next-card-label">下一步</view>
+      <view class="next-card-title">{{calculationSummary.nextStep.title}}</view>
+      <view class="next-focus">
+        <view class="next-focus-item"><text class="overview-label">建议关注时间</text><text class="next-focus-value">{{calculationSummary.nextStep.dateText}}</text></view>
+        <view class="next-focus-item"><text class="overview-label">对应材料</text><text class="next-focus-value">{{calculationSummary.nextStep.materialText}}</text></view>
+      </view>
+      <view class="next-summary">{{calculationSummary.nextStep.summary}}</view>
+    </view>
+    <view wx:else class="next-card next-card-finished">
+      <view class="next-card-label">下一步</view>
+      <view class="next-card-title">已到达当前流程的最后一个节点</view>
+      <view class="next-summary">请结合实际归档情况和上级党组织要求完成核对。</view>
+    </view>
+
+    <view class="summary-card">
+      <view class="summary-title">后续节点概览</view>
+      <view class="summary-stats">
+        <view class="summary-stat"><text class="stat-value">{{calculationSummary.total}}</text><text class="stat-label">后续及当前节点</text></view>
+        <view class="summary-stat"><text class="stat-value">{{calculationSummary.calculable}}</text><text class="stat-label">有时间或条件参考</text></view>
+        <view class="summary-stat"><text class="stat-value">{{calculationSummary.pending}}</text><text class="stat-label">待确认事项</text></view>
+      </view>
     </view>
   </view>
 
   <view class="section-head">
-    <view><view class="section-index">🪜</view><view class="section-title">完整发展阶段</view></view>
+    <view><view class="section-index">阶段</view><view class="section-title">发展阶段</view></view>
     <view class="full-toggle" bindtap="toggleFull">{{showFull ? '收起完整流程' : '查看完整流程'}}</view>
   </view>
 
@@ -43,7 +66,7 @@
   </scroll-view>
 
   <view class="section-head timeline-head">
-    <view><view class="section-index">🗺️</view><view class="section-title">{{showFull ? '完整流程时间轴' : '当前阶段详细步骤'}}</view></view>
+    <view><view class="section-index">步骤</view><view class="section-title">{{showFull ? '完整流程时间轴' : '当前阶段详细步骤'}}</view></view>
   </view>
 
   <view wx:for="{{visibleGroups}}" wx:key="id" class="stage-group">
@@ -65,14 +88,14 @@
   </view>
 
   <view class="notice-card">
-    <view class="notice-title">💡 时间推算说明</view>
+    <view class="notice-title">时间推算说明</view>
     <view class="notice-line">“最早参考”只表示达到流程资料或已确认规则中的时间条件，不代表前置程序已经完成。</view>
     <view class="notice-line">“条件参考”表示只能判断先后关系，党委会、公示无异议、组织研究等实际日期仍需人工确定。</view>
     <view class="notice-line">五个工作日仅按周一至周五演算，法定节假日和调休必须另行核对。</view>
     <view class="disclaimer">{{disclaimer}}</view>
   </view>
 
-  <view class="website-card" bindtap="openWebsite"><view class="website-icon">📚</view>
+  <view class="website-card" bindtap="openWebsite"><view class="website-icon">资料</view>
     <view><view class="website-kicker">网站统一维护</view><view class="website-title">查看发展党员专题资料</view><view class="website-copy">打开指定资料页，查看模板、流程说明和相关内容</view></view>
     <view class="website-arrow">→</view>
   </view>
