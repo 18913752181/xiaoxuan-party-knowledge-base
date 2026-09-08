@@ -49,6 +49,7 @@ export async function POST(request: Request) {
   const unit = await createContentUnit({
     title,
     topic,
+    folderPath: String(formData.get("folderPath") || "").trim(),
     category: topic || category,
     stage: String(formData.get("stage") || "").trim(),
     tags: splitList(formData.get("tags")),

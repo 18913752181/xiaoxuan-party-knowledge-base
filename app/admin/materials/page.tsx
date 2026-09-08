@@ -20,6 +20,8 @@ export default function AdminMaterialsPage() {
   const [message, setMessage] = useState("正在读取资料...");
   const [deletingSlug, setDeletingSlug] = useState("");
   const [pendingDelete, setPendingDelete] = useState<Material | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [draggingSlug, setDraggingSlug] = useState("");
@@ -97,6 +99,49 @@ export default function AdminMaterialsPage() {
     } finally {
       setDeletingSlug("");
     }
+  }
+
+  async function confirmBulkDelete() {
+    const slugs = [...selectedSlugs];
+    if (!slugs.length) {
+      setBulkDeleteOpen(false);
+      return;
+    }
+
+    setBulkDeleting(true);
+    setMessage(`正在删除 0 / ${slugs.length} 份资料...`);
+    const deletedSlugs: string[] = [];
+    const failures: string[] = [];
+
+    for (let index = 0; index < slugs.length; index += 1) {
+      const slug = slugs[index];
+      const material = materials.find((item) => (item.slug || item.id) === slug);
+      try {
+        const response = await fetch(`/api/admin/materials/${encodeURIComponent(slug)}`, { method: "DELETE" });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "删除失败");
+        deletedSlugs.push(slug);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : "删除失败";
+        failures.push(`${material?.title || slug}：${reason}`);
+      }
+      setMessage(`正在删除 ${index + 1} / ${slugs.length} 份资料...`);
+    }
+
+    const deletedSet = new Set(deletedSlugs);
+    setMaterials((current) => current.filter((item) => !deletedSet.has(item.slug || item.id)));
+    setSelectedSlugs(failures.length ? slugs.filter((slug) => !deletedSet.has(slug)) : []);
+    setBulkDeleteOpen(false);
+    setBulkDeleting(false);
+
+    if (!failures.length) {
+      setMessage(`已删除 ${deletedSlugs.length} 份资料。`);
+      return;
+    }
+
+    const failureSummary = failures.slice(0, 3).join("；");
+    const remaining = failures.length > 3 ? `；另有 ${failures.length - 3} 份失败` : "";
+    setMessage(`已删除 ${deletedSlugs.length} 份，${failures.length} 份未删除：${failureSummary}${remaining}`);
   }
 
   function toggleSelected(slug: string) {
@@ -373,7 +418,7 @@ export default function AdminMaterialsPage() {
             <button
               type="button"
               onClick={() => updateMembership(true)}
-              disabled={bulkUpdating}
+              disabled={bulkUpdating || bulkDeleting}
               className="rounded-xl bg-[#9b744f] px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               设为会员专属
@@ -381,12 +426,20 @@ export default function AdminMaterialsPage() {
             <button
               type="button"
               onClick={() => updateMembership(false)}
-              disabled={bulkUpdating}
+              disabled={bulkUpdating || bulkDeleting}
               className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50"
             >
               设为普通资料
             </button>
-            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkUpdating} className="text-sm text-[#6d746f] disabled:opacity-50">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              disabled={bulkUpdating || bulkDeleting}
+              className="rounded-xl border border-[#dfbcbc] bg-white px-4 py-2 text-sm font-medium text-[#a34850] disabled:opacity-50"
+            >
+              批量删除
+            </button>
+            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkUpdating || bulkDeleting} className="text-sm text-[#6d746f] disabled:opacity-50">
               取消选择
             </button>
           </section>
@@ -529,6 +582,17 @@ export default function AdminMaterialsPage() {
         busy={Boolean(pendingDelete) && deletingSlug === (pendingDelete?.slug || pendingDelete?.id)}
         onConfirm={() => void confirmDeleteMaterial()}
         onCancel={() => setPendingDelete(null)}
+      />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        title={`确定删除选中的 ${selectedSlugs.length} 份资料吗？`}
+        description="删除后无法恢复，对应资料文件及前台内容都会被移除。系统会逐份处理；如有删除失败，失败项会继续保留在选中列表中。"
+        confirmText="确认批量删除"
+        busy={bulkDeleting}
+        onConfirm={() => void confirmBulkDelete()}
+        onCancel={() => {
+          if (!bulkDeleting) setBulkDeleteOpen(false);
+        }}
       />
     </main>
   );

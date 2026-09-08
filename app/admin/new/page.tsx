@@ -45,6 +45,7 @@ const titleFromFileName = (fileName = "") => fileName.replace(/\.(docx?|xlsx?|pd
 const supportedFilePattern = /\.(docx?|xlsx?|pdf|pptx?)$/i;
 
 type FileSystemEntryLike = {
+  name: string;
   isFile: boolean;
   isDirectory: boolean;
   file?: (success: (file: File) => void, failure?: (error: DOMException) => void) => void;
@@ -57,9 +58,22 @@ type DataTransferItemWithEntry = DataTransferItem & {
   webkitGetAsEntry?: () => FileSystemEntryLike | null;
 };
 
-async function readEntry(entry: FileSystemEntryLike): Promise<File[]> {
+type UploadItem = {
+  file: File;
+  relativePath: string;
+};
+
+const uploadItemFromFile = (file: File): UploadItem => ({
+  file,
+  relativePath: (file.webkitRelativePath || file.name).replace(/\\/g, "/")
+});
+
+const folderPathFromRelativePath = (value: string) => value.split("/").slice(0, -1).filter(Boolean).join("/");
+
+async function readEntry(entry: FileSystemEntryLike, parentPath = ""): Promise<UploadItem[]> {
+  const relativePath = [parentPath, entry.name].filter(Boolean).join("/");
   if (entry.isFile && entry.file) {
-    return new Promise((resolve, reject) => entry.file?.((file) => resolve([file]), reject));
+    return new Promise((resolve, reject) => entry.file?.((file) => resolve([{ file, relativePath }]), reject));
   }
   if (!entry.isDirectory || !entry.createReader) return [];
 
@@ -70,15 +84,15 @@ async function readEntry(entry: FileSystemEntryLike): Promise<File[]> {
     if (!batch.length) break;
     children.push(...batch);
   }
-  return (await Promise.all(children.map(readEntry))).flat();
+  return (await Promise.all(children.map((child) => readEntry(child, relativePath)))).flat();
 }
 
 async function readDroppedFiles(dataTransfer: DataTransfer) {
   const entries = Array.from(dataTransfer.items)
     .map((item) => (item as DataTransferItemWithEntry).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined)
     .filter(Boolean) as FileSystemEntryLike[];
-  if (!entries.length) return Array.from(dataTransfer.files);
-  return (await Promise.all(entries.map(readEntry))).flat();
+  if (!entries.length) return Array.from(dataTransfer.files).map(uploadItemFromFile);
+  return (await Promise.all(entries.map((entry) => readEntry(entry)))).flat();
 }
 
 function fileTypeFromName(fileName: string) {
@@ -100,7 +114,7 @@ export default function AdminNewPage() {
   const [topics, setTopics] = useState<string[]>([]);
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>(emptyForm);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<UploadItem[]>([]);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [isVip, setIsVip] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -149,10 +163,10 @@ export default function AdminNewPage() {
       .catch(() => setAllMaterials([]));
   }, []);
 
-  const fileInfos = useMemo(() => files.map((file) => ({
-    name: file.webkitRelativePath || file.name,
-    type: fileTypeFromName(file.name),
-    size: formatSize(file.size)
+  const fileInfos = useMemo(() => files.map((item) => ({
+    name: item.relativePath,
+    type: fileTypeFromName(item.file.name),
+    size: formatSize(item.file.size)
   })), [files]);
   const isBatch = files.length > 1;
 
@@ -160,11 +174,11 @@ export default function AdminNewPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function addFiles(nextFiles: File[]) {
-    const supportedFiles = nextFiles.filter((file) => supportedFilePattern.test(file.name));
-    const existingKeys = new Set(files.map((file) => `${file.webkitRelativePath || file.name}-${file.size}-${file.lastModified}`));
-    const uniqueFiles = supportedFiles.filter((file) => {
-      const key = `${file.webkitRelativePath || file.name}-${file.size}-${file.lastModified}`;
+  function addFiles(nextFiles: UploadItem[]) {
+    const supportedFiles = nextFiles.filter((item) => supportedFilePattern.test(item.file.name));
+    const existingKeys = new Set(files.map((item) => `${item.relativePath}-${item.file.size}-${item.file.lastModified}`));
+    const uniqueFiles = supportedFiles.filter((item) => {
+      const key = `${item.relativePath}-${item.file.size}-${item.file.lastModified}`;
       if (existingKeys.has(key)) return false;
       existingKeys.add(key);
       return true;
@@ -174,7 +188,7 @@ export default function AdminNewPage() {
     setUploadProgress([]);
     setForm((current) => ({
       ...current,
-      title: combinedFiles.length === 1 ? titleFromFileName(combinedFiles[0].name) : ""
+      title: combinedFiles.length === 1 ? titleFromFileName(combinedFiles[0].file.name) : ""
     }));
     if (!nextFiles.length) setStatus("文件夹中没有可读取的文件。");
     else if (supportedFiles.length !== nextFiles.length) setStatus("已忽略不支持的文件，仅接受 Word、Excel、PDF、PPT。");
@@ -188,7 +202,7 @@ export default function AdminNewPage() {
     setUploadProgress([]);
     setForm((current) => ({
       ...current,
-      title: nextFiles.length === 1 ? titleFromFileName(nextFiles[0].name) : ""
+      title: nextFiles.length === 1 ? titleFromFileName(nextFiles[0].file.name) : ""
     }));
   }
 
@@ -202,9 +216,10 @@ export default function AdminNewPage() {
     const results: string[] = [];
     const failed: string[] = [];
     for (let index = 0; index < files.length; index += 1) {
-      const file = files[index];
+      const item = files[index];
+      const file = item.file;
       const title = isBatch ? titleFromFileName(file.name) : form.title.trim();
-      setStatus(`正在上传 ${index + 1}/${files.length}：${file.name}`);
+      setStatus(`正在上传 ${index + 1}/${files.length}：${item.relativePath}`);
       try {
         const body = new FormData();
         Object.entries(form).forEach(([key, value]) => body.append(key, value));
@@ -214,13 +229,14 @@ export default function AdminNewPage() {
         body.append("seoTitle", title);
         body.append("seoDescription", form.summary);
         body.append("seoKeywords", "");
+        body.append("folderPath", folderPathFromRelativePath(item.relativePath));
         body.append("file", file);
         const response = await fetch("/api/admin/generate", { method: "POST", body });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "保存失败");
-        results.push(`✓ ${file.name}`);
+        results.push(`✓ ${item.relativePath}`);
       } catch (error) {
-        failed.push(`${file.name}：${error instanceof Error ? error.message : "保存失败"}`);
+        failed.push(`${item.relativePath}：${error instanceof Error ? error.message : "保存失败"}`);
       }
       setUploadProgress([...results, ...failed.map((item) => `✕ ${item}`)]);
     }
@@ -283,7 +299,7 @@ export default function AdminNewPage() {
               multiple
               accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
               onChange={(event) => {
-                addFiles(Array.from(event.target.files || []));
+                addFiles(Array.from(event.target.files || []).map(uploadItemFromFile));
                 event.currentTarget.value = "";
               }}
               className="sr-only"
@@ -296,7 +312,7 @@ export default function AdminNewPage() {
               accept=".doc,.docx,.xls,.xlsx,.pdf,.ppt,.pptx"
               {...({ webkitdirectory: "", directory: "" } as InputHTMLAttributes<HTMLInputElement>)}
               onChange={(event) => {
-                addFiles(Array.from(event.target.files || []));
+                addFiles(Array.from(event.target.files || []).map(uploadItemFromFile));
                 event.currentTarget.value = "";
               }}
               className="sr-only"

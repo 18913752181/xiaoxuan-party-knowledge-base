@@ -37,6 +37,7 @@ export type GenerateInput = {
   title: string;
   category: string;
   topic?: string;
+  folderPath?: string;
   stage?: string;
   tags?: string[];
   summary?: string;
@@ -77,6 +78,7 @@ export type ContentUnitMeta = {
   slug: string;
   category: string;
   topic: string;
+  folderPath?: string;
   stage: string;
   status: "draft" | "published" | "hidden";
   author: string;
@@ -224,6 +226,14 @@ const normalizeList = (value: unknown) => {
     .filter(Boolean);
 };
 
+const normalizeFolderPath = (value: unknown) =>
+  String(value || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((item) => item.trim())
+    .filter((item) => item && item !== "." && item !== "..")
+    .join("/");
+
 const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnitMeta => {
   const slug = meta.slug || path.basename(dir);
   const category = meta.category || path.basename(path.dirname(dir));
@@ -234,6 +244,7 @@ const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnit
     slug,
     category,
     topic: meta.topic || category,
+    folderPath: normalizeFolderPath(meta.folderPath),
     stage: meta.stage || "",
     status: meta.status || (meta.hidden ? "hidden" : "published"),
     author: meta.author || "小宣同志",
@@ -374,6 +385,7 @@ export async function createContentUnit(input: GenerateInput) {
   const title = input.title.trim();
   const category = safeFileName(input.category || input.topic || "未分类");
   const topic = input.topic || category;
+  const folderPath = normalizeFolderPath(input.folderPath);
   const stage = input.stage || "";
   const slug = await createUniqueSlug(title);
   const dir = path.join(contentRoot, category, slug);
@@ -402,6 +414,7 @@ export async function createContentUnit(input: GenerateInput) {
     slug,
     category,
     topic,
+    folderPath,
     stage,
     status: input.status || "published",
     author: input.author || "小宣同志",
@@ -483,6 +496,7 @@ export async function updateContentUnit(slug: string, input: Partial<GenerateInp
     title: input.title || unit.meta.title,
     category: input.category || unit.meta.category,
     topic: input.topic || unit.meta.topic,
+    folderPath: input.folderPath === undefined ? unit.meta.folderPath : normalizeFolderPath(input.folderPath),
     stage: input.stage ?? unit.meta.stage,
     status: input.status || unit.meta.status,
     isVip: typeof input.isVip === "boolean" ? input.isVip : unit.meta.isVip,
@@ -572,6 +586,7 @@ export function contentUnitToMaterial(unit: ContentUnit): Material {
     description: unit.meta.summary || unit.summary || unit.introduction,
     category: unit.meta.category,
     topic: unit.meta.topic,
+    folderPath: unit.meta.folderPath,
     stage: unit.meta.stage,
     status: unit.meta.status,
     file_type: file?.fileType || unit.meta.fileType || "知识单元",
@@ -628,6 +643,7 @@ export function contentUnitToMaterialSummary(unit: ContentUnit): Material {
     summary: material.summary,
     category: material.category,
     topic: material.topic,
+    folderPath: material.folderPath,
     stage: material.stage,
     status: material.status,
     file_type: material.file_type,

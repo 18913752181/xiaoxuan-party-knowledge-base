@@ -23,6 +23,7 @@ export type Material = {
   file_type: string;
   file_size: string;
   file_name?: string;
+  folderPath?: string;
   uploaded_at?: string;
   updated_at: string;
   member_only: boolean;

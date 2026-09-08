@@ -51,6 +51,7 @@ export function ResourceLibrary({
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [isBatchDownloading, setIsBatchDownloading] = useState(false);
   const [isBatchDownloadNoticeOpen, setIsBatchDownloadNoticeOpen] = useState(false);
+  const [folderPath, setFolderPath] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -129,20 +130,44 @@ export function ResourceLibrary({
     const query = submittedKeyword.trim().toLowerCase();
     return displayMaterials.filter((material) => {
       const materialTopic = material.topic || material.category;
-      const searchableText = [material.title, material.description, material.summary, material.category, materialTopic, material.stage, material.file_type, material.file_name, ...(material.tags || [])]
+      const searchableText = [material.title, material.description, material.summary, material.category, materialTopic, material.stage, material.file_type, material.file_name, material.folderPath, ...(material.tags || [])]
         .join(" ")
         .toLowerCase();
       return (topic === topicAllOption || materialTopic === topic) && (!query || searchableText.includes(query));
     });
   }, [displayMaterials, submittedKeyword, topic]);
 
-  useEffect(() => setPage(1), [submittedKeyword, topic, sortMode]);
+  const childFolders = useMemo(() => {
+    if (!libraryOnly) return [];
+    const prefix = folderPath ? `${folderPath}/` : "";
+    const counts = new Map<string, number>();
+    filteredMaterials.forEach((material) => {
+      const path = normalizeFolderPath(material.folderPath);
+      if (!path || (folderPath && !path.startsWith(prefix))) return;
+      const remainder = folderPath ? path.slice(prefix.length) : path;
+      const childName = remainder.split("/")[0];
+      if (!childName) return;
+      const childPath = prefix + childName;
+      counts.set(childPath, (counts.get(childPath) || 0) + 1);
+    });
+    return Array.from(counts, ([path, count]) => ({ path, name: path.split("/").pop() || path, count }));
+  }, [filteredMaterials, folderPath, libraryOnly]);
 
-  const totalPages = libraryOnly ? Math.max(1, Math.ceil(filteredMaterials.length / libraryPageSize)) : 1;
+  const scopedMaterials = useMemo(() => {
+    if (!libraryOnly) return filteredMaterials;
+    return filteredMaterials.filter((material) => normalizeFolderPath(material.folderPath) === folderPath);
+  }, [filteredMaterials, folderPath, libraryOnly]);
+
+  useEffect(() => {
+    setPage(1);
+    setFolderPath("");
+  }, [submittedKeyword, topic, sortMode]);
+
+  const totalPages = libraryOnly ? Math.max(1, Math.ceil(scopedMaterials.length / libraryPageSize)) : 1;
   const currentPage = Math.min(page, totalPages);
   const visibleMaterials = libraryOnly
-    ? filteredMaterials.slice((currentPage - 1) * libraryPageSize, currentPage * libraryPageSize)
-    : filteredMaterials.slice(0, 3);
+    ? scopedMaterials.slice((currentPage - 1) * libraryPageSize, currentPage * libraryPageSize)
+    : scopedMaterials.slice(0, 3);
   const downloadableVisibleMaterials = visibleMaterials.filter((material) => Boolean(material.file_url));
   const allVisibleSelected = downloadableVisibleMaterials.length > 0 && downloadableVisibleMaterials.every((material) => selectedSlugs.includes(getArticleSlug(material)));
 
@@ -268,6 +293,12 @@ export function ResourceLibrary({
     } finally {
       setIsBatchDownloading(false);
     }
+  }
+
+  function openFolder(nextPath: string) {
+    setFolderPath(nextPath);
+    setPage(1);
+    window.requestAnimationFrame(() => document.getElementById("latest-materials")?.scrollIntoView({ block: "start" }));
   }
 
   function requestBatchDownload() {
@@ -439,6 +470,27 @@ export function ResourceLibrary({
             </div>
           ) : null}
 
+          {libraryOnly && folderPath ? (
+            <nav className="mt-4 flex flex-wrap items-center gap-1.5 text-sm text-neutral-500" aria-label="文件夹路径">
+              <button type="button" onClick={() => openFolder("")} className="rounded-lg px-2 py-1 transition-colors hover:bg-[#f1f3f5] hover:text-brand-ink">全部资料</button>
+              {folderPath.split("/").map((name, index, parts) => {
+                const path = parts.slice(0, index + 1).join("/");
+                return <span key={path} className="inline-flex items-center gap-1.5"><span aria-hidden="true">/</span><button type="button" onClick={() => openFolder(path)} className="rounded-lg px-2 py-1 transition-colors hover:bg-[#f1f3f5] hover:text-brand-ink">{name}</button></span>;
+              })}
+            </nav>
+          ) : null}
+
+          {libraryOnly && childFolders.length ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="资料文件夹">
+              {childFolders.map((folder) => (
+                <button key={folder.path} type="button" onClick={() => openFolder(folder.path)} className="group flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-brand-line bg-white px-5 py-4 text-left transition-[border-color,background-color,transform,box-shadow] duration-150 hover:border-[#cfd5db] hover:bg-[#fafbfc] hover:shadow-[0_8px_18px_rgba(35,43,52,0.035)] active:scale-[0.99]">
+                  <span className="min-w-0"><span className="block truncate text-sm font-semibold text-brand-ink">{folder.name}</span><span className="mt-1 block text-xs text-neutral-400">文件夹 · {folder.count} 份资料</span></span>
+                  <span className="text-lg text-neutral-300 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true">›</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           {isBatchDownloadNoticeOpen ? (
             <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#172f35]/20 p-4 sm:items-center" role="presentation" onMouseDown={() => setIsBatchDownloadNoticeOpen(false)}>
               <section role="dialog" aria-modal="true" aria-labelledby="batch-download-notice-title" aria-describedby="batch-download-notice-description" className="w-full max-w-md rounded-2xl border border-[#dfe3e7] bg-white p-6 shadow-[0_20px_60px_rgba(35,43,52,0.18)]" onMouseDown={(event) => event.stopPropagation()}>
@@ -528,7 +580,7 @@ export function ResourceLibrary({
               <button type="button" onClick={() => changePage(currentPage + 1)} disabled={currentPage === totalPages} className="min-h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 transition-[background-color,transform] duration-150 ease-out hover:bg-[#f1f3f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40">下一页</button>
             </nav>
           ) : null}
-          {!isLoading && !filteredMaterials.length ? <div className="xuan-quiet-card mt-4 rounded-2xl p-10 text-center text-sm text-neutral-500">没有找到匹配资料，请更换关键词或专题。</div> : null}
+          {!isLoading && !scopedMaterials.length && !childFolders.length ? <div className="xuan-quiet-card mt-4 rounded-2xl p-10 text-center text-sm text-neutral-500">没有找到匹配资料，请更换关键词、专题或文件夹。</div> : null}
           {!libraryOnly && !isLoading && filteredMaterials.length ? (
             <p className="mt-4 text-center text-xs text-neutral-400">
               首页仅展示最新 3 份，全部资料请前往
@@ -622,4 +674,13 @@ function hasFillingGuide(material: Material) {
 
 function displayMaterialTitle(title: string) {
   return title.replace(/^【小宣资料库】\s*/, "").trim();
+}
+
+function normalizeFolderPath(value?: string) {
+  return String(value || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join("/");
 }
