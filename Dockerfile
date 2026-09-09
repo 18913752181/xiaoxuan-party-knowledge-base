@@ -28,6 +28,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/content /app/seed/content
 COPY --from=builder /app/data /app/seed/data
+COPY deploy/sync-education-base-visuals.mjs /app/deploy/sync-education-base-visuals.mjs
 COPY deploy/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
   && mkdir -p /app/content /app/data

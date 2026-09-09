@@ -361,6 +361,25 @@
     "coverFile": "base-36-kunshan-road-exhibition-cover.webp"
   },
   {
+    "id": 42,
+    "baseName": "昆山戏曲百戏博物馆",
+    "imageUrl": "/images/education-bases/base-42-kunshan-opera-museum-cover.webp",
+    "imageAlt": "昆山戏曲百戏博物馆主题插画",
+    "imageSourceName": "昆山戏曲百戏博物馆",
+    "imageSourceUrl": "https://www.ksoperamuseum.com/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-09",
+    "postcardMasterFile": "base-42-kunshan-opera-museum-postcard-front.png",
+    "motifFile": "base-42-kunshan-opera-museum-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 850,
+      "width": 724,
+      "height": 686
+    },
+    "coverFile": "base-42-kunshan-opera-museum-cover.webp"
+  },
+  {
     "id": 44,
     "baseName": "昆山市党员政治生活馆",
     "imageUrl": "/images/education-bases/base-44-kunshan-party-life-cover.webp",
@@ -608,6 +627,25 @@
     "coverFile": "base-65-ningjuli-museum-cover.webp"
   },
   {
+    "id": 66,
+    "baseName": "上海城市规划展示馆",
+    "imageUrl": "/images/education-bases/base-66-shanghai-urban-planning-cover.webp",
+    "imageAlt": "上海城市规划展示馆主题插画",
+    "imageSourceName": "上海城市规划展示馆",
+    "imageSourceUrl": "https://www.supec.org.cn/index.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-09",
+    "postcardMasterFile": "base-66-shanghai-urban-planning-postcard-front.png",
+    "motifFile": "base-66-shanghai-urban-planning-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 900,
+      "width": 724,
+      "height": 636
+    },
+    "coverFile": "base-66-shanghai-urban-planning-cover.webp"
+  },
+  {
     "id": 69,
     "baseName": "江南制造总局旧址（江南造船厂工人革命斗争地旧址）",
     "imageUrl": "/images/education-bases/base-69-jiangnan-manufacturing-bureau-cover.webp",
@@ -779,6 +817,44 @@
     "coverFile": "base-96-bao-shizhao-cover.webp"
   },
   {
+    "id": 102,
+    "baseName": "吴文化博物馆",
+    "imageUrl": "/images/education-bases/base-102-wu-culture-museum-cover.webp",
+    "imageAlt": "吴文化博物馆主题插画",
+    "imageSourceName": "吴文化博物馆",
+    "imageSourceUrl": "https://wuzhongmuseum.com/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-09",
+    "postcardMasterFile": "base-102-wu-culture-museum-postcard-front.png",
+    "motifFile": "base-102-wu-culture-museum-motif.png",
+    "motifCrop": {
+      "x": 145,
+      "y": 760,
+      "width": 879,
+      "height": 776
+    },
+    "coverFile": "base-102-wu-culture-museum-cover.webp"
+  },
+  {
+    "id": 110,
+    "baseName": "苏州御窑金砖博物馆",
+    "imageUrl": "/images/education-bases/base-110-imperial-kiln-brick-cover.webp",
+    "imageAlt": "苏州御窑金砖博物馆主题插画",
+    "imageSourceName": "苏州御窑金砖博物馆",
+    "imageSourceUrl": "https://www.szyyjzbwg.com/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-09",
+    "postcardMasterFile": "base-110-imperial-kiln-brick-postcard-front.png",
+    "motifFile": "base-110-imperial-kiln-brick-motif.png",
+    "motifCrop": {
+      "x": 35,
+      "y": 900,
+      "width": 989,
+      "height": 510
+    },
+    "coverFile": "base-110-imperial-kiln-brick-cover.webp"
+  },
+  {
     "id": 111,
     "baseName": "苏州市党风廉政警示教育基地",
     "imageUrl": "/images/education-bases/base-111-suzhou-integrity-education-cover.webp",
@@ -853,6 +929,25 @@
       "height": 786
     },
     "coverFile": "base-115-fengyi-village-history-cover.webp"
+  },
+  {
+    "id": 145,
+    "baseName": "草鞋山考古遗址公园",
+    "imageUrl": "/images/education-bases/base-145-caoxieshan-archaeological-cover.webp",
+    "imageAlt": "草鞋山考古遗址公园主题插画",
+    "imageSourceName": "苏州工业园区城市重建有限公司",
+    "imageSourceUrl": "https://www.sipurd.com/product/showproduct.php?id=152&lang=cn",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-09",
+    "postcardMasterFile": "base-145-caoxieshan-archaeological-postcard-front.png",
+    "motifFile": "base-145-caoxieshan-archaeological-motif.png",
+    "motifCrop": {
+      "x": 430,
+      "y": 940,
+      "width": 594,
+      "height": 596
+    },
+    "coverFile": "base-145-caoxieshan-archaeological-cover.webp"
   },
   {
     "id": 147,
