@@ -986,5 +986,100 @@
       "height": 576
     },
     "coverFile": "base-148-red-xinshazhou-cover.webp"
+  },
+  {
+    "id": 150,
+    "baseName": "中共淞沪中心县委纪念馆",
+    "imageUrl": "/images/education-bases/base-150-songhu-county-committee-cover.webp",
+    "imageAlt": "中共淞沪中心县委纪念馆主题插画",
+    "imageSourceName": "央广网",
+    "imageSourceUrl": "https://js.cnr.cn/qxlb/20220930/t20220930_526024433.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-150-songhu-county-committee-postcard-front.png",
+    "motifFile": "base-150-songhu-county-committee-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 760,
+      "width": 694,
+      "height": 675
+    },
+    "coverFile": "base-150-songhu-county-committee-cover.webp"
+  },
+  {
+    "id": 151,
+    "baseName": "双山岛渡江胜利公园",
+    "imageUrl": "/images/education-bases/base-151-shuangshan-victory-crossing-cover.webp",
+    "imageAlt": "双山岛渡江胜利公园主题插画",
+    "imageSourceName": "苏州市退役军人事务局",
+    "imageSourceUrl": "https://www.suzhou.gov.cn/2023symfc/shuangydb/202310/a331e7b6a931423d904a0f79c74af94e.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-151-shuangshan-victory-crossing-postcard-front.png",
+    "motifFile": "base-151-shuangshan-victory-crossing-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 700,
+      "width": 686,
+      "height": 836
+    },
+    "coverFile": "base-151-shuangshan-victory-crossing-cover.webp"
+  },
+  {
+    "id": 152,
+    "baseName": "渡江胜利纪念馆",
+    "imageUrl": "/images/education-bases/base-152-victory-crossing-memorial-cover.webp",
+    "imageAlt": "渡江胜利纪念馆主题插画",
+    "imageSourceName": "南京市雨花台烈士陵园管理局（中国南京红色在线）",
+    "imageSourceUrl": "https://yht.nanjing.gov.cn/rednanjing/hszxmap/202506/t20250611_5583639.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-152-victory-crossing-memorial-postcard-front.png",
+    "motifFile": "base-152-victory-crossing-memorial-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 780,
+      "width": 724,
+      "height": 756
+    },
+    "coverFile": "base-152-victory-crossing-memorial-cover.webp"
+  },
+  {
+    "id": 153,
+    "baseName": "雨花台烈士纪念馆",
+    "imageUrl": "/images/education-bases/base-153-yuhuatai-martyrs-memorial-cover.webp",
+    "imageAlt": "雨花台烈士纪念馆主题插画",
+    "imageSourceName": "南京市雨花台烈士陵园管理局",
+    "imageSourceUrl": "https://yht.nanjing.gov.cn/rednanjing/hszxmap/202506/t20250611_5583622.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-153-yuhuatai-martyrs-memorial-postcard-front.png",
+    "motifFile": "base-153-yuhuatai-martyrs-memorial-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 680,
+      "width": 744,
+      "height": 856
+    },
+    "coverFile": "base-153-yuhuatai-martyrs-memorial-cover.webp"
+  },
+  {
+    "id": 154,
+    "baseName": "中共代表团梅园新村纪念馆",
+    "imageUrl": "/images/education-bases/base-154-meiyuan-xincun-memorial-cover.webp",
+    "imageAlt": "中共代表团梅园新村纪念馆主题插画",
+    "imageSourceName": "南京市文化和旅游局",
+    "imageSourceUrl": "https://wlj.nanjing.gov.cn/whcg/bwg/zgdbtmyxcjng/201807/t20180731_1078650.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-154-meiyuan-xincun-memorial-postcard-front.png",
+    "motifFile": "base-154-meiyuan-xincun-memorial-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 580,
+      "width": 744,
+      "height": 956
+    },
+    "coverFile": "base-154-meiyuan-xincun-memorial-cover.webp"
   }
 ]
