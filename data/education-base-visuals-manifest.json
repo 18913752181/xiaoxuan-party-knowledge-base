@@ -665,6 +665,25 @@
     "coverFile": "base-50-wansan-winery-cover.webp"
   },
   {
+    "id": 51,
+    "baseName": "昆山乡村振兴讲习所",
+    "imageUrl": "/images/education-bases/base-51-kunshan-rural-revitalization-school-cover.webp",
+    "imageAlt": "昆山乡村振兴讲习所主题插画",
+    "imageSourceName": "苏州市网上党员服务中心（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/278940883_783493",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-51-kunshan-rural-revitalization-school-postcard-front.png",
+    "motifFile": "base-51-kunshan-rural-revitalization-school-motif.png",
+    "motifCrop": [
+      400,
+      800,
+      1024,
+      1415
+    ],
+    "coverFile": "base-51-kunshan-rural-revitalization-school-cover.webp"
+  },
+  {
     "id": 53,
     "baseName": "中共一大纪念馆",
     "imageUrl": "/images/education-bases/base-53-first-cpc-congress-cover.webp",
@@ -1311,6 +1330,25 @@
     "coverFile": "base-88-fei-xiaotong-cover.webp"
   },
   {
+    "id": 89,
+    "baseName": "吴江区江陵街道湖东社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-89-wujang-hudong-community-cover.webp",
+    "imageAlt": "吴江区江陵街道湖东社区党群服务中心主题插画",
+    "imageSourceName": "我苏网（吴江区融媒体中心）",
+    "imageSourceUrl": "https://www.ourjiangsu.com/a/20231023/169804316485.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-89-wujang-hudong-community-postcard-front.png",
+    "motifFile": "base-89-wujang-hudong-community-motif.png",
+    "motifCrop": [
+      390,
+      830,
+      1024,
+      1290
+    ],
+    "coverFile": "base-89-wujang-hudong-community-cover.webp"
+  },
+  {
     "id": 90,
     "baseName": "吴江区融入式党建展示馆",
     "imageUrl": "/images/education-bases/base-90-wujiang-party-exhibition-cover.webp",
@@ -1423,6 +1461,44 @@
       "height": 736
     },
     "coverFile": "base-96-bao-shizhao-cover.webp"
+  },
+  {
+    "id": 98,
+    "baseName": "吴中区临湖镇灵湖村黄墅党群驿站",
+    "imageUrl": "/images/education-bases/base-98-linghu-huangshu-party-station-cover.webp",
+    "imageAlt": "吴中区临湖镇灵湖村黄墅党群驿站主题插画",
+    "imageSourceName": "苏州科技大学",
+    "imageSourceUrl": "https://news.usts.edu.cn/info/1097/22628.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-98-linghu-huangshu-party-station-postcard-front.png",
+    "motifFile": "base-98-linghu-huangshu-party-station-motif.png",
+    "motifCrop": [
+      310,
+      720,
+      1024,
+      1320
+    ],
+    "coverFile": "base-98-linghu-huangshu-party-station-cover.webp"
+  },
+  {
+    "id": 99,
+    "baseName": "吴中区金庭镇生态文明讲习所(消夏湾党建阵地)",
+    "imageUrl": "/images/education-bases/base-99-xiaoxiawan-ecology-school-cover.webp",
+    "imageAlt": "吴中区金庭镇生态文明讲习所(消夏湾党建阵地)主题插画",
+    "imageSourceName": "苏州市发展和改革委员会",
+    "imageSourceUrl": "https://fg.suzhou.gov.cn/szfgw/xxdt/202112/9d292d4bf175498e9a66ef23493b8600.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-99-xiaoxiawan-ecology-school-postcard-front.png",
+    "motifFile": "base-99-xiaoxiawan-ecology-school-motif.png",
+    "motifCrop": [
+      340,
+      820,
+      1024,
+      1490
+    ],
+    "coverFile": "base-99-xiaoxiawan-ecology-school-cover.webp"
   },
   {
     "id": 101,
@@ -1822,6 +1898,25 @@
       "height": 781
     },
     "coverFile": "base-125-zhaojiaxiang-community-hub-cover.webp"
+  },
+  {
+    "id": 127,
+    "baseName": "娄葑街道基层社会治理“1+4”实训基地",
+    "imageUrl": "/images/education-bases/base-127-loufeng-governance-training-base-cover.webp",
+    "imageAlt": "娄葑街道基层社会治理“1+4”实训基地主题插画",
+    "imageSourceName": "娄葑街道（搜狐转载）",
+    "imageSourceUrl": "https://m.sohu.com/a/506764225_121106832/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-127-loufeng-governance-training-base-postcard-front.png",
+    "motifFile": "base-127-loufeng-governance-training-base-motif.png",
+    "motifCrop": [
+      20,
+      690,
+      1024,
+      1260
+    ],
+    "coverFile": "base-127-loufeng-governance-training-base-cover.webp"
   },
   {
     "id": 128,
