@@ -608,6 +608,25 @@
     "coverFile": "base-63-shanghai-underground-cover.webp"
   },
   {
+    "id": 64,
+    "baseName": "上海中心大厦——楼宇党建主题展馆",
+    "imageUrl": "/images/education-bases/base-64-shanghai-tower-party-building-cover.webp",
+    "imageAlt": "上海中心大厦——楼宇党建主题展馆主题插画",
+    "imageSourceName": "上海中心大厦官方网站",
+    "imageSourceUrl": "https://www.shanghaitower.com/Picture.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-64-shanghai-tower-party-building-postcard-front.png",
+    "motifFile": "base-64-shanghai-tower-party-building-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 980,
+      "width": 686,
+      "height": 556
+    },
+    "coverFile": "base-64-shanghai-tower-party-building-cover.webp"
+  },
+  {
     "id": 65,
     "baseName": "上海凝聚力工程博物馆",
     "imageUrl": "/images/education-bases/base-65-ningjuli-museum-cover.webp",
@@ -646,6 +665,25 @@
     "coverFile": "base-66-shanghai-urban-planning-cover.webp"
   },
   {
+    "id": 68,
+    "baseName": "江南造船博物馆",
+    "imageUrl": "/images/education-bases/base-68-jiangnan-shipbuilding-museum-cover.webp",
+    "imageAlt": "江南造船博物馆主题插画",
+    "imageSourceName": "携程攻略（补充参考）",
+    "imageSourceUrl": "https://you.ctrip.com/sight/shanghai2/4679129.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-68-jiangnan-shipbuilding-museum-postcard-front.png",
+    "motifFile": "base-68-jiangnan-shipbuilding-museum-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 900,
+      "width": 686,
+      "height": 636
+    },
+    "coverFile": "base-68-jiangnan-shipbuilding-museum-cover.webp"
+  },
+  {
     "id": 69,
     "baseName": "江南制造总局旧址（江南造船厂工人革命斗争地旧址）",
     "imageUrl": "/images/education-bases/base-69-jiangnan-manufacturing-bureau-cover.webp",
@@ -663,6 +701,25 @@
       "height": 580
     },
     "coverFile": "base-69-jiangnan-manufacturing-bureau-cover.webp"
+  },
+  {
+    "id": 70,
+    "baseName": "上海工匠馆",
+    "imageUrl": "/images/education-bases/base-70-shanghai-craftsman-museum-cover.webp",
+    "imageAlt": "上海工匠馆主题插画",
+    "imageSourceName": "新闻晨报（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/898853292_120244154",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-70-shanghai-craftsman-museum-postcard-front.png",
+    "motifFile": "base-70-shanghai-craftsman-museum-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 940,
+      "width": 724,
+      "height": 596
+    },
+    "coverFile": "base-70-shanghai-craftsman-museum-cover.webp"
   },
   {
     "id": 72,
@@ -834,6 +891,44 @@
       "height": 776
     },
     "coverFile": "base-102-wu-culture-museum-cover.webp"
+  },
+  {
+    "id": 103,
+    "baseName": "苏州全国劳动模范事迹馆",
+    "imageUrl": "/images/education-bases/base-103-suzhou-model-workers-museum-cover.webp",
+    "imageAlt": "苏州全国劳动模范事迹馆主题插画",
+    "imageSourceName": "苏州市市场监督管理局",
+    "imageSourceUrl": "https://scjgj.suzhou.gov.cn/szqts/jgdj/202104/cadbed58132e42a79a14a95a2a3e08e4.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-103-suzhou-model-workers-museum-postcard-front.png",
+    "motifFile": "base-103-suzhou-model-workers-museum-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 940,
+      "width": 724,
+      "height": 596
+    },
+    "coverFile": "base-103-suzhou-model-workers-museum-cover.webp"
+  },
+  {
+    "id": 108,
+    "baseName": "苏州市宪法宣传教育馆",
+    "imageUrl": "/images/education-bases/base-108-suzhou-constitution-hall-cover.webp",
+    "imageAlt": "苏州市宪法宣传教育馆主题插画",
+    "imageSourceName": "苏州市信访局",
+    "imageSourceUrl": "https://xinfj.suzhou.gov.cn/szxfj/xwzx/202212/a09d8c0a9a7946ce86f6535bdca2e17b.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-108-suzhou-constitution-hall-postcard-front.png",
+    "motifFile": "base-108-suzhou-constitution-hall-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 1010,
+      "width": 686,
+      "height": 526
+    },
+    "coverFile": "base-108-suzhou-constitution-hall-cover.webp"
   },
   {
     "id": 110,
