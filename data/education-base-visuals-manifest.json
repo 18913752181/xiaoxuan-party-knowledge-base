@@ -1349,6 +1349,44 @@
     "coverFile": "base-115-fengyi-village-history-cover.webp"
   },
   {
+    "id": 116,
+    "baseName": "生物医药产业园党群服务中心",
+    "imageUrl": "/images/education-bases/base-116-biobay-party-service-cover.webp",
+    "imageAlt": "生物医药产业园党群服务中心主题插画",
+    "imageSourceName": "苏州生物医药产业园（BioBAY）",
+    "imageSourceUrl": "https://www.biobay.com.cn/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-116-biobay-party-service-postcard-front.png",
+    "motifFile": "base-116-biobay-party-service-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 780,
+      "width": 744,
+      "height": 690
+    },
+    "coverFile": "base-116-biobay-party-service-cover.webp"
+  },
+  {
+    "id": 119,
+    "baseName": "三星半导体党委",
+    "imageUrl": "/images/education-bases/base-119-samsung-semiconductor-party-cover.webp",
+    "imageAlt": "三星半导体党委主题插画",
+    "imageSourceName": "苏州工业园区规划建设委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szghjswyh/gzdt/202405/f8a75a5436224e698dcbcd1419c9b148.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-119-samsung-semiconductor-party-postcard-front.png",
+    "motifFile": "base-119-samsung-semiconductor-party-motif.png",
+    "motifCrop": {
+      "x": 195,
+      "y": 770,
+      "width": 829,
+      "height": 550
+    },
+    "coverFile": "base-119-samsung-semiconductor-party-cover.webp"
+  },
+  {
     "id": 120,
     "baseName": "同程网党委",
     "imageUrl": "/images/education-bases/base-120-tongcheng-party-cover.webp",
@@ -1501,6 +1539,44 @@
     "coverFile": "base-132-suzhou-center-hub-cover.webp"
   },
   {
+    "id": 135,
+    "baseName": "苏州工业园区与新社会创新发展中心",
+    "imageUrl": "/images/education-bases/base-135-yuxin-social-innovation-cover.webp",
+    "imageAlt": "苏州工业园区与新社会创新发展中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/dthg202407/202407/11cb6fc42bc941f1a2450a0f99f39db7.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-135-yuxin-social-innovation-postcard-front.png",
+    "motifFile": "base-135-yuxin-social-innovation-motif.png",
+    "motifCrop": {
+      "x": 385,
+      "y": 820,
+      "width": 639,
+      "height": 600
+    },
+    "coverFile": "base-135-yuxin-social-innovation-cover.webp"
+  },
+  {
+    "id": 138,
+    "baseName": "巴士课堂：红色慧湖",
+    "imageUrl": "/images/education-bases/base-138-huihu-bus-classroom-cover.webp",
+    "imageAlt": "巴士课堂：红色慧湖主题插画",
+    "imageSourceName": "苏州独墅湖科教创新区",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szdshkjcxq/gzdt/202412/9b6298c3837341849835e0e8319bb9c2.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-138-huihu-bus-classroom-postcard-front.png",
+    "motifFile": "base-138-huihu-bus-classroom-motif.png",
+    "motifCrop": {
+      "x": 490,
+      "y": 845,
+      "width": 534,
+      "height": 660
+    },
+    "coverFile": "base-138-huihu-bus-classroom-cover.webp"
+  },
+  {
     "id": 140,
     "baseName": "金龙客车",
     "imageUrl": "/images/education-bases/base-140-higer-bus-cover.webp",
@@ -1518,6 +1594,25 @@
       "height": 590
     },
     "coverFile": "base-140-higer-bus-cover.webp"
+  },
+  {
+    "id": 141,
+    "baseName": "邻里中心公司党员活动中心",
+    "imageUrl": "/images/education-bases/base-141-neighborhood-center-party-cover.webp",
+    "imageAlt": "邻里中心公司党员活动中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/dthg202407/202407/11cb6fc42bc941f1a2450a0f99f39db7.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-141-neighborhood-center-party-postcard-front.png",
+    "motifFile": "base-141-neighborhood-center-party-motif.png",
+    "motifCrop": {
+      "x": 445,
+      "y": 775,
+      "width": 579,
+      "height": 720
+    },
+    "coverFile": "base-141-neighborhood-center-party-cover.webp"
   },
   {
     "id": 142,
