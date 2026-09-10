@@ -38,6 +38,25 @@
     "coverFile": "base-2-changshu-resistance-cover.jpg"
   },
   {
+    "id": 3,
+    "baseName": "常熟市新业态新就业群体党群服务中心",
+    "imageUrl": "/images/education-bases/base-3-changshu-new-work-party-center-cover.webp",
+    "imageAlt": "常熟市新业态新就业群体党群服务中心主题插画",
+    "imageSourceName": "中国城市报（图片由常熟市委组织部提供）",
+    "imageSourceUrl": "https://paper.people.com.cn/zgcsb/pc/content/202512/08/content_30119296.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-3-changshu-new-work-party-center-postcard-front.png",
+    "motifFile": "base-3-changshu-new-work-party-center-motif.png",
+    "motifCrop": [
+      365,
+      760,
+      1024,
+      1515
+    ],
+    "coverFile": "base-3-changshu-new-work-party-center-cover.webp"
+  },
+  {
     "id": 4,
     "baseName": "波司登集团领航党群服务中心",
     "imageUrl": "/images/education-bases/base-4-bosideng-linghang-cover.webp",
@@ -76,6 +95,25 @@
     "coverFile": "base-5-yijia-community-hub-cover.webp"
   },
   {
+    "id": 6,
+    "baseName": "常熟市沙家浜镇芦荡村党群服务中心",
+    "imageUrl": "/images/education-bases/base-6-ludang-village-party-center-cover.webp",
+    "imageAlt": "常熟市沙家浜镇芦荡村党群服务中心主题插画",
+    "imageSourceName": "常熟市委组织部相关政务信息（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/669514361_121106832",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-6-ludang-village-party-center-postcard-front.png",
+    "motifFile": "base-6-ludang-village-party-center-motif.png",
+    "motifCrop": [
+      330,
+      800,
+      1024,
+      1515
+    ],
+    "coverFile": "base-6-ludang-village-party-center-cover.webp"
+  },
+  {
     "id": 7,
     "baseName": "常熟城市展示馆",
     "imageUrl": "/images/education-bases/base-7-changshu-city-gallery-cover.jpg",
@@ -112,6 +150,25 @@
       "height": 640
     },
     "coverFile": "base-8-jiangxiang-village-cover.webp"
+  },
+  {
+    "id": 9,
+    "baseName": "常熟市新时代文明实践中心（常熟市志愿者协会总部）",
+    "imageUrl": "/images/education-bases/base-9-changshu-civilization-practice-center-cover.webp",
+    "imageAlt": "常熟市新时代文明实践中心（常熟市志愿者协会总部）主题插画",
+    "imageSourceName": "中国文明网",
+    "imageSourceUrl": "https://www.wenming.cn/wmsjzx/dfcz/js/202202/t20220211_6293932.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-9-changshu-civilization-practice-center-postcard-front.png",
+    "motifFile": "base-9-changshu-civilization-practice-center-motif.png",
+    "motifCrop": [
+      320,
+      805,
+      1024,
+      1515
+    ],
+    "coverFile": "base-9-changshu-civilization-practice-center-cover.webp"
   },
   {
     "id": 10,
@@ -1214,6 +1271,25 @@
       "height": 721
     },
     "coverFile": "base-75-taicang-party-service-center-cover.webp"
+  },
+  {
+    "id": 76,
+    "baseName": "太仓市城厢镇电站村党群服务中心",
+    "imageUrl": "/images/education-bases/base-76-dianzhan-village-party-center-cover.webp",
+    "imageAlt": "太仓市城厢镇电站村党群服务中心主题插画",
+    "imageSourceName": "太仓市城厢镇团委相关信息（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/678059069_121123867",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-76-dianzhan-village-party-center-postcard-front.png",
+    "motifFile": "base-76-dianzhan-village-party-center-motif.png",
+    "motifCrop": [
+      180,
+      820,
+      1024,
+      1515
+    ],
+    "coverFile": "base-76-dianzhan-village-party-center-cover.webp"
   },
   {
     "id": 77,
