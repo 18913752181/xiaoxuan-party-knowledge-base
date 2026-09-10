@@ -38,6 +38,25 @@
     "coverFile": "base-2-changshu-resistance-cover.jpg"
   },
   {
+    "id": 4,
+    "baseName": "波司登集团领航党群服务中心",
+    "imageUrl": "/images/education-bases/base-4-bosideng-linghang-cover.webp",
+    "imageAlt": "波司登集团领航党群服务中心主题插画",
+    "imageSourceName": "北京大学新闻网",
+    "imageSourceUrl": "https://news.pku.edu.cn/xwzh/8e0456327b294d0daa9d1b93071411a8.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-4-bosideng-linghang-postcard-front.png",
+    "motifFile": "base-4-bosideng-linghang-motif.png",
+    "motifCrop": {
+      "x": 390,
+      "y": 750,
+      "width": 634,
+      "height": 720
+    },
+    "coverFile": "base-4-bosideng-linghang-cover.webp"
+  },
+  {
     "id": 5,
     "baseName": "常熟市常福街道‘益家营造中心’",
     "imageUrl": "/images/education-bases/base-5-yijia-community-hub-cover.webp",
@@ -112,6 +131,25 @@
       "height": 685
     },
     "coverFile": "base-10-shushan-2035-cover.webp"
+  },
+  {
+    "id": 11,
+    "baseName": "苏州高新区周新民党建工作室",
+    "imageUrl": "/images/education-bases/base-11-zhou-xinmin-studio-cover.webp",
+    "imageAlt": "苏州高新区周新民党建工作室主题插画",
+    "imageSourceName": "南京大学前沿科学学院",
+    "imageSourceUrl": "https://frontier.nju.edu.cn/19/ad/c59140a727469/pagem.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-11-zhou-xinmin-studio-postcard-front.png",
+    "motifFile": "base-11-zhou-xinmin-studio-motif.png",
+    "motifCrop": {
+      "x": 335,
+      "y": 710,
+      "width": 689,
+      "height": 795
+    },
+    "coverFile": "base-11-zhou-xinmin-studio-cover.webp"
   },
   {
     "id": 12,
@@ -1197,6 +1235,25 @@
     "coverFile": "base-103-suzhou-model-workers-museum-cover.webp"
   },
   {
+    "id": 104,
+    "baseName": "国内首部全景影秀剧《信仰》",
+    "imageUrl": "/images/education-bases/base-104-faith-360-theatre-cover.webp",
+    "imageAlt": "国内首部全景影秀剧《信仰》主题插画",
+    "imageSourceName": "苏州市红十字会",
+    "imageSourceUrl": "https://szredcross.suzhou.gov.cn/index.php/home/mb/xwzxcontent?id=8756",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-08",
+    "postcardMasterFile": "base-104-faith-360-theatre-postcard-front.png",
+    "motifFile": "base-104-faith-360-theatre-motif.png",
+    "motifCrop": {
+      "x": 275,
+      "y": 750,
+      "width": 749,
+      "height": 760
+    },
+    "coverFile": "base-104-faith-360-theatre-cover.webp"
+  },
+  {
     "id": 106,
     "baseName": "相城区黄埭镇冯梦龙村",
     "imageUrl": "/images/education-bases/base-106-fengmenglong-village-cover.webp",
@@ -1520,6 +1577,25 @@
     "coverFile": "base-130-jinji-summit-cover.webp"
   },
   {
+    "id": 131,
+    "baseName": "圆融星座党群服务中心",
+    "imageUrl": "/images/education-bases/base-131-yuanrong-constellation-cover.webp",
+    "imageAlt": "圆融星座党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区楼宇经济促进会",
+    "imageSourceUrl": "https://jinjilake.sipac.gov.cn/upload/202407/09/202407090929379124.pdf",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-131-yuanrong-constellation-postcard-front.png",
+    "motifFile": "base-131-yuanrong-constellation-motif.png",
+    "motifCrop": {
+      "x": 445,
+      "y": 800,
+      "width": 579,
+      "height": 710
+    },
+    "coverFile": "base-131-yuanrong-constellation-cover.webp"
+  },
+  {
     "id": 132,
     "baseName": "苏州中心党群服务中心",
     "imageUrl": "/images/education-bases/base-132-suzhou-center-hub-cover.webp",
@@ -1537,6 +1613,25 @@
       "height": 610
     },
     "coverFile": "base-132-suzhou-center-hub-cover.webp"
+  },
+  {
+    "id": 134,
+    "baseName": "苏州工业园区“夜经济”党群服务中心",
+    "imageUrl": "/images/education-bases/base-134-night-economy-center-cover.webp",
+    "imageAlt": "苏州工业园区“夜经济”党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区楼宇经济促进会",
+    "imageSourceUrl": "https://jinjilake.sipac.gov.cn/upload/202503/06/202503061015302176.pdf",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-134-night-economy-center-postcard-front.png",
+    "motifFile": "base-134-night-economy-center-motif.png",
+    "motifCrop": {
+      "x": 325,
+      "y": 760,
+      "width": 699,
+      "height": 700
+    },
+    "coverFile": "base-134-night-economy-center-cover.webp"
   },
   {
     "id": 135,
