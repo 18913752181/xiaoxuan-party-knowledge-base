@@ -2052,6 +2052,44 @@
     "coverFile": "base-120-tongcheng-party-cover.webp"
   },
   {
+    "id": 121,
+    "baseName": "亿滋食品党群服务中心",
+    "imageUrl": "/images/education-bases/base-121-mondelez-party-center-cover.webp",
+    "imageAlt": "亿滋食品党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/xgbd/202408/4b8511e352d14094a7f69bc3d793ee31.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-121-mondelez-party-center-postcard-front.png",
+    "motifFile": "base-121-mondelez-party-center-motif.png",
+    "motifCrop": [
+      250,
+      1030,
+      1024,
+      1515
+    ],
+    "coverFile": "base-121-mondelez-party-center-cover.webp"
+  },
+  {
+    "id": 122,
+    "baseName": "江南嘉捷党委",
+    "imageUrl": "/images/education-bases/base-122-sjec-party-committee-cover.webp",
+    "imageAlt": "江南嘉捷党委主题插画",
+    "imageSourceName": "扬子晚报/紫牛新闻",
+    "imageSourceUrl": "https://m.yzwb.net/wap/news/1484257.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-122-sjec-party-committee-postcard-front.png",
+    "motifFile": "base-122-sjec-party-committee-motif.png",
+    "motifCrop": [
+      410,
+      820,
+      1024,
+      1515
+    ],
+    "coverFile": "base-122-sjec-party-committee-cover.webp"
+  },
+  {
     "id": 123,
     "baseName": "协鑫党建馆",
     "imageUrl": "/images/education-bases/base-123-gcl-party-culture-hall-cover.webp",
