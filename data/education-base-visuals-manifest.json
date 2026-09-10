@@ -171,6 +171,25 @@
     "coverFile": "base-12-smart-manufacturing-center-cover.webp"
   },
   {
+    "id": 13,
+    "baseName": "旺山村党群服务中心",
+    "imageUrl": "/images/education-bases/base-13-wangshan-party-service-cover.webp",
+    "imageAlt": "旺山村党群服务中心主题插画",
+    "imageSourceName": "苏州市委政法委（来源：吴中普法）",
+    "imageSourceUrl": "https://swzfw.suzhou.gov.cn/swzfw/pasz/202303/fafa30c4e18b42e794d1da6a3377c288.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-13-wangshan-party-service-postcard-front.png",
+    "motifFile": "base-13-wangshan-party-service-motif.png",
+    "motifCrop": [
+      390,
+      790,
+      1024,
+      1460
+    ],
+    "coverFile": "base-13-wangshan-party-service-cover.webp"
+  },
+  {
     "id": 15,
     "baseName": "中国南社纪念馆",
     "imageUrl": "/images/education-bases/base-15-china-nanshe-memorial-cover.webp",
@@ -513,6 +532,25 @@
     "coverFile": "base-40-kunshan-archives-cover.webp"
   },
   {
+    "id": 41,
+    "baseName": "昆山融入长三角对接大上海展示馆",
+    "imageUrl": "/images/education-bases/base-41-kunshan-shanghai-integration-hall-cover.webp",
+    "imageAlt": "昆山融入长三角对接大上海展示馆主题插画",
+    "imageSourceName": "中国新闻网（新浪转载）",
+    "imageSourceUrl": "https://news.sina.cn/2020-08-23/detail-iivhuipp0212736.d.html?vt=4",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-41-kunshan-shanghai-integration-hall-postcard-front.png",
+    "motifFile": "base-41-kunshan-shanghai-integration-hall-motif.png",
+    "motifCrop": [
+      430,
+      820,
+      1024,
+      1480
+    ],
+    "coverFile": "base-41-kunshan-shanghai-integration-hall-cover.webp"
+  },
+  {
     "id": 42,
     "baseName": "昆山戏曲百戏博物馆",
     "imageUrl": "/images/education-bases/base-42-kunshan-opera-museum-cover.webp",
@@ -587,6 +625,25 @@
       1445
     ],
     "coverFile": "base-45-tsingtao-kunshan-party-service-cover.webp"
+  },
+  {
+    "id": 46,
+    "baseName": "昆山交发集团党群服务中心",
+    "imageUrl": "/images/education-bases/base-46-kunshan-transport-party-center-cover.webp",
+    "imageAlt": "昆山交发集团党群服务中心主题插画",
+    "imageSourceName": "昆山市融媒体中心（第一昆山）",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/211520",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-46-kunshan-transport-party-center-postcard-front.png",
+    "motifFile": "base-46-kunshan-transport-party-center-motif.png",
+    "motifCrop": [
+      370,
+      800,
+      1024,
+      1470
+    ],
+    "coverFile": "base-46-kunshan-transport-party-center-cover.webp"
   },
   {
     "id": 47,
@@ -1501,6 +1558,25 @@
     "coverFile": "base-99-xiaoxiawan-ecology-school-cover.webp"
   },
   {
+    "id": 100,
+    "baseName": "吴中区越溪街道旺山村党群服务中心",
+    "imageUrl": "/images/education-bases/base-100-wangshan-village-party-center-cover.webp",
+    "imageAlt": "吴中区越溪街道旺山村党群服务中心主题插画",
+    "imageSourceName": "苏州市委政法委（来源：吴中普法）",
+    "imageSourceUrl": "https://swzfw.suzhou.gov.cn/swzfw/pasz/202303/fafa30c4e18b42e794d1da6a3377c288.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-100-wangshan-village-party-center-postcard-front.png",
+    "motifFile": "base-100-wangshan-village-party-center-motif.png",
+    "motifCrop": [
+      390,
+      790,
+      1024,
+      1460
+    ],
+    "coverFile": "base-100-wangshan-village-party-center-cover.webp"
+  },
+  {
     "id": 101,
     "baseName": "吴中区五社融合创新实践中心",
     "imageUrl": "/images/education-bases/base-101-wushe-practice-center-cover.webp",
@@ -2126,6 +2202,25 @@
       "height": 660
     },
     "coverFile": "base-138-huihu-bus-classroom-cover.webp"
+  },
+  {
+    "id": 139,
+    "baseName": "“湖畔花开”——行走的红色课堂",
+    "imageUrl": "/images/education-bases/base-139-lakeside-traveling-classroom-cover.webp",
+    "imageAlt": "“湖畔花开”——行走的红色课堂主题插画",
+    "imageSourceName": "苏州工业园区空间提升协会官方刊物",
+    "imageSourceUrl": "https://jinjilake.sipac.gov.cn/upload/202509/28/202509281541308422.pdf",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-139-lakeside-traveling-classroom-postcard-front.png",
+    "motifFile": "base-139-lakeside-traveling-classroom-motif.png",
+    "motifCrop": [
+      410,
+      770,
+      1024,
+      1470
+    ],
+    "coverFile": "base-139-lakeside-traveling-classroom-cover.webp"
   },
   {
     "id": 140,
