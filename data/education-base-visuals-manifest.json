@@ -684,6 +684,25 @@
     "coverFile": "base-66-shanghai-urban-planning-cover.webp"
   },
   {
+    "id": 67,
+    "baseName": "苏州河工业文明展示馆",
+    "imageUrl": "/images/education-bases/base-67-suzhou-creek-industry-museum-cover.webp",
+    "imageAlt": "苏州河工业文明展示馆主题插画",
+    "imageSourceName": "上海市普陀区人民政府",
+    "imageSourceUrl": "https://www.shpt.gov.cn/wenzi-ptnh/20260707/971225.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-67-suzhou-creek-industry-museum-postcard-front.png",
+    "motifFile": "base-67-suzhou-creek-industry-museum-motif.png",
+    "motifCrop": {
+      "x": 205,
+      "y": 690,
+      "width": 819,
+      "height": 846
+    },
+    "coverFile": "base-67-suzhou-creek-industry-museum-cover.webp"
+  },
+  {
     "id": 68,
     "baseName": "江南造船博物馆",
     "imageUrl": "/images/education-bases/base-68-jiangnan-shipbuilding-museum-cover.webp",
@@ -758,6 +777,25 @@
       "height": 756
     },
     "coverFile": "base-72-taicang-first-branch-cover.webp"
+  },
+  {
+    "id": 75,
+    "baseName": "太仓市城市党建融合服务中心",
+    "imageUrl": "/images/education-bases/base-75-taicang-party-service-center-cover.webp",
+    "imageAlt": "太仓市城市党建融合服务中心主题插画",
+    "imageSourceName": "人民网·中国城市报",
+    "imageSourceUrl": "https://paper.people.com.cn/zgcsbwap/html/2021-01/04/content_2027217.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-75-taicang-party-service-center-postcard-front.png",
+    "motifFile": "base-75-taicang-party-service-center-motif.png",
+    "motifCrop": {
+      "x": 220,
+      "y": 815,
+      "width": 804,
+      "height": 721
+    },
+    "coverFile": "base-75-taicang-party-service-center-cover.webp"
   },
   {
     "id": 78,
@@ -855,6 +893,25 @@
     "coverFile": "base-86-hengli-group-showroom-cover.webp"
   },
   {
+    "id": 87,
+    "baseName": "亨通集团党建传播中心",
+    "imageUrl": "/images/education-bases/base-87-hengtong-party-center-cover.webp",
+    "imageAlt": "亨通集团党建传播中心主题插画",
+    "imageSourceName": "苏州市吴江区人民政府",
+    "imageSourceUrl": "https://www.wujiang.gov.cn/zgwj/kjcs/202304/09a9ee0873af43e49fc86deac9384ea4.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-87-hengtong-party-center-postcard-front.png",
+    "motifFile": "base-87-hengtong-party-center-motif.png",
+    "motifCrop": {
+      "x": 250,
+      "y": 565,
+      "width": 774,
+      "height": 971
+    },
+    "coverFile": "base-87-hengtong-party-center-cover.webp"
+  },
+  {
     "id": 88,
     "baseName": "费孝通江村纪念馆",
     "imageUrl": "/images/education-bases/base-88-fei-xiaotong-cover.webp",
@@ -893,6 +950,25 @@
     "coverFile": "base-90-wujiang-party-exhibition-cover.webp"
   },
   {
+    "id": 91,
+    "baseName": "吴江区建设长三角生态绿色一体化发展示范区展示馆",
+    "imageUrl": "/images/education-bases/base-91-yangtze-delta-demo-hall-cover.webp",
+    "imageAlt": "吴江区建设长三角生态绿色一体化发展示范区展示馆主题插画",
+    "imageSourceName": "苏州金螳螂文化发展股份有限公司",
+    "imageSourceUrl": "https://www.jtlculture.com/news_info/8/608",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-91-yangtze-delta-demo-hall-postcard-front.png",
+    "motifFile": "base-91-yangtze-delta-demo-hall-motif.png",
+    "motifCrop": {
+      "x": 275,
+      "y": 750,
+      "width": 749,
+      "height": 786
+    },
+    "coverFile": "base-91-yangtze-delta-demo-hall-cover.webp"
+  },
+  {
     "id": 92,
     "baseName": "太湖雪蚕桑文化园",
     "imageUrl": "/images/education-bases/base-92-taihu-snow-culture-park-cover.webp",
@@ -929,6 +1005,25 @@
       "height": 776
     },
     "coverFile": "base-93-zhonganqiao-xiejialu-cover.webp"
+  },
+  {
+    "id": 94,
+    "baseName": "名城集团漫山岛",
+    "imageUrl": "/images/education-bases/base-94-manshan-island-cover.webp",
+    "imageAlt": "名城集团漫山岛主题插画",
+    "imageSourceName": "名城苏州·看苏州客户端",
+    "imageSourceUrl": "https://news.2500sz.com/doc/2022/05/16/849279.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-94-manshan-island-postcard-front.png",
+    "motifFile": "base-94-manshan-island-motif.png",
+    "motifCrop": {
+      "x": 205,
+      "y": 710,
+      "width": 819,
+      "height": 826
+    },
+    "coverFile": "base-94-manshan-island-cover.webp"
   },
   {
     "id": 96,
