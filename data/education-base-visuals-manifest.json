@@ -209,6 +209,63 @@
     "coverFile": "base-15-china-nanshe-memorial-cover.webp"
   },
   {
+    "id": 17,
+    "baseName": "姑苏区平江历史文化街区党群服务中心",
+    "imageUrl": "/images/education-bases/base-17-pingjiang-party-service-cover.webp",
+    "imageAlt": "姑苏区平江历史文化街区党群服务中心主题插画",
+    "imageSourceName": "苏州普法相关政务信息（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/811285923_121106832",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-17-pingjiang-party-service-postcard-front.png",
+    "motifFile": "base-17-pingjiang-party-service-motif.png",
+    "motifCrop": [
+      335,
+      785,
+      1024,
+      1515
+    ],
+    "coverFile": "base-17-pingjiang-party-service-cover.webp"
+  },
+  {
+    "id": 20,
+    "baseName": "西美社区“幸福兵站”",
+    "imageUrl": "/images/education-bases/base-20-ximei-happiness-soldier-station-cover.webp",
+    "imageAlt": "西美社区“幸福兵站”主题插画",
+    "imageSourceName": "姑苏区相关政务信息（搜狐转载）",
+    "imageSourceUrl": "https://www.sohu.com/a/823607248_121106832",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-20-ximei-happiness-soldier-station-postcard-front.png",
+    "motifFile": "base-20-ximei-happiness-soldier-station-motif.png",
+    "motifCrop": [
+      350,
+      775,
+      1024,
+      1515
+    ],
+    "coverFile": "base-20-ximei-happiness-soldier-station-cover.webp"
+  },
+  {
+    "id": 21,
+    "baseName": "金阊街道中街路社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-21-zhongjie-road-party-service-cover.webp",
+    "imageAlt": "金阊街道中街路社区党群服务中心主题插画",
+    "imageSourceName": "姑苏区文旅相关信息（搜狐转载）",
+    "imageSourceUrl": "https://m.sohu.com/a/450466479_349673",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-21-zhongjie-road-party-service-postcard-front.png",
+    "motifFile": "base-21-zhongjie-road-party-service-motif.png",
+    "motifCrop": [
+      320,
+      740,
+      1024,
+      1515
+    ],
+    "coverFile": "base-21-zhongjie-road-party-service-cover.webp"
+  },
+  {
     "id": 22,
     "baseName": "沧浪街道党群服务1号店",
     "imageUrl": "/images/education-bases/base-22-canglang-service-no1-cover.webp",
