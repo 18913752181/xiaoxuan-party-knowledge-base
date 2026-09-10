@@ -266,6 +266,25 @@
     "coverFile": "base-25-digital-innovation-hub-cover.webp"
   },
   {
+    "id": 26,
+    "baseName": "桂花公益坊",
+    "imageUrl": "/images/education-bases/base-26-guihua-community-cover.webp",
+    "imageAlt": "桂花公益坊主题插画",
+    "imageSourceName": "我苏网",
+    "imageSourceUrl": "https://www.ourjiangsu.com/a/20231024/169812647145.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-26-guihua-community-postcard-front.png",
+    "motifFile": "base-26-guihua-community-motif.png",
+    "motifCrop": {
+      "x": 340,
+      "y": 800,
+      "width": 684,
+      "height": 610
+    },
+    "coverFile": "base-26-guihua-community-cover.webp"
+  },
+  {
     "id": 27,
     "baseName": "名城集团白居易纪念苑",
     "imageUrl": "/images/education-bases/base-27-bai-juyi-garden-cover.webp",
@@ -511,6 +530,63 @@
       "height": 800
     },
     "coverFile": "base-44-kunshan-party-life-cover.webp"
+  },
+  {
+    "id": 48,
+    "baseName": "好孩子集团党群服务站",
+    "imageUrl": "/images/education-bases/base-48-goodbaby-service-cover.webp",
+    "imageAlt": "好孩子集团党群服务站主题插画",
+    "imageSourceName": "昆山市人民政府",
+    "imageSourceUrl": "https://data.ks.gov.cn/kss/funv/202311/bcef051a47ee432db9fc0a2c9a03be6e.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-48-goodbaby-service-postcard-front.png",
+    "motifFile": "base-48-goodbaby-service-motif.png",
+    "motifCrop": {
+      "x": 390,
+      "y": 790,
+      "width": 634,
+      "height": 595
+    },
+    "coverFile": "base-48-goodbaby-service-cover.webp"
+  },
+  {
+    "id": 49,
+    "baseName": "千灯镇歇马桥村党群服务中心",
+    "imageUrl": "/images/education-bases/base-49-xiemaqiao-village-cover.webp",
+    "imageAlt": "千灯镇歇马桥村党群服务中心主题插画",
+    "imageSourceName": "第一昆山",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/131675",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-49-xiemaqiao-village-postcard-front.png",
+    "motifFile": "base-49-xiemaqiao-village-motif.png",
+    "motifCrop": {
+      "x": 390,
+      "y": 850,
+      "width": 634,
+      "height": 570
+    },
+    "coverFile": "base-49-xiemaqiao-village-cover.webp"
+  },
+  {
+    "id": 50,
+    "baseName": "万三酒庄“曲颂”党群服务点",
+    "imageUrl": "/images/education-bases/base-50-wansan-winery-cover.webp",
+    "imageAlt": "万三酒庄“曲颂”党群服务点主题插画",
+    "imageSourceName": "名城苏州",
+    "imageSourceUrl": "https://news.2500sz.com/doc/2024/05/03/1080362.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-50-wansan-winery-postcard-front.png",
+    "motifFile": "base-50-wansan-winery-motif.png",
+    "motifCrop": {
+      "x": 380,
+      "y": 840,
+      "width": 644,
+      "height": 485
+    },
+    "coverFile": "base-50-wansan-winery-cover.webp"
   },
   {
     "id": 53,
@@ -1727,6 +1803,25 @@
       "height": 600
     },
     "coverFile": "base-135-yuxin-social-innovation-cover.webp"
+  },
+  {
+    "id": 137,
+    "baseName": "中国人民大学（苏州校区）校史馆",
+    "imageUrl": "/images/education-bases/base-137-ruc-suzhou-history-cover.webp",
+    "imageAlt": "中国人民大学（苏州校区）校史馆主题插画",
+    "imageSourceName": "KEDGE Business School",
+    "imageSourceUrl": "https://kedge.edu/l-ecole/presse/kit-media",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-137-ruc-suzhou-history-postcard-front.png",
+    "motifFile": "base-137-ruc-suzhou-history-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 785,
+      "width": 694,
+      "height": 610
+    },
+    "coverFile": "base-137-ruc-suzhou-history-cover.webp"
   },
   {
     "id": 138,
