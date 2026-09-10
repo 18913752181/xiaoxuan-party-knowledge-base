@@ -1007,6 +1007,25 @@
     "coverFile": "base-70-shanghai-craftsman-museum-cover.webp"
   },
   {
+    "id": 71,
+    "baseName": "太仓市党员教育“心源”馆",
+    "imageUrl": "/images/education-bases/base-71-taicang-xinyuan-hall-cover.webp",
+    "imageAlt": "太仓市党员教育“心源”馆主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/nlj/djgz/202311/ee5b88284fd545aa8ac5356968f955ef.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-71-taicang-xinyuan-hall-postcard-front.png",
+    "motifFile": "base-71-taicang-xinyuan-hall-motif.png",
+    "motifCrop": [
+      390,
+      790,
+      1024,
+      1475
+    ],
+    "coverFile": "base-71-taicang-xinyuan-hall-cover.webp"
+  },
+  {
     "id": 72,
     "baseName": "太仓第一个党支部纪念馆",
     "imageUrl": "/images/education-bases/base-72-taicang-first-branch-cover.webp",
@@ -1024,6 +1043,25 @@
       "height": 756
     },
     "coverFile": "base-72-taicang-first-branch-cover.webp"
+  },
+  {
+    "id": 74,
+    "baseName": "太仓市乡村振兴实践学院",
+    "imageUrl": "/images/education-bases/base-74-taicang-rural-revitalization-institute-cover.webp",
+    "imageAlt": "太仓市乡村振兴实践学院主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/nlj/djgz/202311/ee5b88284fd545aa8ac5356968f955ef.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-74-taicang-rural-revitalization-institute-postcard-front.png",
+    "motifFile": "base-74-taicang-rural-revitalization-institute-motif.png",
+    "motifCrop": [
+      300,
+      825,
+      1024,
+      1450
+    ],
+    "coverFile": "base-74-taicang-rural-revitalization-institute-cover.webp"
   },
   {
     "id": 75,
@@ -1501,6 +1539,25 @@
     "coverFile": "base-106-fengmenglong-village-cover.webp"
   },
   {
+    "id": 107,
+    "baseName": "望亭镇果园社区",
+    "imageUrl": "/images/education-bases/base-107-wangting-guoyuan-community-cover.webp",
+    "imageAlt": "望亭镇果园社区主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/nlj/ywdt/202601/d1f69521ed134ebdbea7f8f6d5a3d2fa.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-107-wangting-guoyuan-community-postcard-front.png",
+    "motifFile": "base-107-wangting-guoyuan-community-motif.png",
+    "motifCrop": [
+      300,
+      770,
+      1024,
+      1490
+    ],
+    "coverFile": "base-107-wangting-guoyuan-community-cover.webp"
+  },
+  {
     "id": 108,
     "baseName": "苏州市宪法宣传教育馆",
     "imageUrl": "/images/education-bases/base-108-suzhou-constitution-hall-cover.webp",
@@ -1862,6 +1919,25 @@
     "coverFile": "base-132-suzhou-center-hub-cover.webp"
   },
   {
+    "id": 133,
+    "baseName": "斜塘老街党群服务中心",
+    "imageUrl": "/images/education-bases/base-133-xietang-old-street-party-center-cover.webp",
+    "imageAlt": "斜塘老街党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/zmjxs/202411/3e16ae5bc802425b880befc33104c686.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-133-xietang-old-street-party-center-postcard-front.png",
+    "motifFile": "base-133-xietang-old-street-party-center-motif.png",
+    "motifCrop": [
+      360,
+      1115,
+      1024,
+      1515
+    ],
+    "coverFile": "base-133-xietang-old-street-party-center-cover.webp"
+  },
+  {
     "id": 134,
     "baseName": "苏州工业园区“夜经济”党群服务中心",
     "imageUrl": "/images/education-bases/base-134-night-economy-center-cover.webp",
@@ -1898,6 +1974,25 @@
       "height": 600
     },
     "coverFile": "base-135-yuxin-social-innovation-cover.webp"
+  },
+  {
+    "id": 136,
+    "baseName": "西浦“蓝色西浦红五星”党建走廊",
+    "imageUrl": "/images/education-bases/base-136-xjtlu-red-star-corridor-cover.webp",
+    "imageAlt": "西浦“蓝色西浦红五星”党建走廊主题插画",
+    "imageSourceName": "西交利物浦大学",
+    "imageSourceUrl": "https://www.xjtlu.edu.cn/zh/news/2019/11/fushizhangwangxianglaifang",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-136-xjtlu-red-star-corridor-postcard-front.png",
+    "motifFile": "base-136-xjtlu-red-star-corridor-motif.png",
+    "motifCrop": [
+      40,
+      690,
+      1010,
+      1335
+    ],
+    "coverFile": "base-136-xjtlu-red-star-corridor-cover.webp"
   },
   {
     "id": 137,
