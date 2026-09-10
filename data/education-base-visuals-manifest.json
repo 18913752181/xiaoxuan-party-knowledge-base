@@ -361,6 +361,25 @@
     "coverFile": "base-36-kunshan-road-exhibition-cover.webp"
   },
   {
+    "id": 40,
+    "baseName": "“玉出昆冈——昆山历史文化档案陈列”展（昆山市档案馆）",
+    "imageUrl": "/images/education-bases/base-40-kunshan-archives-cover.webp",
+    "imageAlt": "“玉出昆冈——昆山历史文化档案陈列”展（昆山市档案馆）主题插画",
+    "imageSourceName": "学习强国",
+    "imageSourceUrl": "https://article.xuexi.cn/html/9665123514958921389.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-40-kunshan-archives-postcard-front.png",
+    "motifFile": "base-40-kunshan-archives-motif.png",
+    "motifCrop": {
+      "x": 320,
+      "y": 835,
+      "width": 704,
+      "height": 701
+    },
+    "coverFile": "base-40-kunshan-archives-cover.webp"
+  },
+  {
     "id": 42,
     "baseName": "昆山戏曲百戏博物馆",
     "imageUrl": "/images/education-bases/base-42-kunshan-opera-museum-cover.webp",
@@ -855,6 +874,25 @@
     "coverFile": "base-90-wujiang-party-exhibition-cover.webp"
   },
   {
+    "id": 92,
+    "baseName": "太湖雪蚕桑文化园",
+    "imageUrl": "/images/education-bases/base-92-taihu-snow-culture-park-cover.webp",
+    "imageAlt": "太湖雪蚕桑文化园主题插画",
+    "imageSourceName": "太湖雪",
+    "imageSourceUrl": "https://taihusnow.com/taihu-snow-silkworm-garden-silk-road-theme-park.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-92-taihu-snow-culture-park-postcard-front.png",
+    "motifFile": "base-92-taihu-snow-culture-park-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 820,
+      "width": 724,
+      "height": 716
+    },
+    "coverFile": "base-92-taihu-snow-culture-park-cover.webp"
+  },
+  {
     "id": 96,
     "baseName": "暴式昭纪念馆",
     "imageUrl": "/images/education-bases/base-96-bao-shizhao-cover.webp",
@@ -912,6 +950,25 @@
     "coverFile": "base-103-suzhou-model-workers-museum-cover.webp"
   },
   {
+    "id": 106,
+    "baseName": "相城区黄埭镇冯梦龙村",
+    "imageUrl": "/images/education-bases/base-106-fengmenglong-village-cover.webp",
+    "imageAlt": "相城区黄埭镇冯梦龙村主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/nlj/sqdt/202112/1355f14a31d9478ba9874a38214f766e.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-106-fengmenglong-village-postcard-front.png",
+    "motifFile": "base-106-fengmenglong-village-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 790,
+      "width": 724,
+      "height": 746
+    },
+    "coverFile": "base-106-fengmenglong-village-cover.webp"
+  },
+  {
     "id": 108,
     "baseName": "苏州市宪法宣传教育馆",
     "imageUrl": "/images/education-bases/base-108-suzhou-constitution-hall-cover.webp",
@@ -929,6 +986,25 @@
       "height": 526
     },
     "coverFile": "base-108-suzhou-constitution-hall-cover.webp"
+  },
+  {
+    "id": 109,
+    "baseName": "苏州相城区规划展示馆",
+    "imageUrl": "/images/education-bases/base-109-xiangcheng-planning-hall-cover.webp",
+    "imageAlt": "苏州相城区规划展示馆主题插画",
+    "imageSourceName": "designboom",
+    "imageSourceUrl": "https://www.designboom.com/architecture/lacime-architects-cover-exhibition-hall-undulating-facade-suzhou-china-11-03-2018/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-109-xiangcheng-planning-hall-postcard-front.png",
+    "motifFile": "base-109-xiangcheng-planning-hall-motif.png",
+    "motifCrop": {
+      "x": 300,
+      "y": 805,
+      "width": 724,
+      "height": 731
+    },
+    "coverFile": "base-109-xiangcheng-planning-hall-cover.webp"
   },
   {
     "id": 110,
@@ -1024,6 +1100,25 @@
       "height": 786
     },
     "coverFile": "base-115-fengyi-village-history-cover.webp"
+  },
+  {
+    "id": 143,
+    "baseName": "苏州基金博物馆",
+    "imageUrl": "/images/education-bases/base-143-suzhou-fund-museum-cover.webp",
+    "imageAlt": "苏州基金博物馆主题插画",
+    "imageSourceName": "携程攻略",
+    "imageSourceUrl": "https://you.ctrip.com/sight/suzhou11/1487567.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-143-suzhou-fund-museum-postcard-front.png",
+    "motifFile": "base-143-suzhou-fund-museum-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 865,
+      "width": 686,
+      "height": 671
+    },
+    "coverFile": "base-143-suzhou-fund-museum-cover.webp"
   },
   {
     "id": 145,
