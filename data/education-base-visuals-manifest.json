@@ -76,6 +76,25 @@
     "coverFile": "base-7-changshu-city-gallery-cover.jpg"
   },
   {
+    "id": 8,
+    "baseName": "蒋巷村",
+    "imageUrl": "/images/education-bases/base-8-jiangxiang-village-cover.webp",
+    "imageAlt": "蒋巷村主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/nlj/tpxw/202601/0eb891b6798e4084b51c267057b425fa.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-8-jiangxiang-village-postcard-front.png",
+    "motifFile": "base-8-jiangxiang-village-motif.png",
+    "motifCrop": {
+      "x": 190,
+      "y": 870,
+      "width": 834,
+      "height": 640
+    },
+    "coverFile": "base-8-jiangxiang-village-cover.webp"
+  },
+  {
     "id": 10,
     "baseName": "苏州高新区树山2035乡村振兴实践展示馆",
     "imageUrl": "/images/education-bases/base-10-shushan-2035-cover.webp",
@@ -798,6 +817,25 @@
     "coverFile": "base-75-taicang-party-service-center-cover.webp"
   },
   {
+    "id": 77,
+    "baseName": "太仓市规划展示馆",
+    "imageUrl": "/images/education-bases/base-77-taicang-planning-hall-cover.webp",
+    "imageAlt": "太仓市规划展示馆主题插画",
+    "imageSourceName": "全国文化信息资源共享工程·云馆",
+    "imageSourceUrl": "https://yunghzg.cn/default.aspx/?RoomID=119",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-77-taicang-planning-hall-postcard-front.png",
+    "motifFile": "base-77-taicang-planning-hall-motif.png",
+    "motifCrop": {
+      "x": 200,
+      "y": 870,
+      "width": 824,
+      "height": 640
+    },
+    "coverFile": "base-77-taicang-planning-hall-cover.webp"
+  },
+  {
     "id": 78,
     "baseName": "新四军六师师部旧址纪念馆",
     "imageUrl": "/images/education-bases/base-78-sixth-division-cover.webp",
@@ -1045,6 +1083,25 @@
     "coverFile": "base-96-bao-shizhao-cover.webp"
   },
   {
+    "id": 101,
+    "baseName": "吴中区五社融合创新实践中心",
+    "imageUrl": "/images/education-bases/base-101-wushe-practice-center-cover.webp",
+    "imageAlt": "吴中区五社融合创新实践中心主题插画",
+    "imageSourceName": "苏州市民政局（来源：吴中区民政局）",
+    "imageSourceUrl": "https://minzhengju.suzhou.gov.cn/mzj/sqdt/202306/cdd613dd763c40238817020088968b4e.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-101-wushe-practice-center-postcard-front.png",
+    "motifFile": "base-101-wushe-practice-center-motif.png",
+    "motifCrop": {
+      "x": 610,
+      "y": 675,
+      "width": 414,
+      "height": 835
+    },
+    "coverFile": "base-101-wushe-practice-center-cover.webp"
+  },
+  {
     "id": 102,
     "baseName": "吴文化博物馆",
     "imageUrl": "/images/education-bases/base-102-wu-culture-museum-cover.webp",
@@ -1233,6 +1290,44 @@
       "height": 786
     },
     "coverFile": "base-115-fengyi-village-history-cover.webp"
+  },
+  {
+    "id": 123,
+    "baseName": "协鑫党建馆",
+    "imageUrl": "/images/education-bases/base-123-gcl-party-culture-hall-cover.webp",
+    "imageAlt": "协鑫党建馆主题插画",
+    "imageSourceName": "东南大学苏州校区",
+    "imageSourceUrl": "https://szxq.seu.edu.cn/2023/1123/c24377a473028/pagem.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-123-gcl-party-culture-hall-postcard-front.png",
+    "motifFile": "base-123-gcl-party-culture-hall-motif.png",
+    "motifCrop": {
+      "x": 355,
+      "y": 710,
+      "width": 669,
+      "height": 725
+    },
+    "coverFile": "base-123-gcl-party-culture-hall-cover.webp"
+  },
+  {
+    "id": 124,
+    "baseName": "工业园区唯亭街道北部市民中心党群服务中心",
+    "imageUrl": "/images/education-bases/base-124-north-civic-center-cover.webp",
+    "imageAlt": "工业园区唯亭街道北部市民中心党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区城市重建有限公司",
+    "imageSourceUrl": "https://www.sipurd.com/product/showproduct.php?id=151&lang=cn",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-124-north-civic-center-postcard-front.png",
+    "motifFile": "base-124-north-civic-center-motif.png",
+    "motifCrop": {
+      "x": 20,
+      "y": 1135,
+      "width": 985,
+      "height": 375
+    },
+    "coverFile": "base-124-north-civic-center-cover.webp"
   },
   {
     "id": 125,
