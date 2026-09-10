@@ -855,6 +855,63 @@
     "coverFile": "base-78-sixth-division-cover.webp"
   },
   {
+    "id": 79,
+    "baseName": "红豆集团",
+    "imageUrl": "/images/education-bases/base-79-hongdou-group-cover.webp",
+    "imageAlt": "红豆集团主题插画",
+    "imageSourceName": "中华全国工商业联合会",
+    "imageSourceUrl": "https://www.acfic.org.cn/ztzlhz/lxxnjyjd/lxxnjyjd_10/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-79-hongdou-group-postcard-front.png",
+    "motifFile": "base-79-hongdou-group-motif.png",
+    "motifCrop": {
+      "x": 235,
+      "y": 850,
+      "width": 789,
+      "height": 660
+    },
+    "coverFile": "base-79-hongdou-group-cover.webp"
+  },
+  {
+    "id": 80,
+    "baseName": "严家桥村",
+    "imageUrl": "/images/education-bases/base-80-yanjiaqiao-village-cover.webp",
+    "imageAlt": "严家桥村主题插画",
+    "imageSourceName": "无锡市锡山区人民政府办公室",
+    "imageSourceUrl": "https://www.jsxishan.gov.cn/doc/2025/08/26/4636719.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-80-yanjiaqiao-village-postcard-front.png",
+    "motifFile": "base-80-yanjiaqiao-village-motif.png",
+    "motifCrop": {
+      "x": 310,
+      "y": 980,
+      "width": 714,
+      "height": 530
+    },
+    "coverFile": "base-80-yanjiaqiao-village-cover.webp"
+  },
+  {
+    "id": 82,
+    "baseName": "无锡一棉纺织集团",
+    "imageUrl": "/images/education-bases/base-82-wuxi-no1-cotton-mill-cover.webp",
+    "imageAlt": "无锡一棉纺织集团主题插画",
+    "imageSourceName": "江苏大生集团有限公司",
+    "imageSourceUrl": "https://www.dasheng-group.com.cn/newsitem/MjIxNA%3D%3D.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-82-wuxi-no1-cotton-mill-postcard-front.png",
+    "motifFile": "base-82-wuxi-no1-cotton-mill-motif.png",
+    "motifCrop": {
+      "x": 215,
+      "y": 870,
+      "width": 809,
+      "height": 640
+    },
+    "coverFile": "base-82-wuxi-no1-cotton-mill-cover.webp"
+  },
+  {
     "id": 83,
     "baseName": "吴江党史馆",
     "imageUrl": "/images/education-bases/base-83-wujiang-history-cover.webp",
@@ -1349,6 +1406,25 @@
     "coverFile": "base-125-zhaojiaxiang-community-hub-cover.webp"
   },
   {
+    "id": 132,
+    "baseName": "苏州中心党群服务中心",
+    "imageUrl": "/images/education-bases/base-132-suzhou-center-hub-cover.webp",
+    "imageAlt": "苏州中心党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区金鸡湖商务区",
+    "imageSourceUrl": "https://www.sipac.gov.cn/jjhswq/tpxw/202510/2f5ac8af72d44c31a4ecf9b2cb0524e9.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-132-suzhou-center-hub-postcard-front.png",
+    "motifFile": "base-132-suzhou-center-hub-motif.png",
+    "motifCrop": {
+      "x": 330,
+      "y": 900,
+      "width": 694,
+      "height": 610
+    },
+    "coverFile": "base-132-suzhou-center-hub-cover.webp"
+  },
+  {
     "id": 142,
     "baseName": "独墅湖青创港",
     "imageUrl": "/images/education-bases/base-142-dushuhu-youth-venture-port-cover.webp",
@@ -1461,6 +1537,25 @@
       "height": 576
     },
     "coverFile": "base-148-red-xinshazhou-cover.webp"
+  },
+  {
+    "id": 149,
+    "baseName": "张家港市南丰镇永联村",
+    "imageUrl": "/images/education-bases/base-149-yonglian-village-cover.webp",
+    "imageAlt": "张家港市南丰镇永联村主题插画",
+    "imageSourceName": "张家港市南丰镇永联村股份经济合作社",
+    "imageSourceUrl": "https://www.yong-lian.cn/",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-149-yonglian-village-postcard-front.png",
+    "motifFile": "base-149-yonglian-village-motif.png",
+    "motifCrop": {
+      "x": 430,
+      "y": 870,
+      "width": 594,
+      "height": 640
+    },
+    "coverFile": "base-149-yonglian-village-cover.webp"
   },
   {
     "id": 150,
