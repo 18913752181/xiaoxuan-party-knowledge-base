@@ -437,6 +437,25 @@
     "coverFile": "base-36-kunshan-road-exhibition-cover.webp"
   },
   {
+    "id": 37,
+    "baseName": "昆山开发区党群服务中心暨陈惠芬党建工作室",
+    "imageUrl": "/images/education-bases/base-37-kunshan-development-party-center-cover.webp",
+    "imageAlt": "昆山开发区党群服务中心暨陈惠芬党建工作室主题插画",
+    "imageSourceName": "昆山市融媒体中心（第一昆山）",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/211953",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-37-kunshan-development-party-center-postcard-front.png",
+    "motifFile": "base-37-kunshan-development-party-center-motif.png",
+    "motifCrop": [
+      390,
+      840,
+      1024,
+      1460
+    ],
+    "coverFile": "base-37-kunshan-development-party-center-cover.webp"
+  },
+  {
     "id": 38,
     "baseName": "陆家镇邹家角社区启发广场党群服务点",
     "imageUrl": "/images/education-bases/base-38-zoujiajiao-service-point-cover.webp",
@@ -454,6 +473,25 @@
       "height": 595
     },
     "coverFile": "base-38-zoujiajiao-service-point-cover.webp"
+  },
+  {
+    "id": 39,
+    "baseName": "深化两岸产业合作试验区展示馆（光电产业园）",
+    "imageUrl": "/images/education-bases/base-39-cross-strait-industry-hall-cover.webp",
+    "imageAlt": "深化两岸产业合作试验区展示馆（光电产业园）主题插画",
+    "imageSourceName": "扬子晚报/紫牛新闻",
+    "imageSourceUrl": "https://www.yangtse.com/news/yysp/202606/t20260630_367479.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-39-cross-strait-industry-hall-postcard-front.png",
+    "motifFile": "base-39-cross-strait-industry-hall-motif.png",
+    "motifCrop": [
+      315,
+      850,
+      1024,
+      1445
+    ],
+    "coverFile": "base-39-cross-strait-industry-hall-cover.webp"
   },
   {
     "id": 40,
@@ -530,6 +568,44 @@
       "height": 800
     },
     "coverFile": "base-44-kunshan-party-life-cover.webp"
+  },
+  {
+    "id": 45,
+    "baseName": "青岛啤酒(昆山)有限公司党群服务点",
+    "imageUrl": "/images/education-bases/base-45-tsingtao-kunshan-party-service-cover.webp",
+    "imageAlt": "青岛啤酒(昆山)有限公司党群服务点主题插画",
+    "imageSourceName": "昆山市融媒体中心（第一昆山）",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/290639",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-45-tsingtao-kunshan-party-service-postcard-front.png",
+    "motifFile": "base-45-tsingtao-kunshan-party-service-motif.png",
+    "motifCrop": [
+      330,
+      825,
+      1024,
+      1445
+    ],
+    "coverFile": "base-45-tsingtao-kunshan-party-service-cover.webp"
+  },
+  {
+    "id": 47,
+    "baseName": "昆山人力资源市场党群服务中心",
+    "imageUrl": "/images/education-bases/base-47-kunshan-human-resources-party-center-cover.webp",
+    "imageAlt": "昆山人力资源市场党群服务中心主题插画",
+    "imageSourceName": "昆山市融媒体中心（第一昆山）",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/172268",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-47-kunshan-human-resources-party-center-postcard-front.png",
+    "motifFile": "base-47-kunshan-human-resources-party-center-motif.png",
+    "motifCrop": [
+      335,
+      850,
+      1024,
+      1435
+    ],
+    "coverFile": "base-47-kunshan-human-resources-party-center-cover.webp"
   },
   {
     "id": 48,
@@ -1043,6 +1119,25 @@
       "height": 530
     },
     "coverFile": "base-80-yanjiaqiao-village-cover.webp"
+  },
+  {
+    "id": 81,
+    "baseName": "谈村",
+    "imageUrl": "/images/education-bases/base-81-tancun-village-cover.webp",
+    "imageAlt": "谈村主题插画",
+    "imageSourceName": "无锡市人民政府",
+    "imageSourceUrl": "https://www.wuxi.gov.cn/doc/2025/12/18/4703653.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-81-tancun-village-postcard-front.png",
+    "motifFile": "base-81-tancun-village-motif.png",
+    "motifCrop": [
+      315,
+      770,
+      1024,
+      1495
+    ],
+    "coverFile": "base-81-tancun-village-cover.webp"
   },
   {
     "id": 82,
