@@ -418,6 +418,25 @@
     "coverFile": "base-36-kunshan-road-exhibition-cover.webp"
   },
   {
+    "id": 38,
+    "baseName": "陆家镇邹家角社区启发广场党群服务点",
+    "imageUrl": "/images/education-bases/base-38-zoujiajiao-service-point-cover.webp",
+    "imageAlt": "陆家镇邹家角社区启发广场党群服务点主题插画",
+    "imageSourceName": "第一昆山",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/107537",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-38-zoujiajiao-service-point-postcard-front.png",
+    "motifFile": "base-38-zoujiajiao-service-point-motif.png",
+    "motifCrop": {
+      "x": 350,
+      "y": 840,
+      "width": 674,
+      "height": 595
+    },
+    "coverFile": "base-38-zoujiajiao-service-point-cover.webp"
+  },
+  {
     "id": 40,
     "baseName": "“玉出昆冈——昆山历史文化档案陈列”展（昆山市档案馆）",
     "imageUrl": "/images/education-bases/base-40-kunshan-archives-cover.webp",
@@ -454,6 +473,25 @@
       "height": 686
     },
     "coverFile": "base-42-kunshan-opera-museum-cover.webp"
+  },
+  {
+    "id": 43,
+    "baseName": "阳澄湖两岸科创中心展示馆",
+    "imageUrl": "/images/education-bases/base-43-yangcheng-lake-scitech-cover.webp",
+    "imageAlt": "阳澄湖两岸科创中心展示馆主题插画",
+    "imageSourceName": "第一昆山",
+    "imageSourceUrl": "https://www.ksrmtzx.com/news/detail/191366",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-43-yangcheng-lake-scitech-postcard-front.png",
+    "motifFile": "base-43-yangcheng-lake-scitech-motif.png",
+    "motifCrop": {
+      "x": 350,
+      "y": 800,
+      "width": 674,
+      "height": 570
+    },
+    "coverFile": "base-43-yangcheng-lake-scitech-cover.webp"
   },
   {
     "id": 44,
@@ -1254,6 +1292,25 @@
     "coverFile": "base-104-faith-360-theatre-cover.webp"
   },
   {
+    "id": 105,
+    "baseName": "相城区中亿丰红石榴党建阵地",
+    "imageUrl": "/images/education-bases/base-105-zhongyifeng-party-space-cover.webp",
+    "imageAlt": "相城区中亿丰红石榴党建阵地主题插画",
+    "imageSourceName": "中亿丰科技",
+    "imageSourceUrl": "https://www.sohu.com/picture/343228874",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-105-zhongyifeng-party-space-postcard-front.png",
+    "motifFile": "base-105-zhongyifeng-party-space-motif.png",
+    "motifCrop": {
+      "x": 400,
+      "y": 775,
+      "width": 624,
+      "height": 650
+    },
+    "coverFile": "base-105-zhongyifeng-party-space-cover.webp"
+  },
+  {
     "id": 106,
     "baseName": "相城区黄埭镇冯梦龙村",
     "imageUrl": "/images/education-bases/base-106-fengmenglong-village-cover.webp",
@@ -1423,6 +1480,25 @@
       "height": 690
     },
     "coverFile": "base-116-biobay-party-service-cover.webp"
+  },
+  {
+    "id": 117,
+    "baseName": "科创人才党群服务中心",
+    "imageUrl": "/images/education-bases/base-117-scitech-talent-center-cover.webp",
+    "imageAlt": "科创人才党群服务中心主题插画",
+    "imageSourceName": "学习强国",
+    "imageSourceUrl": "https://article.xuexi.cn/articles/index.html?art_id=15676289725116143781",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-117-scitech-talent-center-postcard-front.png",
+    "motifFile": "base-117-scitech-talent-center-motif.png",
+    "motifCrop": {
+      "x": 335,
+      "y": 790,
+      "width": 689,
+      "height": 575
+    },
+    "coverFile": "base-117-scitech-talent-center-cover.webp"
   },
   {
     "id": 119,
@@ -1746,6 +1822,25 @@
       "height": 671
     },
     "coverFile": "base-143-suzhou-fund-museum-cover.webp"
+  },
+  {
+    "id": 144,
+    "baseName": "花语江南人才会客厅",
+    "imageUrl": "/images/education-bases/base-144-huayu-jiangnan-lounge-cover.webp",
+    "imageAlt": "花语江南人才会客厅主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/mtjj/202411/ab3b5ce073c642439f296d1c291a45d6.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-144-huayu-jiangnan-lounge-postcard-front.png",
+    "motifFile": "base-144-huayu-jiangnan-lounge-motif.png",
+    "motifCrop": {
+      "x": 350,
+      "y": 830,
+      "width": 674,
+      "height": 595
+    },
+    "coverFile": "base-144-huayu-jiangnan-lounge-cover.webp"
   },
   {
     "id": 145,
