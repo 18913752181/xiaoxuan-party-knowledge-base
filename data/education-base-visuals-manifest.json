@@ -836,6 +836,25 @@
     "coverFile": "base-85-nanshe-office-cover.webp"
   },
   {
+    "id": 86,
+    "baseName": "恒力集团展示馆",
+    "imageUrl": "/images/education-bases/base-86-hengli-group-showroom-cover.webp",
+    "imageAlt": "恒力集团展示馆主题插画",
+    "imageSourceName": "科技日报",
+    "imageSourceUrl": "https://www.stdaily.com/web/gdxw/2024-06/16/content_1964198.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-86-hengli-group-showroom-postcard-front.png",
+    "motifFile": "base-86-hengli-group-showroom-motif.png",
+    "motifCrop": {
+      "x": 280,
+      "y": 790,
+      "width": 744,
+      "height": 746
+    },
+    "coverFile": "base-86-hengli-group-showroom-cover.webp"
+  },
+  {
     "id": 88,
     "baseName": "费孝通江村纪念馆",
     "imageUrl": "/images/education-bases/base-88-fei-xiaotong-cover.webp",
@@ -891,6 +910,25 @@
       "height": 716
     },
     "coverFile": "base-92-taihu-snow-culture-park-cover.webp"
+  },
+  {
+    "id": 93,
+    "baseName": "众安桥村谢家路",
+    "imageUrl": "/images/education-bases/base-93-zhonganqiao-xiejialu-cover.webp",
+    "imageAlt": "众安桥村谢家路主题插画",
+    "imageSourceName": "苏州市农业农村局",
+    "imageSourceUrl": "https://nyncj.suzhou.gov.cn/gxnz/gzdt/202304/279e9cc36c424bc7b833d2a5515dda8d.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-93-zhonganqiao-xiejialu-postcard-front.png",
+    "motifFile": "base-93-zhonganqiao-xiejialu-motif.png",
+    "motifCrop": {
+      "x": 250,
+      "y": 760,
+      "width": 774,
+      "height": 776
+    },
+    "coverFile": "base-93-zhonganqiao-xiejialu-cover.webp"
   },
   {
     "id": 96,
@@ -1102,6 +1140,44 @@
     "coverFile": "base-115-fengyi-village-history-cover.webp"
   },
   {
+    "id": 125,
+    "baseName": "工业园区金鸡湖街道兆佳巷党群服务中心",
+    "imageUrl": "/images/education-bases/base-125-zhaojiaxiang-community-hub-cover.webp",
+    "imageAlt": "工业园区金鸡湖街道兆佳巷党群服务中心主题插画",
+    "imageSourceName": "梦泊科技",
+    "imageSourceUrl": "https://www.dreamport.com.cn/cases/8.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-125-zhaojiaxiang-community-hub-postcard-front.png",
+    "motifFile": "base-125-zhaojiaxiang-community-hub-motif.png",
+    "motifCrop": {
+      "x": 338,
+      "y": 755,
+      "width": 686,
+      "height": 781
+    },
+    "coverFile": "base-125-zhaojiaxiang-community-hub-cover.webp"
+  },
+  {
+    "id": 142,
+    "baseName": "独墅湖青创港",
+    "imageUrl": "/images/education-bases/base-142-dushuhu-youth-venture-port-cover.webp",
+    "imageAlt": "独墅湖青创港主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/tsyq/202601/293e0d5c7ae040fa9caeb09011513812.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-142-dushuhu-youth-venture-port-postcard-front.png",
+    "motifFile": "base-142-dushuhu-youth-venture-port-motif.png",
+    "motifCrop": {
+      "x": 270,
+      "y": 700,
+      "width": 754,
+      "height": 836
+    },
+    "coverFile": "base-142-dushuhu-youth-venture-port-cover.webp"
+  },
+  {
     "id": 143,
     "baseName": "苏州基金博物馆",
     "imageUrl": "/images/education-bases/base-143-suzhou-fund-museum-cover.webp",
@@ -1138,6 +1214,25 @@
       "height": 596
     },
     "coverFile": "base-145-caoxieshan-archaeological-cover.webp"
+  },
+  {
+    "id": 146,
+    "baseName": "苏州工业园区展示中心",
+    "imageUrl": "/images/education-bases/base-146-sip-exhibition-center-cover.webp",
+    "imageAlt": "苏州工业园区展示中心主题插画",
+    "imageSourceName": "中衡设计集团",
+    "imageSourceUrl": "https://www.artsgroup.cn/en/ennews/engoodNews/2024-04-22/811.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-10",
+    "postcardMasterFile": "base-146-sip-exhibition-center-postcard-front.png",
+    "motifFile": "base-146-sip-exhibition-center-motif.png",
+    "motifCrop": {
+      "x": 270,
+      "y": 820,
+      "width": 754,
+      "height": 716
+    },
+    "coverFile": "base-146-sip-exhibition-center-cover.webp"
   },
   {
     "id": 147,
