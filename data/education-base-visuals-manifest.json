@@ -1349,6 +1349,25 @@
     "coverFile": "base-115-fengyi-village-history-cover.webp"
   },
   {
+    "id": 120,
+    "baseName": "同程网党委",
+    "imageUrl": "/images/education-bases/base-120-tongcheng-party-cover.webp",
+    "imageAlt": "同程网党委主题插画",
+    "imageSourceName": "同程旅行",
+    "imageSourceUrl": "https://www.ly.com/news/detail-66140.html",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-120-tongcheng-party-postcard-front.png",
+    "motifFile": "base-120-tongcheng-party-motif.png",
+    "motifCrop": {
+      "x": 250,
+      "y": 745,
+      "width": 774,
+      "height": 570
+    },
+    "coverFile": "base-120-tongcheng-party-cover.webp"
+  },
+  {
     "id": 123,
     "baseName": "协鑫党建馆",
     "imageUrl": "/images/education-bases/base-123-gcl-party-culture-hall-cover.webp",
@@ -1406,6 +1425,63 @@
     "coverFile": "base-125-zhaojiaxiang-community-hub-cover.webp"
   },
   {
+    "id": 128,
+    "baseName": "玲珑湾社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-128-linglong-bay-community-cover.webp",
+    "imageAlt": "玲珑湾社区党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/dthg202408/202408/ae396faff64e45c091f68c1514dc95cd.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-128-linglong-bay-community-postcard-front.png",
+    "motifFile": "base-128-linglong-bay-community-motif.png",
+    "motifCrop": {
+      "x": 350,
+      "y": 770,
+      "width": 674,
+      "height": 520
+    },
+    "coverFile": "base-128-linglong-bay-community-cover.webp"
+  },
+  {
+    "id": 129,
+    "baseName": "星湾社区“红色管家”示范点",
+    "imageUrl": "/images/education-bases/base-129-xingwan-red-steward-cover.webp",
+    "imageAlt": "星湾社区“红色管家”示范点主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/dthg202407/202407/5cc02fdd82f8485783039e18ed208463.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-129-xingwan-red-steward-postcard-front.png",
+    "motifFile": "base-129-xingwan-red-steward-motif.png",
+    "motifCrop": {
+      "x": 285,
+      "y": 625,
+      "width": 739,
+      "height": 665
+    },
+    "coverFile": "base-129-xingwan-red-steward-cover.webp"
+  },
+  {
+    "id": 130,
+    "baseName": "“金楫之巅”国金中心党群服务中心",
+    "imageUrl": "/images/education-bases/base-130-jinji-summit-cover.webp",
+    "imageAlt": "“金楫之巅”国金中心党群服务中心主题插画",
+    "imageSourceName": "苏州工业园区管理委员会",
+    "imageSourceUrl": "https://www.sipac.gov.cn/szgyyq/dthg202404/202404/37108852b6e444fda6ff10e76ea2f1cf.shtml",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-130-jinji-summit-postcard-front.png",
+    "motifFile": "base-130-jinji-summit-motif.png",
+    "motifCrop": {
+      "x": 275,
+      "y": 675,
+      "width": 749,
+      "height": 625
+    },
+    "coverFile": "base-130-jinji-summit-cover.webp"
+  },
+  {
     "id": 132,
     "baseName": "苏州中心党群服务中心",
     "imageUrl": "/images/education-bases/base-132-suzhou-center-hub-cover.webp",
@@ -1423,6 +1499,25 @@
       "height": 610
     },
     "coverFile": "base-132-suzhou-center-hub-cover.webp"
+  },
+  {
+    "id": 140,
+    "baseName": "金龙客车",
+    "imageUrl": "/images/education-bases/base-140-higer-bus-cover.webp",
+    "imageAlt": "金龙客车主题插画",
+    "imageSourceName": "厦门金龙汽车集团股份有限公司",
+    "imageSourceUrl": "https://www.xmklm.com.cn/tzqy/szjl.htm",
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-140-higer-bus-postcard-front.png",
+    "motifFile": "base-140-higer-bus-motif.png",
+    "motifCrop": {
+      "x": 0,
+      "y": 730,
+      "width": 1024,
+      "height": 590
+    },
+    "coverFile": "base-140-higer-bus-cover.webp"
   },
   {
     "id": 142,
