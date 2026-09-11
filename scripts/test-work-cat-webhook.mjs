@@ -148,6 +148,12 @@ if (!/咪|Dimmo/.test(casualChat) || /交给小宣社长确认|专业判断/.tes
 }
 console.log("✓ 日常闲聊不会误转小宣");
 
+const libraryEntry = await message("资料库在哪里", `local-library-entry-${suffix}`);
+if (!/https:\/\/xiaoxuanvip\.com\/library/.test(libraryEntry) || /https:\/\/xiaoxuanvip\.com\/(?:\s|$)/.test(libraryEntry)) {
+  throw new Error(`资料库入口不符合预期：${libraryEntry}`);
+}
+console.log("✓ 资料库入口指向 /library");
+
 const voice = await voiceMessage("你好", `local-voice-${suffix}`);
 if (!/Dimmo|咪|社长/.test(voice) || /具体党务判断/.test(voice)) {
   throw new Error(`语音转写链路不符合预期：${voice}`);

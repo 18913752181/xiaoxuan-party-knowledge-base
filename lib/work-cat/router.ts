@@ -9,6 +9,8 @@ import { createTaskBindingCode } from "@/lib/work-cat/task-identity";
 import type { Classification, ConversationRow } from "@/lib/work-cat/types";
 
 const HUMAN_CONFIDENCE_THRESHOLD = 0.8;
+const LIBRARY_PRODUCT_PATTERN = /资料库|找资料|模板在哪里/;
+const LIBRARY_PRODUCT_REPLY = "📚 喵喵资料库在这里：https://xiaoxuanvip.com/library\n可以直接搜索关键词找资料，咪也可以帮你指路～";
 const MEMBERSHIP_STATUS_PATTERN = /(我(是|是不是|算不算).{0,4}会员|会员(状态|资格|到期|有效期)|查.{0,4}会员|是不是.{0,4}会员)/;
 const REMINDER_LIST_PATTERN = /(?:查看|看看|查询|我的|查一下).{0,4}(?:提醒|待办)|(?:提醒|待办)(?:列表|清单)/;
 const TASK_QUERY_PATTERN = /(?:今天|明天).{0,8}(?:什么事|有什么|安排|待办|任务|提醒)(?:[？?吗呢]|$)|(?:还有|查看|看看|查询|查一下).{0,8}(?:没完成|未完成|待完成)/;
@@ -322,7 +324,9 @@ export async function routeWorkCatMessage(content: string, context: Conversation
   if (identified.intent === "PRODUCT_QA") {
     return {
       ...identified, category: "faq", shouldReplyDirectly: true, needHuman: false,
-      reply: "🐾 资料库在 https://xiaoxuanvip.com/；提醒可以直接在这里告诉咪“明天8点提醒咪开会”，想查看就说“查看提醒”。\n\n会员和喵喵工作台入口在 https://xiaoxuanvip.com/membership/payment ，小程序正在准备中。"
+      reply: LIBRARY_PRODUCT_PATTERN.test(content)
+        ? LIBRARY_PRODUCT_REPLY
+        : "🐾 提醒可以直接在这里告诉咪“明天8点提醒咪开会”，想查看就说“查看提醒”。\n\n会员和喵喵工作台入口在 https://xiaoxuanvip.com/membership/payment ，小程序正在准备中。"
     };
   }
   if (identified.intent === "TOOL") {
