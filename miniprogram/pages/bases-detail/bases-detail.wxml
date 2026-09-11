@@ -23,43 +23,58 @@
   </view>
 
   <view class="section-card member-guide-card {{memberActive ? 'is-unlocked' : ''}}">
-    <view class="member-guide-head"><view><view class="member-kicker">MEMBER GUIDE</view><view class="section-title">会员基地攻略</view></view><view class="member-badge">{{memberActive ? '已解锁' : '会员专属'}}</view></view>
+    <view class="member-guide-head"><view><view class="member-kicker">EDUCATION BASE GUIDE</view><view class="section-title">教育基地攻略</view></view><view class="member-badge">{{memberActive ? '已解锁' : '会员专享'}}</view></view>
 
     <view wx:if="{{guideLoading}}" class="guide-state">正在核验会员状态和攻略资料…</view>
     <view wx:elif="{{guideError}}" class="guide-state guide-error"><text>{{guideError}}</text><button class="guide-retry" bindtap="loadMemberGuide">重新加载</button></view>
 
     <block wx:elif="{{!memberActive}}">
-      <view class="locked-copy">基础信息和地图永久免费。开通会员后，可继续查看经过整理的联系、预约、活动组织和资料信息。</view>
-      <view class="benefit-list"><view wx:for="{{guidePreview}}" wx:key="*this" class="benefit-row"><text class="benefit-mark">✓</text><text>{{item}}</text></view></view>
-      <button class="unlock-button" bindtap="openMembership">解锁基地攻略</button>
+      <view class="locked-copy">会员解锁参观联系、讲解信息、活动路线和配套资料</view>
+      <view class="benefit-grid"><view wx:for="{{guidePreview}}" wx:key="title" class="benefit-card"><view class="benefit-name">{{item.title}}</view><view class="benefit-description">{{item.description}}</view><view class="benefit-lock">会员内容</view></view></view>
+      <button class="unlock-button" bindtap="openMembership">查看会员权益</button>
       <button wx:if="{{!memberBound}}" class="binding-link" bindtap="openMemberBinding">已经是会员？绑定 Dimmo 账号</button>
     </block>
 
     <block wx:else>
-      <view class="guide-group">
-        <view class="guide-group-title">参观与预约</view>
-        <view class="member-info-row" data-value="{{memberGuide.contact}}" bindtap="copyGuideValue"><text>联系方式</text><view class="{{memberGuide.contact ? '' : 'is-muted'}}">{{memberGuide.contact || '待完善'}}</view></view>
-        <view class="member-info-row"><text>开放信息</text><view class="{{memberGuide.openingInfo ? '' : 'is-muted'}}">{{memberGuide.openingInfo || '待完善'}}</view></view>
-        <view class="member-info-row"><text>预约信息</text><view class="{{memberGuide.reservationInfo ? '' : 'is-muted'}}">{{memberGuide.reservationInfo || '待完善'}}</view></view>
-        <view class="member-info-row"><text>讲解服务</text><view>{{memberGuide.guidedTour ? (memberGuide.guidedTour.available === true ? '有讲解' : memberGuide.guidedTour.available === false ? '明确无讲解' : '待完善') : '待完善'}}</view></view>
-        <view class="member-info-row"><text>讲解费用</text><view class="{{memberGuide.guidedTour && memberGuide.guidedTour.fee ? '' : 'is-muted'}}">{{memberGuide.guidedTour && memberGuide.guidedTour.fee ? memberGuide.guidedTour.fee : '待完善'}}</view></view>
-        <view wx:if="{{memberGuide.guidedTour && memberGuide.guidedTour.note}}" class="guide-long-text">{{memberGuide.guidedTour.note}}</view>
+      <view class="guide-module fact-module">
+        <view class="guide-module-head"><view class="guide-module-index">01</view><view><view class="guide-module-title">参观联系</view><view class="guide-module-caption">经核实的基地公开信息</view></view></view>
+        <view class="fact-card"><view class="fact-label">联系电话</view><view class="fact-content {{memberGuide.officialFacts.contact ? '' : 'is-muted'}}">{{memberGuide.officialFacts.contact || '待完善'}}</view><button wx:if="{{memberGuide.officialFacts.contact}}" class="inline-action" data-value="{{memberGuide.officialFacts.contact}}" bindtap="copyGuideValue">一键复制</button></view>
+        <view class="fact-card"><view class="fact-label">预约方式</view><view class="fact-content {{memberGuide.officialFacts.reservationInfo ? '' : 'is-muted'}}">{{memberGuide.officialFacts.reservationInfo || '待完善'}}</view><button wx:if="{{memberGuide.officialFacts.reservationInfo}}" class="inline-action" data-value="{{memberGuide.officialFacts.reservationInfo}}" bindtap="copyGuideValue">复制预约信息</button></view>
+        <view class="fact-note"><text>预约 / 开放提示</text><view class="{{memberGuide.officialFacts.openingInfo ? '' : 'is-muted'}}">{{memberGuide.officialFacts.openingInfo || '待完善'}}</view></view>
       </view>
 
-      <view class="guide-group">
-        <view class="guide-group-title">活动组织参考</view>
-        <view class="member-info-row"><text>活动形式</text><view class="{{memberGuide.activityFormats ? '' : 'is-muted'}}">{{memberGuide.activityFormats || '待完善'}}</view></view>
-        <view class="member-info-row"><text>适合人群</text><view class="{{memberGuide.suitableAudiences ? '' : 'is-muted'}}">{{memberGuide.suitableAudiences || '待完善'}}</view></view>
-        <view class="member-info-row"><text>活动路线</text><view class="{{memberGuide.activityRoute ? '' : 'is-muted'}}">{{memberGuide.activityRoute || '待完善'}}</view></view>
-        <view class="member-info-row"><text>周边组合</text><view class="{{memberGuide.nearbyBaseCombinations ? '' : 'is-muted'}}">{{memberGuide.nearbyBaseCombinations || '待完善'}}</view></view>
-        <view class="member-info-row"><text>活动方案</text><view class="{{memberGuide.activityPlan ? '' : 'is-muted'}}">{{memberGuide.activityPlan || '待完善'}}</view></view>
-        <view class="member-info-row"><text>相关资料</text><view class="{{memberGuide.relatedMaterials ? '' : 'is-muted'}}">{{memberGuide.relatedMaterials || '待完善'}}</view></view>
+      <view class="guide-module fact-module">
+        <view class="guide-module-head"><view class="guide-module-index">02</view><view><view class="guide-module-title">讲解服务</view><view class="guide-module-caption">经核实的讲解与收费信息</view></view></view>
+        <view class="guide-summary-cards">
+          <view><text>是否提供讲解</text><text class="guide-strong">{{memberGuide.officialFacts.guidedTour ? (memberGuide.officialFacts.guidedTour.available === true ? '提供讲解' : memberGuide.officialFacts.guidedTour.available === false ? '明确不提供' : '待完善') : '待完善'}}</text></view>
+          <view><text>讲解费用 / 场次</text><text class="guide-strong {{memberGuide.officialFacts.guidedTour && memberGuide.officialFacts.guidedTour.fee ? '' : 'is-muted'}}">{{memberGuide.officialFacts.guidedTour && memberGuide.officialFacts.guidedTour.fee ? memberGuide.officialFacts.guidedTour.fee : '待完善'}}</text></view>
+        </view>
+        <view class="fact-note"><text>预约说明</text><view class="{{memberGuide.officialFacts.guidedTour && memberGuide.officialFacts.guidedTour.note ? '' : 'is-muted'}}">{{memberGuide.officialFacts.guidedTour && memberGuide.officialFacts.guidedTour.note ? memberGuide.officialFacts.guidedTour.note : '待完善'}}</view></view>
+      </view>
+
+      <view class="guide-module advice-module">
+        <view class="guide-module-head"><view class="guide-module-index">03</view><view><view class="guide-module-title">活动路线</view><view class="guide-module-caption advice-label">宣知整理建议</view></view></view>
+        <view class="route-block"><view class="route-block-title">半日路线</view><view wx:if="{{memberGuide.editorialAdvice.routes.halfDay.length}}" class="route-timeline"><view wx:for="{{memberGuide.editorialAdvice.routes.halfDay}}" wx:key="index" wx:for-item="step" class="route-node {{step.baseId ? 'is-link' : ''}}" data-id="{{step.baseId}}" bindtap="openNearbyBase"><view class="route-dot"></view><view class="route-node-body"><view class="route-node-line"><text wx:if="{{step.time}}">{{step.time}}</text><text class="route-node-title">{{step.title}}</text></view><view wx:if="{{step.note}}" class="route-node-note">{{step.note}}</view></view></view></view><view wx:else class="empty-guide">待完善</view></view>
+        <view class="route-block"><view class="route-block-title">一日路线</view><view wx:if="{{memberGuide.editorialAdvice.routes.fullDay.length}}" class="route-timeline"><view wx:for="{{memberGuide.editorialAdvice.routes.fullDay}}" wx:key="index" wx:for-item="step" class="route-node {{step.baseId ? 'is-link' : ''}}" data-id="{{step.baseId}}" bindtap="openNearbyBase"><view class="route-dot"></view><view class="route-node-body"><view class="route-node-line"><text wx:if="{{step.time}}">{{step.time}}</text><text class="route-node-title">{{step.title}}</text></view><view wx:if="{{step.note}}" class="route-node-note">{{step.note}}</view></view></view></view><view wx:else class="empty-guide">待完善</view></view>
+        <view class="route-block"><view class="route-block-title">可联动的周边基地 / 教学点</view><view wx:if="{{memberGuide.editorialAdvice.routes.nearby.length}}" class="nearby-list"><button wx:for="{{memberGuide.editorialAdvice.routes.nearby}}" wx:key="id" wx:for-item="nearby" class="nearby-card" data-id="{{nearby.id}}" bindtap="openNearbyBase"><text class="nearby-name">{{nearby.name}}</text><text wx:if="{{nearby.note}}" class="nearby-note">{{nearby.note}}</text><text wx:else class="nearby-note">查看基地详情</text></button></view><view wx:else class="empty-guide">{{memberGuide.editorialAdvice.routes.nearbyNote || '待完善'}}</view></view>
+        <view wx:if="{{memberGuide.editorialAdvice.routes.note}}" class="route-general-note">{{memberGuide.editorialAdvice.routes.note}}</view>
+      </view>
+
+      <view class="guide-module advice-module">
+        <view class="guide-module-head"><view class="guide-module-index">04</view><view><view class="guide-module-title">配套方案与资料</view><view class="guide-module-caption">直接关联小宣资料库</view></view></view>
+        <view wx:if="{{memberGuide.editorialAdvice.materials.length}}" class="material-list"><button wx:for="{{memberGuide.editorialAdvice.materials}}" wx:key="url" wx:for-item="material" class="material-card" data-url="{{material.url}}" data-title="{{material.title}}" bindtap="openGuideMaterial"><text class="material-name">{{material.title}}</text><text wx:if="{{material.description}}" class="material-description">{{material.description}}</text><text class="material-action">打开资料</text></button></view>
+        <view wx:else class="empty-guide">待完善</view>
+      </view>
+
+      <view class="guide-module advice-module">
+        <view class="guide-module-head"><view class="guide-module-index">05</view><view><view class="guide-module-title">基地使用提示</view><view class="guide-module-caption advice-label">宣知整理建议</view></view></view>
+        <view wx:if="{{memberGuide.editorialAdvice.usageTips.length}}" class="usage-tags"><text wx:for="{{memberGuide.editorialAdvice.usageTips}}" wx:key="*this">{{item}}</text></view><view wx:else class="empty-guide">待完善</view>
       </view>
 
       <view class="guide-source-actions">
-        <view class="source-status">事实信息以后台收录和最新核验结果为准。</view>
-        <button class="source-copy" data-value="{{memberGuide.officialSourceUrl}}" bindtap="copyGuideValue">{{memberGuide.officialSourceUrl ? '复制官方来源' : '官方来源待完善'}}</button>
-        <button wx:if="{{memberGuide.guidedTour && memberGuide.guidedTour.sourceUrl}}" class="source-copy" data-value="{{memberGuide.guidedTour.sourceUrl}}" bindtap="copyGuideValue">复制讲解依据</button>
+        <view class="source-status">事实信息来自后台核验资料；缺失内容不会自动补齐。</view>
+        <button wx:if="{{memberGuide.officialFacts.officialSourceUrl}}" class="source-copy" data-value="{{memberGuide.officialFacts.officialSourceUrl}}" bindtap="copyGuideValue">复制官方来源</button>
+        <button wx:if="{{memberGuide.officialFacts.guidedTour && memberGuide.officialFacts.guidedTour.sourceUrl}}" class="source-copy" data-value="{{memberGuide.officialFacts.guidedTour.sourceUrl}}" bindtap="copyGuideValue">复制讲解依据</button>
       </view>
     </block>
   </view>

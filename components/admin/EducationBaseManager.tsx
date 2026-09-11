@@ -33,6 +33,7 @@ type EducationBase = {
   nearby_base_combinations: string | null;
   activity_plan: string | null;
   related_materials: string | null;
+  usage_tips: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -75,6 +76,7 @@ const EMPTY_DRAFT: Draft = {
   nearby_base_combinations: null,
   activity_plan: null,
   related_materials: null,
+  usage_tips: null,
   address: null,
   latitude: null,
   longitude: null,
@@ -95,6 +97,75 @@ function optional(value: string | null) {
 
 function numberValue(value: number | null) {
   return value === null ? "" : String(value);
+}
+
+type RoutePart = "halfDay" | "fullDay";
+type RouteEntry = { time?: string; title: string; note?: string; baseId?: number };
+
+function jsonValue(value: string | null): unknown {
+  if (!value) return null;
+  try { return JSON.parse(value); } catch { return value; }
+}
+
+function routePlan(value: string | null) {
+  const parsed = jsonValue(value);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { halfDay: [] as RouteEntry[], fullDay: [] as RouteEntry[], note: typeof parsed === "string" ? parsed : "" };
+  const record = parsed as Record<string, unknown>;
+  return {
+    halfDay: Array.isArray(record.halfDay) ? record.halfDay as RouteEntry[] : [],
+    fullDay: Array.isArray(record.fullDay) ? record.fullDay as RouteEntry[] : [],
+    note: typeof record.note === "string" ? record.note : ""
+  };
+}
+
+function routePartText(value: string | null, part: RoutePart) {
+  return routePlan(value)[part].map((item) => [item.time || "", item.title || "", item.note || "", item.baseId || ""].join("｜").replace(/[｜]+$/, "")).join("\n");
+}
+
+function updateRoutePart(value: string | null, part: RoutePart, content: string) {
+  const plan = routePlan(value);
+  plan[part] = content.split(/\r?\n/).map((line) => {
+    const [time = "", title = "", note = "", baseId = ""] = line.split(/[|｜]/).map((item) => item.trim());
+    const id = Number(baseId);
+    return { ...(time ? { time } : {}), title: title || time, ...(note ? { note } : {}), ...(Number.isInteger(id) && id > 0 ? { baseId: id } : {}) };
+  }).filter((item) => item.title);
+  return plan.halfDay.length || plan.fullDay.length || plan.note ? JSON.stringify(plan) : null;
+}
+
+function nearbyText(value: string | null) {
+  const parsed = jsonValue(value);
+  if (!Array.isArray(parsed)) return typeof parsed === "string" ? parsed : "";
+  return parsed.map((entry) => {
+    const item: Record<string, unknown> = typeof entry === "object" && entry ? entry as Record<string, unknown> : { baseId: entry };
+    return [item.baseId || item.id || "", item.note || ""].join("｜").replace(/[｜]+$/, "");
+  }).filter(Boolean).join("\n");
+}
+
+function updateNearby(content: string) {
+  const items = content.split(/\r?\n/).map((line) => {
+    const [baseId = "", note = ""] = line.split(/[|｜]/).map((item) => item.trim());
+    const id = Number(baseId);
+    return Number.isInteger(id) && id > 0 ? { baseId: id, ...(note ? { note } : {}) } : null;
+  }).filter(Boolean);
+  return items.length ? JSON.stringify(items) : null;
+}
+
+function materialsText(value: string | null) {
+  const parsed = jsonValue(value);
+  if (!Array.isArray(parsed)) return typeof parsed === "string" ? parsed : "";
+  return parsed.map((entry) => {
+    if (!entry || typeof entry !== "object") return "";
+    const item = entry as Record<string, unknown>;
+    return [item.title || item.name || "", item.url || "", item.description || item.note || ""].join("｜").replace(/[｜]+$/, "");
+  }).filter(Boolean).join("\n");
+}
+
+function updateMaterials(content: string) {
+  const items = content.split(/\r?\n/).map((line) => {
+    const [title = "", url = "", description = ""] = line.split(/[|｜]/).map((item) => item.trim());
+    return title && /^https:\/\/(?:www\.)?xiaoxuanvip\.com(?:\/|$)/i.test(url) ? { title, url, ...(description ? { description } : {}) } : null;
+  }).filter(Boolean);
+  return items.length ? JSON.stringify(items) : null;
 }
 
 function draftFrom(item: EducationBase): Draft {
@@ -331,8 +402,8 @@ export default function EducationBaseManager() {
             </div>
 
             <div className="border-t border-[#ece6dc] pt-5">
-              <h3 className="font-semibold">会员基地攻略</h3>
-              <p className="mt-1 text-xs leading-5 text-[#858b86]">以下内容仅向有效会员完整展示。只填写已核实或有可靠依据的信息；不知道时留空，小程序会显示“待完善”。</p>
+              <h3 className="font-semibold">教育基地攻略（会员内容）</h3>
+              <p className="mt-1 text-xs leading-5 text-[#858b86]">事实信息必须经过核实；路线和使用提示属于“宣知整理建议”。不知道时留空，小程序统一显示“待完善”。</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field label="经核实的联系方式"><input value={draft.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} placeholder="未知时填写：联系信息待核实" /></Field>
                 <Field label="官方来源网址"><input type="url" value={optional(draft.source_url)} onChange={(event) => update("source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
@@ -344,14 +415,14 @@ export default function EducationBaseManager() {
                 <Field label="讲解信息来源"><input type="url" value={optional(draft.guide_source_url)} onChange={(event) => update("guide_source_url", event.target.value || null)} className={inputClass} placeholder="https://" /></Field>
               </div>
               <div className="mt-4"><Field label="讲解说明" hint="预约、场次、人数等"><textarea value={optional(draft.guide_service_note)} onChange={(event) => update("guide_service_note", event.target.value || null)} className={textareaClass} placeholder="未查到时留空" /></Field></div>
+              <div className="mt-5 border-t border-[#eee8dc] pt-5"><p className="text-sm font-semibold text-[#4f5852]">活动路线 <span className="ml-2 text-xs font-normal text-[#9a7b2d]">宣知整理建议</span></p><p className="mt-1 text-xs leading-5 text-[#858b86]">每行格式：时间｜节点名称｜简短说明｜关联基地ID。没有的部分可以留空。</p></div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Field label="适合开展的活动形式"><textarea value={optional(draft.activity_formats)} onChange={(event) => update("activity_formats", event.target.value || null)} className={textareaClass} placeholder="例如现场教学；必须有人工判断依据" /></Field>
-                <Field label="适合人群"><textarea value={optional(draft.suitable_audiences)} onChange={(event) => update("suitable_audiences", event.target.value || null)} className={textareaClass} placeholder="未知时留空" /></Field>
-                <Field label="活动路线"><textarea value={optional(draft.activity_route)} onChange={(event) => update("activity_route", event.target.value || null)} className={textareaClass} placeholder="按真实展陈和入口信息填写" /></Field>
-                <Field label="周边基地组合"><textarea value={optional(draft.nearby_base_combinations)} onChange={(event) => update("nearby_base_combinations", event.target.value || null)} className={textareaClass} placeholder="核对真实距离和开放情况后填写" /></Field>
-                <Field label="活动方案"><textarea value={optional(draft.activity_plan)} onChange={(event) => update("activity_plan", event.target.value || null)} className={textareaClass} placeholder="活动方案正文或摘要" /></Field>
-                <Field label="相关资料"><textarea value={optional(draft.related_materials)} onChange={(event) => update("related_materials", event.target.value || null)} className={textareaClass} placeholder="资料名称和链接，可按行填写" /></Field>
+                <Field label="半日路线"><textarea value={routePartText(draft.activity_route, "halfDay")} onChange={(event) => update("activity_route", updateRoutePart(draft.activity_route, "halfDay", event.target.value))} className={textareaClass} placeholder="09:00｜基地参观｜建议提前到场｜14" /></Field>
+                <Field label="一日路线"><textarea value={routePartText(draft.activity_route, "fullDay")} onChange={(event) => update("activity_route", updateRoutePart(draft.activity_route, "fullDay", event.target.value))} className={textareaClass} placeholder="09:00｜上午教学｜核对开放时间｜14" /></Field>
+                <Field label="周边联动基地" hint="填写数据库中的基地ID"><textarea value={nearbyText(draft.nearby_base_combinations)} onChange={(event) => update("nearby_base_combinations", updateNearby(event.target.value))} className={textareaClass} placeholder="14｜步行可达，适合联动" /></Field>
+                <Field label="配套方案与资料" hint="只关联小宣资料库"><textarea value={materialsText(draft.related_materials)} onChange={(event) => update("related_materials", updateMaterials(event.target.value))} className={textareaClass} placeholder="主题党日活动方案｜https://xiaoxuanvip.com/materials/...｜方案说明" /></Field>
               </div>
+              <div className="mt-4"><Field label="基地使用提示" hint="宣知整理建议，最多5条，每行1条"><textarea value={optional(draft.usage_tips)} onChange={(event) => update("usage_tips", event.target.value || null)} className={textareaClass} placeholder={'建议提前预约\n适合团队活动\n可安排半日'} /></Field></div>
             </div>
 
             <div className="border-t border-[#ece6dc] pt-5">

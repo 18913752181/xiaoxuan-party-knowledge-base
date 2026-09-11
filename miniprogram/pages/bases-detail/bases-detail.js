@@ -27,7 +27,13 @@ Page({
     base: null, favorite: false, routeFull: false, inRoute: false, routeButtonText: "加入路线",
     guideLoading: true, guideError: "", memberBound: false, memberActive: false,
     memberGuide: null,
-    guidePreview: ["经核实的联系与预约信息", "开放与讲解服务", "适合开展的活动形式和人群", "活动路线与周边基地组合", "活动方案及相关资料"]
+    guidePreview: [
+      { title: "参观联系", description: "联系方式、预约方式与开放提示" },
+      { title: "讲解服务", description: "讲解预约、费用与场次信息" },
+      { title: "活动路线", description: "半日、一日及周边联动路线" },
+      { title: "配套方案与资料", description: "关联小宣资料库现有内容" },
+      { title: "基地使用提示", description: "宣知整理的简短组织建议" }
+    ]
   },
 
   onLoad(options) {
@@ -123,9 +129,25 @@ Page({
     wx.setClipboardData({ data: value, success: () => wx.showToast({ title: "内容已复制", icon: "none" }) });
   },
 
+  openNearbyBase(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    if (!Number.isInteger(id) || id <= 0 || id === Number(this.data.base.id)) return;
+    wx.navigateTo({ url: `/pages/bases-detail/bases-detail?id=${id}` });
+  },
+
+  openGuideMaterial(event) {
+    const url = event.currentTarget.dataset.url || "";
+    const title = encodeURIComponent(event.currentTarget.dataset.title || "相关资料");
+    if (!/^https:\/\/(www\.)?xiaoxuanvip\.com(?:\/|$)/.test(url)) {
+      wx.showToast({ title: "资料链接待完善", icon: "none" });
+      return;
+    }
+    wx.navigateTo({ url: `/pages/webview/webview?title=${title}&url=${encodeURIComponent(url)}` });
+  },
+
   openMembership() {
     const url = encodeURIComponent("https://xiaoxuanvip.com/membership/payment");
-    const title = encodeURIComponent("解锁基地攻略");
+    const title = encodeURIComponent("查看会员权益");
     wx.navigateTo({ url: `/pages/webview/webview?title=${title}&url=${url}` });
   },
 

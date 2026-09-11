@@ -31,6 +31,7 @@ export type EducationBaseRow = {
   nearby_base_combinations: string | null;
   activity_plan: string | null;
   related_materials: string | null;
+  usage_tips: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -87,7 +88,7 @@ const SUZHOU_DISTRICTS: Record<string, string> = {
   "张家港": "张家港市"
 };
 
-export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,image_url,image_storage_path,image_alt,image_source_url,image_rights_status,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,opening_info,reservation_info,activity_formats,suitable_audiences,activity_route,nearby_base_combinations,activity_plan,related_materials,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
+export const EDUCATION_BASE_SELECT = "id,name,type,city,district,intro,status,icon,contact,source_url,image_url,image_storage_path,image_alt,image_source_url,image_rights_status,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,opening_info,reservation_info,activity_formats,suitable_audiences,activity_route,nearby_base_combinations,activity_plan,related_materials,usage_tips,address,latitude,longitude,coordinate_type,location_source_name,location_source_url,location_confidence,sort_order,is_published,created_at,updated_at";
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim() : fallback;
@@ -151,6 +152,7 @@ export function getFallbackEducationBases(): EducationBaseRow[] {
       nearby_base_combinations: null,
       activity_plan: null,
       related_materials: null,
+      usage_tips: null,
       address: location?.address || null,
       latitude: location?.latitude ?? null,
       longitude: location?.longitude ?? null,
@@ -213,6 +215,7 @@ export function normalizeEducationBaseInput(input: Record<string, unknown>, curr
     nearby_base_combinations: nullableText(input.nearby_base_combinations ?? current?.nearby_base_combinations),
     activity_plan: nullableText(input.activity_plan ?? current?.activity_plan),
     related_materials: nullableText(input.related_materials ?? current?.related_materials),
+    usage_tips: nullableText(input.usage_tips ?? current?.usage_tips),
     address: nullableText(input.address ?? current?.address),
     latitude,
     longitude,
