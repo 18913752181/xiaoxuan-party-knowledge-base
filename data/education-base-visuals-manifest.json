@@ -266,6 +266,25 @@
     "coverFile": "base-15-china-nanshe-memorial-cover.webp"
   },
   {
+    "id": 16,
+    "baseName": "姑苏区吴门桥街道“悠悠内马路”新就业群体服务中心",
+    "imageUrl": "/images/education-bases/base-16-youyou-neimalu-cover.webp",
+    "imageAlt": "姑苏区吴门桥街道“悠悠内马路”新就业群体服务中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-16-youyou-neimalu-postcard-front.png",
+    "motifFile": "base-16-youyou-neimalu-motif.png",
+    "motifCrop": [
+      275,
+      815,
+      1024,
+      1510
+    ],
+    "coverFile": "base-16-youyou-neimalu-cover.webp"
+  },
+  {
     "id": 17,
     "baseName": "姑苏区平江历史文化街区党群服务中心",
     "imageUrl": "/images/education-bases/base-17-pingjiang-party-service-cover.webp",
@@ -435,6 +454,25 @@
       "height": 805
     },
     "coverFile": "base-27-bai-juyi-garden-cover.webp"
+  },
+  {
+    "id": 28,
+    "baseName": "姑苏区党史陈列展示馆",
+    "imageUrl": "/images/education-bases/base-28-gusu-party-history-cover.webp",
+    "imageAlt": "姑苏区党史陈列展示馆主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-28-gusu-party-history-postcard-front.png",
+    "motifFile": "base-28-gusu-party-history-motif.png",
+    "motifCrop": [
+      405,
+      760,
+      1024,
+      1510
+    ],
+    "coverFile": "base-28-gusu-party-history-cover.webp"
   },
   {
     "id": 29,
@@ -855,6 +893,25 @@
     "coverFile": "base-51-kunshan-rural-revitalization-school-cover.webp"
   },
   {
+    "id": 52,
+    "baseName": "昆山高新区红学院党群服务中心",
+    "imageUrl": "/images/education-bases/base-52-kunshan-red-academy-cover.webp",
+    "imageAlt": "昆山高新区红学院党群服务中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-52-kunshan-red-academy-postcard-front.png",
+    "motifFile": "base-52-kunshan-red-academy-motif.png",
+    "motifCrop": [
+      400,
+      760,
+      1024,
+      1510
+    ],
+    "coverFile": "base-52-kunshan-red-academy-cover.webp"
+  },
+  {
     "id": 53,
     "baseName": "中共一大纪念馆",
     "imageUrl": "/images/education-bases/base-53-first-cpc-congress-cover.webp",
@@ -1233,6 +1290,25 @@
       "height": 756
     },
     "coverFile": "base-72-taicang-first-branch-cover.webp"
+  },
+  {
+    "id": 73,
+    "baseName": "太仓港党建领航中心",
+    "imageUrl": "/images/education-bases/base-73-taicang-port-party-center-cover.webp",
+    "imageAlt": "太仓港党建领航中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-73-taicang-port-party-center-postcard-front.png",
+    "motifFile": "base-73-taicang-port-party-center-motif.png",
+    "motifCrop": [
+      250,
+      835,
+      1024,
+      1510
+    ],
+    "coverFile": "base-73-taicang-port-party-center-cover.webp"
   },
   {
     "id": 74,
@@ -1653,6 +1729,25 @@
     "coverFile": "base-96-bao-shizhao-cover.webp"
   },
   {
+    "id": 97,
+    "baseName": "吴中太湖新城建设者新家园党群服务中心",
+    "imageUrl": "/images/education-bases/base-97-taihu-new-city-builders-home-cover.webp",
+    "imageAlt": "吴中太湖新城建设者新家园党群服务中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-97-taihu-new-city-builders-home-postcard-front.png",
+    "motifFile": "base-97-taihu-new-city-builders-home-motif.png",
+    "motifCrop": [
+      400,
+      900,
+      1024,
+      1510
+    ],
+    "coverFile": "base-97-taihu-new-city-builders-home-cover.webp"
+  },
+  {
     "id": 98,
     "baseName": "吴中区临湖镇灵湖村黄墅党群驿站",
     "imageUrl": "/images/education-bases/base-98-linghu-huangshu-party-station-cover.webp",
@@ -2014,6 +2109,25 @@
     "coverFile": "base-117-scitech-talent-center-cover.webp"
   },
   {
+    "id": 118,
+    "baseName": "“金浦绘客厅”设计小镇党群服务中心",
+    "imageUrl": "/images/education-bases/base-118-jinpu-drawing-lounge-cover.webp",
+    "imageAlt": "“金浦绘客厅”设计小镇党群服务中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-118-jinpu-drawing-lounge-postcard-front.png",
+    "motifFile": "base-118-jinpu-drawing-lounge-motif.png",
+    "motifCrop": [
+      480,
+      810,
+      1024,
+      1400
+    ],
+    "coverFile": "base-118-jinpu-drawing-lounge-cover.webp"
+  },
+  {
     "id": 119,
     "baseName": "三星半导体党委",
     "imageUrl": "/images/education-bases/base-119-samsung-semiconductor-party-cover.webp",
@@ -2145,6 +2259,25 @@
       "height": 781
     },
     "coverFile": "base-125-zhaojiaxiang-community-hub-cover.webp"
+  },
+  {
+    "id": 126,
+    "baseName": "工业园区胜浦街道星辰社区党群服务中心",
+    "imageUrl": "/images/education-bases/base-126-xingchen-community-party-center-cover.webp",
+    "imageAlt": "工业园区胜浦街道星辰社区党群服务中心主题插画",
+    "imageSourceName": "用户提供照片",
+    "imageSourceUrl": null,
+    "imageRightsStatus": "reference-only",
+    "imageVerifiedAt": "2026-09-11",
+    "postcardMasterFile": "base-126-xingchen-community-party-center-postcard-front.png",
+    "motifFile": "base-126-xingchen-community-party-center-motif.png",
+    "motifCrop": [
+      25,
+      545,
+      1000,
+      1515
+    ],
+    "coverFile": "base-126-xingchen-community-party-center-cover.webp"
   },
   {
     "id": 127,
