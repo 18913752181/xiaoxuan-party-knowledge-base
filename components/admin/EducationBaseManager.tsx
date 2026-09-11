@@ -33,7 +33,6 @@ type EducationBase = {
   nearby_base_combinations: string | null;
   activity_plan: string | null;
   related_materials: string | null;
-  usage_tips: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -76,7 +75,6 @@ const EMPTY_DRAFT: Draft = {
   nearby_base_combinations: null,
   activity_plan: null,
   related_materials: null,
-  usage_tips: null,
   address: null,
   latitude: null,
   longitude: null,
@@ -422,7 +420,7 @@ export default function EducationBaseManager() {
                 <Field label="周边联动基地" hint="填写数据库中的基地ID"><textarea value={nearbyText(draft.nearby_base_combinations)} onChange={(event) => update("nearby_base_combinations", updateNearby(event.target.value))} className={textareaClass} placeholder="14｜步行可达，适合联动" /></Field>
                 <Field label="配套方案与资料" hint="只关联小宣资料库"><textarea value={materialsText(draft.related_materials)} onChange={(event) => update("related_materials", updateMaterials(event.target.value))} className={textareaClass} placeholder="主题党日活动方案｜https://xiaoxuanvip.com/materials/...｜方案说明" /></Field>
               </div>
-              <div className="mt-4"><Field label="基地使用提示" hint="宣知整理建议，最多5条，每行1条"><textarea value={optional(draft.usage_tips)} onChange={(event) => update("usage_tips", event.target.value || null)} className={textareaClass} placeholder={'建议提前预约\n适合团队活动\n可安排半日'} /></Field></div>
+              <div className="mt-4"><Field label="基地使用提示" hint="宣知整理建议，最多5条，每行1条"><textarea value={optional(draft.activity_formats)} onChange={(event) => update("activity_formats", event.target.value || null)} className={textareaClass} placeholder={'建议提前预约\n适合团队活动\n可安排半日'} /></Field></div>
             </div>
 
             <div className="border-t border-[#ece6dc] pt-5">

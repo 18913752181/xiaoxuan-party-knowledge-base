@@ -4,7 +4,7 @@ import { exchangeMiniProgramCode, resolveMiniProgramUser } from "@/lib/work-cat/
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const GUIDE_SELECT = "id,name,contact,source_url,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,opening_info,reservation_info,activity_route,nearby_base_combinations,related_materials,usage_tips,updated_at,is_published";
+const GUIDE_SELECT = "id,name,contact,source_url,has_guided_tour,guide_fee,guide_service_note,guide_source_url,guide_verified_at,opening_info,reservation_info,activity_formats,activity_route,nearby_base_combinations,related_materials,updated_at,is_published";
 
 type RouteNode = { time: string | null; title: string; note: string | null; baseId: number | null };
 type NearbyInput = { baseId: number; note: string | null };
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
           label: "宣知整理建议",
           routes: { ...routes, nearby, nearbyNote: nearbyInput.note },
           materials: materialLinks(base.related_materials),
-          usageTips: usageTips(base.usage_tips)
+          usageTips: usageTips(base.activity_formats)
         },
         updatedAt: base.updated_at || null
       }
