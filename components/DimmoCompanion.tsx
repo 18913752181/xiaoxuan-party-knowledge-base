@@ -7,6 +7,10 @@ import atlas from "@/public/images/dimmo-motion-atlas.json";
 import timeline from "@/motion/dimmo/build/timeline.json";
 
 type DimmoState = "resting" | "rising" | "awake" | "yawning" | "settling";
+type DimmoCompanionProps = {
+  initialState?: "resting" | "awake";
+  keepAwake?: boolean;
+};
 
 const WAKE_DELAY = 2_000;
 const IDLE_DELAY = 10_000;
@@ -36,13 +40,13 @@ function staticStateFor(state: DimmoState): keyof typeof staticSprites {
   return "awake";
 }
 
-export function DimmoCompanion() {
-  const [state, setState] = useState<DimmoState>("resting");
+export function DimmoCompanion({ initialState = "resting", keepAwake = false }: DimmoCompanionProps = {}) {
+  const [state, setState] = useState<DimmoState>(initialState);
   const [atlasReady, setAtlasReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const textureRef = useRef<HTMLImageElement>(null);
-  const stateRef = useRef<DimmoState>("resting");
-  const currentFrameRef = useRef(REST_START_FRAME);
+  const stateRef = useRef<DimmoState>(initialState);
+  const currentFrameRef = useRef(initialState === "awake" ? AWAKE_FRAME : REST_START_FRAME);
   const actionTokenRef = useRef(0);
   const animationFrameRef = useRef<number | null>(null);
   const wakeTimer = useRef<number | null>(null);
@@ -144,11 +148,12 @@ export function DimmoCompanion() {
 
   const scheduleRest = useCallback(() => {
     clearTimer(idleTimer);
+    if (keepAwake) return;
     idleTimer.current = window.setTimeout(() => {
       idleTimer.current = null;
       if (stateRef.current === "awake") settle();
     }, IDLE_DELAY);
-  }, [clearTimer, settle]);
+  }, [clearTimer, keepAwake, settle]);
 
   useEffect(() => {
     scheduleRestRef.current = scheduleRest;
@@ -178,8 +183,8 @@ export function DimmoCompanion() {
   }, []);
 
   useEffect(() => {
-    wakeDeadlineRef.current = performance.now() + WAKE_DELAY;
-  }, []);
+    wakeDeadlineRef.current = initialState === "resting" ? performance.now() + WAKE_DELAY : null;
+  }, [initialState]);
 
   useEffect(() => {
     let active = true;
@@ -197,6 +202,11 @@ export function DimmoCompanion() {
 
   useEffect(() => {
     if (!atlasReady || reduceMotion) return;
+    if (stateRef.current === "awake") {
+      renderFrame(AWAKE_FRAME);
+      scheduleRestRef.current();
+      return;
+    }
     renderFrame(REST_START_FRAME);
     const remainingDelay = Math.max(
       0,

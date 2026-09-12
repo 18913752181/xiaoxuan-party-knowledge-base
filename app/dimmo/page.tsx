@@ -167,7 +167,7 @@ export default function DimmoPage() {
           <section className="studio-hero" aria-labelledby="studio-title">
             <div className="studio-hero-copy">
               <p className="studio-kicker">小宣干货社</p>
-              <h1 id="studio-title" className="studio-h1">一个工作台，两位最佳拍档。</h1>
+              <h1 id="studio-title" className="studio-h1">「喵喵工作台」的最佳拍档</h1>
               <p className="studio-hero-lead">小宣社长负责专业判断，Dimmo 负责先接住问题、资料和待办。</p>
               <div className="studio-actions">
                 <Link className="studio-button" href="/">进入喵喵工作台</Link>
@@ -231,7 +231,7 @@ export default function DimmoPage() {
                 <p>接待、找资料、记录待办、查看清单、到点提醒和日常陪伴，都可以先告诉 Dimmo。</p>
               </div>
               <div className="studio-cat-spot" aria-label="可以点击互动的 Dimmo">
-                <DimmoCompanion />
+                <DimmoCompanion initialState="awake" keepAwake />
               </div>
             </article>
           </div>
