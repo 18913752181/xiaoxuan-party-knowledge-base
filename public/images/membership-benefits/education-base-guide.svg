@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">教育基地导览和攻略</title>
+  <desc id="desc">一张带定位标记与品牌小花的折叠导览地图</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf4"/>
+      <stop offset="1" stop-color="#f4e8bd"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd85e"/>
+      <stop offset="1" stop-color="#c58a08"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#2d2d27" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)" stroke="#2d2d27" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path fill="url(#paper)" d="M55 126c0-16 13-27 28-23l105 29 130-35 111 31c16 4 28 19 28 36v246c0 16-13 27-28 23l-111-31-130 35-105-29c-16-4-28-19-28-36z"/>
+    <path fill="#f6bd32" d="m188 132 130-35v285l-130 35z"/>
+    <path fill="#fff7d6" d="m318 97 111 31c16 4 28 19 28 36v246c0 16-13 27-28 23l-111-31z"/>
+    <path fill="none" stroke="#a9780d" stroke-width="13" stroke-dasharray="18 20" d="M91 330c38-54 76-77 120-70 54 9 72 70 122 68 38-2 60-37 88-79"/>
+    <path fill="url(#gold)" d="M302 174c0 54-75 129-75 129s-75-75-75-129c0-42 34-76 75-76s75 34 75 76z"/>
+    <circle cx="227" cy="174" r="28" fill="#fff8dc"/>
+    <g transform="translate(346 282)" fill="#fffdf4" stroke-width="13">
+      <path d="M42 50C7 27 18-7 42 20 66-7 77 27 42 50Z"/>
+      <path d="M42 50C19 85-15 74 12 50-15 26 19 15 42 50Z"/>
+      <path d="M42 50c23 35 57 24 30 0 27-24-7-35-30 0Z"/>
+      <circle cx="42" cy="50" r="12" fill="#c58a08"/>
+    </g>
+  </g>
+</svg>
