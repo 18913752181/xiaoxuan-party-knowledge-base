@@ -5,7 +5,7 @@ import { DimmoCompanion } from "@/components/DimmoCompanion";
 
 export const metadata: Metadata = {
   title: { absolute: "小宣干货社简介" },
-  description: "认识小宣干货社、喵喵工作台、Dimmo 和小宣社长，以及资料、工具、待办提醒和人工专业支持。"
+  description: "认识小宣干货社、喵喵工作台、Dimmo 和小宣社长，以及资料、教育基地工具、待办提醒和人工专业支持。"
 };
 
 const productEntries = [
@@ -25,8 +25,8 @@ const productEntries = [
   },
   {
     label: "用工具",
-    title: "算时间，找基地",
-    description: "核算发展党员时间节点，查找红色教育基地与参观信息。",
+    title: "算时间，查基地，做路线",
+    description: "在小程序核算发展党员时间节点，按地区和类型查找红色教育基地、收藏点位并整理参观路线。",
     href: "/",
     action: "从工作台开始"
   },
@@ -262,6 +262,7 @@ export default function DimmoPage() {
               <span>会员专属资料</span>
               <span>批量下载</span>
               <span>Dimmo 任务小本本</span>
+              <span>小程序教育基地攻略</span>
               <span>日常陪伴</span>
               <span>持续更新</span>
             </div>
