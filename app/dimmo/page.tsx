@@ -121,7 +121,7 @@ const styles = `
     .studio-nav-links { gap: 18px; }
     .studio-hero { grid-template-columns: 1fr; min-height: auto; padding: 54px 0 0; }
     .studio-hero-copy { padding: 0; }
-    .studio-h1 { font-size: clamp(34px, 8.5vw, 42px); }
+    .studio-h1 { font-size: clamp(30px, 7.2vw, 36px); }
     .studio-hero-lead { font-size: 16px; }
     .studio-hero-art { min-height: 410px; margin-top: 28px; }
     .studio-hero-art::before { inset: 8% 0 2%; }
