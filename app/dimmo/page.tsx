@@ -17,13 +17,6 @@ const productEntries = [
     action: "进入资料库"
   },
   {
-    label: "找路径",
-    title: "按工作事项进入办理流程",
-    description: "从具体工作进入专题、流程、制度依据、常见问题和关联资料。",
-    href: "/work-navigation",
-    action: "打开工作导航"
-  },
-  {
     label: "用工具",
     title: "算时间，查基地，做路线",
     description: "在小程序核算发展党员时间节点，按地区和类型查找红色教育基地、收藏点位并整理参观路线。",
@@ -74,7 +67,7 @@ const styles = `
   .studio-hero-copy { position: relative; z-index: 2; padding: 18px 0 58px; }
   .studio-kicker { margin: 0 0 18px; color: var(--yellow-deep); font-size: 14px; font-weight: 720; letter-spacing: .08em; }
   .studio-h1, .studio-h2, .studio-h3 { margin: 0; letter-spacing: -.045em; }
-  .studio-h1 { max-width: 560px; font-size: clamp(44px, 5.5vw, 68px); font-weight: 720; line-height: 1.1; }
+  .studio-h1 { max-width: 600px; font-size: clamp(38px, 4.6vw, 58px); font-weight: 720; line-height: 1.12; }
   .studio-h2 { max-width: 760px; font-size: clamp(30px, 4vw, 46px); font-weight: 700; line-height: 1.2; }
   .studio-h3 { font-size: 22px; font-weight: 690; line-height: 1.35; }
   .studio-hero-lead { max-width: 520px; margin: 24px 0 0; color: #55534c; font-size: 18px; line-height: 1.85; }
@@ -128,7 +121,7 @@ const styles = `
     .studio-nav-links { gap: 18px; }
     .studio-hero { grid-template-columns: 1fr; min-height: auto; padding: 54px 0 0; }
     .studio-hero-copy { padding: 0; }
-    .studio-h1 { font-size: clamp(40px, 11vw, 54px); }
+    .studio-h1 { font-size: clamp(34px, 8.5vw, 42px); }
     .studio-hero-lead { font-size: 16px; }
     .studio-hero-art { min-height: 410px; margin-top: 28px; }
     .studio-hero-art::before { inset: 8% 0 2%; }
@@ -174,7 +167,7 @@ export default function DimmoPage() {
           <section className="studio-hero" aria-labelledby="studio-title">
             <div className="studio-hero-copy">
               <p className="studio-kicker">小宣干货社</p>
-              <h1 id="studio-title" className="studio-h1">一个工作台，两位搭档。</h1>
+              <h1 id="studio-title" className="studio-h1">一个工作台，两位最佳拍档。</h1>
               <p className="studio-hero-lead">小宣社长负责专业判断，Dimmo 负责先接住问题、资料和待办。</p>
               <div className="studio-actions">
                 <Link className="studio-button" href="/">进入喵喵工作台</Link>
@@ -262,9 +255,9 @@ export default function DimmoPage() {
               <span>会员专属资料</span>
               <span>批量下载</span>
               <span>Dimmo 任务小本本</span>
-              <span>小程序教育基地攻略</span>
+              <span>教育基地导览</span>
               <span>日常陪伴</span>
-              <span>持续更新</span>
+              <span>资料持续更新</span>
             </div>
           </div>
           <Link className="studio-button" href="/membership/payment">查看会员权益</Link>
