@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
+import { QrProductEntry } from "@/components/QrProductEntry";
 
 export const metadata: Metadata = {
   title: { absolute: "小宣干货社简介" },
@@ -21,14 +22,28 @@ const productEntries = [
     title: "算时间，查基地，做路线",
     description: "在小程序核算发展党员时间节点，按地区和类型查找红色教育基地、收藏点位并整理参观路线。",
     href: "/",
-    action: "从工作台开始"
+    action: "进入小程序",
+    qr: {
+      eyebrow: "喵喵小程序",
+      title: "微信扫码进入小程序",
+      description: "核算时间、查找教育基地，也可以收藏点位和整理参观路线。",
+      image: "/images/education-base-miniprogram-code.jpg",
+      alt: "喵喵小程序码"
+    }
   },
   {
     label: "交给 Dimmo",
     title: "记待办，到点提醒",
     description: "在微信里记录事项、查看清单和设置提醒，会员任务与小程序保持同步。",
     href: "/membership/payment",
-    action: "了解会员工作台"
+    action: "和喵聊天",
+    qr: {
+      eyebrow: "小宣干货社服务号",
+      title: "微信扫码和 Dimmo 聊天",
+      description: "关注服务号后，直接发消息给 Dimmo，记录待办、查看清单或聊聊天。",
+      image: "/images/xiaoxuan-service-account-code.jpg",
+      alt: "小宣干货社服务号二维码"
+    }
   }
 ];
 
@@ -85,11 +100,21 @@ const styles = `
   .studio-section-copy p { max-width: 620px; margin: 18px 0 0; color: var(--muted); font-size: 17px; }
   .studio-product-list { margin-top: 52px; border-top: 1px solid var(--line); }
   .studio-product { display: grid; grid-template-columns: 130px minmax(0,1fr) 190px; align-items: center; gap: 34px; min-height: 138px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; transition: background-color .22s ease, padding .22s ease; }
+  .studio-product-button { width: 100%; padding: 0; border-width: 0 0 1px; border-style: solid; border-color: var(--line); background: transparent; font: inherit; text-align: left; cursor: pointer; }
   .studio-product:hover { padding: 0 22px; background: var(--yellow-soft); }
   .studio-product-label { color: var(--yellow-deep); font-size: 14px; font-weight: 720; }
   .studio-product p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
   .studio-product-action { justify-self: end; font-size: 14px; font-weight: 700; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 3px; text-underline-offset: 7px; transition: text-decoration-color .22s ease; }
   .studio-product:hover .studio-product-action { text-decoration-color: var(--yellow); }
+  .studio-qr-overlay { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(38,38,34,.56); }
+  .studio-qr-dialog { position: relative; width: min(100%, 390px); padding: 30px; border: 1px solid #e4d59f; border-radius: 24px; background: var(--paper); box-shadow: 0 28px 90px rgba(38,38,34,.28); text-align: center; }
+  .studio-qr-close { position: absolute; top: 12px; right: 14px; display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #f2eee4; color: var(--ink); font: inherit; font-size: 24px; line-height: 1; cursor: pointer; }
+  .studio-qr-close:hover { background: var(--yellow-soft); }
+  .studio-qr-close:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .studio-qr-title { margin: 8px 0 0; font-size: 25px; line-height: 1.35; letter-spacing: -.035em; }
+  .studio-qr-copy { margin: 10px auto 20px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .studio-qr-image { display: block; width: 258px; height: 258px; margin: 0 auto; border-radius: 18px; }
+  .studio-qr-tip { margin: 14px 0 0; color: #81734f; font-size: 13px; font-weight: 650; }
   .studio-collaboration { padding: 92px 0; background: var(--surface); }
   .studio-collaboration-head { max-width: 760px; }
   .studio-collaboration-head > p { max-width: 620px; margin: 18px 0 0; color: var(--muted); font-size: 16px; }
@@ -149,6 +174,14 @@ const styles = `
     .studio-role-cat { grid-template-columns: 1fr; }
     .studio-cat-spot { min-height: 120px; justify-content: flex-start; }
   }
+  @media (max-width: 360px) {
+    .studio-qr-overlay { padding: 14px; }
+    .studio-qr-dialog { padding: 28px 18px; }
+    .studio-qr-image { width: 215px; height: 215px; }
+  }
+  @media (max-width: 300px) {
+    .studio-qr-image { width: 172px; height: 172px; }
+  }
 `;
 
 export default function DimmoPage() {
@@ -195,14 +228,29 @@ export default function DimmoPage() {
         </div>
         <div className="studio-product-list">
           {productEntries.map((item) => (
-            <Link key={item.label} href={item.href} className="studio-product">
-              <span className="studio-product-label">{item.label}</span>
-              <span>
-                <h3 className="studio-h3">{item.title}</h3>
-                <p>{item.description}</p>
-              </span>
-              <span className="studio-product-action">{item.action}</span>
-            </Link>
+            item.qr ? (
+              <QrProductEntry
+                key={item.label}
+                label={item.label}
+                title={item.title}
+                description={item.description}
+                action={item.action}
+                qrEyebrow={item.qr.eyebrow}
+                qrTitle={item.qr.title}
+                qrDescription={item.qr.description}
+                qrImage={item.qr.image}
+                qrAlt={item.qr.alt}
+              />
+            ) : (
+              <Link key={item.label} href={item.href} className="studio-product">
+                <span className="studio-product-label">{item.label}</span>
+                <span>
+                  <h3 className="studio-h3">{item.title}</h3>
+                  <p>{item.description}</p>
+                </span>
+                <span className="studio-product-action">{item.action}</span>
+              </Link>
+            )
           ))}
         </div>
       </section>
