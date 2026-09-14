@@ -8,14 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BASE_COLUMNS = "id,name,type,city,district,address,latitude,longitude,location_confidence";
-const TEST_BASE_NAMES = new Set([
-  "沙家浜革命历史纪念馆",
-  "苏州博物馆",
-  "苏州高新区周新民党建工作室",
-  "费孝通江村纪念馆",
-  "上海中心大厦——楼宇党建主题展馆"
-]);
 const CANDIDATE_COLUMNS = "id,review_id,candidate_rank,poi_id,poi_name,address,latitude,longitude,city,district,poi_category,name_similarity,city_match,district_match,match_score,confidence_level,is_reasonable_category";
+
+function internalAuthorized(request: Request) {
+  const secret = process.env.REMINDER_CRON_SECRET?.trim();
+  const authorization = request.headers.get("authorization") || "";
+  return Boolean(secret && authorization === `Bearer ${secret}`);
+}
 
 function errorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message || "腾讯位置服务核验失败");
@@ -60,23 +59,22 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const check = await requireAdmin();
-  if (!check.ok) return check.response;
+  const isInternal = internalAuthorized(request);
+  const check = isInternal ? null : await requireAdmin();
+  if (check && !check.ok) return check.response;
+  const respond = (response: NextResponse) => check && check.ok ? withAuthCookies(check.session, response) : response;
   try {
     const body = await request.json() as { baseIds?: unknown };
     const ids = Array.isArray(body.baseIds) ? Array.from(new Set(body.baseIds.map(Number).filter((id) => Number.isInteger(id) && id > 0))) : [];
-    if (!ids.length || ids.length > 5) return NextResponse.json({ error: "每次只允许检索 1 到 5 条基地。" }, { status: 400 });
+    if (!ids.length || ids.length > 5) return respond(NextResponse.json({ error: "每次只允许检索 1 到 5 条基地。" }, { status: 400 }));
     const admin = getSupabaseAdmin();
     const { data: bases, error } = await admin.from("education_bases").select(BASE_COLUMNS).in("id", ids);
     if (error) throw error;
-    if ((bases || []).length !== ids.length) return NextResponse.json({ error: "部分基地不存在。" }, { status: 404 });
-    if ((bases || []).some((base) => !TEST_BASE_NAMES.has(base.name))) {
-      return NextResponse.json({ error: "当前仍是5条试运行阶段，暂不允许检索其他基地。" }, { status: 400 });
-    }
-    const outcomes = [] as Array<{ baseId: number; baseName: string; result: string }>;
+    if ((bases || []).length !== ids.length) return respond(NextResponse.json({ error: "部分基地不存在。" }, { status: 404 }));
+    const outcomes = [] as Array<{ baseId: number; baseName: string; result: string; current?: { address: string | null; latitude: number | null; longitude: number | null }; selected?: Record<string, unknown> }>;
     for (const base of bases || []) {
-      const complete = base.address && base.latitude !== null && base.longitude !== null;
-      if (complete) { outcomes.push({ baseId: base.id, baseName: base.name, result: "skipped_existing" }); continue; }
+      const complete = Boolean(base.address && base.latitude !== null && base.longitude !== null);
+      const current = { address: base.address, latitude: base.latitude, longitude: base.longitude };
       const searchQuery = `${base.name} ${base.city} ${base.district}`;
       try {
         const pois = await searchTencentPois(base);
@@ -99,12 +97,12 @@ export async function POST(request: Request) {
             const { error: locationError } = await admin.from("education_bases").update({ address: best.poi.address, latitude: best.poi.latitude, longitude: best.poi.longitude, coordinate_type: "gcj02", location_source_name: "腾讯位置服务 POI", location_source_url: "https://lbs.qq.com/", location_confidence: "probable" }).eq("id", base.id).neq("location_confidence", "verified");
             if (locationError) throw locationError;
             await admin.from("education_base_location_reviews").update({ status: "auto_matched", selected_candidate_id: selected.id }).eq("id", review.id);
-            outcomes.push({ baseId: base.id, baseName: base.name, result: "auto_matched" });
+            outcomes.push({ baseId: base.id, baseName: base.name, result: "auto_matched", current, selected: best.row });
           } else {
             await admin.from("education_base_location_reviews").update({ status: pois.length ? "needs_review" : "not_found", selected_candidate_id: selected?.id || null }).eq("id", review.id);
-            outcomes.push({ baseId: base.id, baseName: base.name, result: pois.length ? "needs_review" : "not_found" });
+            outcomes.push({ baseId: base.id, baseName: base.name, result: pois.length ? (complete ? "checked_existing" : "needs_review") : "not_found", current, selected: best.row });
           }
-        } else outcomes.push({ baseId: base.id, baseName: base.name, result: "not_found" });
+        } else outcomes.push({ baseId: base.id, baseName: base.name, result: "not_found", current });
       } catch (lookupError) {
         await admin.from("education_base_location_reviews").upsert({ base_id: base.id, search_query: searchQuery, status: "failed", last_error: errorMessage(lookupError), searched_at: new Date().toISOString() }, { onConflict: "base_id" });
         outcomes.push({ baseId: base.id, baseName: base.name, result: "failed" });
@@ -113,14 +111,14 @@ export async function POST(request: Request) {
     revalidatePath("/api/education-bases");
     const summary = {
       autoMatched: outcomes.filter((item) => item.result === "auto_matched").length,
+      checkedExisting: outcomes.filter((item) => item.result === "checked_existing").length,
       needsReview: outcomes.filter((item) => item.result === "needs_review").length,
       notFound: outcomes.filter((item) => item.result === "not_found").length,
-      protectedExisting: outcomes.filter((item) => item.result === "skipped_existing").length,
       failed: outcomes.filter((item) => item.result === "failed").length
     };
-    return withAuthCookies(check.session, NextResponse.json({ outcomes, summary }));
+    return respond(NextResponse.json({ outcomes, summary }));
   } catch (error) {
-    return withAuthCookies(check.session, NextResponse.json({ error: errorMessage(error) }, { status: 500 }));
+    return respond(NextResponse.json({ error: errorMessage(error) }, { status: 500 }));
   }
 }
 
