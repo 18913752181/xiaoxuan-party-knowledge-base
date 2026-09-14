@@ -257,7 +257,7 @@ export default function MembershipPaymentPage() {
               </div>
               <div className="dimmo-membership-note">
                 <p>通行卡会员权益</p><ul>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>会员专属资料</b><small>解锁专属模板、填写说明与完整附件</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>全部资料预览与下载</b><small>付费会员不限资料数量；普通会员累计限 5 份</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/continuous-updates.png" alt="" width={64} height={64} /><span><b>资料持续更新</b><small>新增资料和优化版本持续同步</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>多份资料一次打包为 ZIP</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>

@@ -176,6 +176,26 @@ button:not(:disabled),
   text-wrap: pretty;
 }
 
+.material-preview-title {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.material-preview-title:hover,
+.material-preview-title:focus-visible {
+  text-decoration-color: var(--xuan-highlight);
+}
+
+.material-preview-title:focus-visible {
+  outline: 2px solid var(--xuan-highlight);
+  outline-offset: 5px;
+  border-radius: 2px;
+}
+
 .xuan-highlight {
   background: linear-gradient(transparent 58%, var(--xuan-highlight) 58%, var(--xuan-highlight) 94%, transparent 94%);
   padding: 0 2px;

@@ -20,4 +20,5 @@ dev-*.log
 .codex-dev-*.log
 
 .vercel
+data/material-access/
 ui-shots/

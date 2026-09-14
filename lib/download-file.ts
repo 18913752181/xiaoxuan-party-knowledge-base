@@ -156,7 +156,7 @@ async function responseError(response: Response): Promise<DownloadResult> {
   } catch {
     error = `下载失败：${response.status}`;
   }
-  return { ok: false, error, membershipRequired: code === "MEMBERSHIP_REQUIRED" };
+  return { ok: false, error, membershipRequired: ["MEMBERSHIP_REQUIRED", "MATERIAL_QUOTA_EXCEEDED", "BATCH_MEMBERSHIP_REQUIRED"].includes(code) };
 }
 
 export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
@@ -183,49 +183,22 @@ export async function downloadMaterialFile(material: Material): Promise<Download
   if (!material.file_url) return { ok: false, error: "该资料暂未上传可下载文件。" };
   const result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title);
   if (result.ok) await rememberDownload(material);
+  window.dispatchEvent(new Event("material-access-changed"));
   return result;
 }
 
 export async function downloadMaterialsAsZip(materials: Material[]): Promise<BatchDownloadResult> {
   if (!materials.length) return { ok: false, downloaded: [], failures: [], error: "请先选择需要下载的资料。" };
-
-  const { default: JSZip } = await import("jszip");
-  const zip = new JSZip();
-  const usedNames = new Set<string>();
-  const downloaded: Material[] = [];
-  const failures: BatchDownloadFailure[] = [];
-
-  for (const material of materials) {
-    if (!material.file_url) {
-      failures.push({ material, ok: false, error: "该资料暂未上传可下载文件。" });
-      continue;
-    }
-
-    try {
-      const response = await fetch(material.file_url, { credentials: "same-origin" });
-      if (!response.ok) {
-        failures.push({ material, ...(await responseError(response)) });
-        continue;
-      }
-
-      const blob = await response.blob();
-      const fileName = fileNameFromDisposition(response.headers.get("content-disposition"), material.file_name || material.title);
-      zip.file(uniqueFileName(fileName, usedNames), blob);
-      downloaded.push(material);
-    } catch {
-      failures.push({ material, ok: false, error: "网络异常，未能取得文件。" });
-    }
-  }
-
-  if (!downloaded.length) {
-    return { ok: false, downloaded, failures, error: failures[0]?.error || "没有可打包的文件。" };
-  }
-
-  const blob = await zip.generateAsync({
-    type: "blob",
-    compression: "DEFLATE",
-    compressionOptions: { level: 3 }
+  const response = await fetch("/api/content-units/batch-download", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slugs: materials.map((item) => item.slug || item.id) })
   });
+  if (!response.ok) {
+    const failure = await responseError(response);
+    return { ok: false, downloaded: [], failures: [{ material: materials[0], ...failure }], error: failure.error };
+  }
+  const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = objectUrl;
@@ -234,7 +207,7 @@ export async function downloadMaterialsAsZip(materials: Material[]): Promise<Bat
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-
-  await Promise.all(downloaded.map((material) => rememberDownload(material)));
-  return { ok: true, downloaded, failures };
+  await Promise.all(materials.map((material) => rememberDownload(material)));
+  window.dispatchEvent(new Event("material-access-changed"));
+  return { ok: true, downloaded: materials, failures: [] };
 }

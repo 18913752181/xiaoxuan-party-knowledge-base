@@ -8,6 +8,8 @@ import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
+import { MaterialPreview } from "@/components/MaterialPreview";
+import { MaterialAccessNotice, useMaterialAccess } from "@/components/MaterialAccessNotice";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -88,6 +90,7 @@ function cleanNetworkItems(items?: string[]) {
 
 export function MaterialDetailClient({ initialMaterial, initialMaterials }: { initialMaterial: Material; initialMaterials: Material[] }) {
   const router = useRouter();
+  const materialAccess = useMaterialAccess();
   const [material, setMaterial] = useState<Material | null>(initialMaterial);
   const [allMaterials] = useState<Material[]>(initialMaterials);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
@@ -172,12 +175,15 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
         <div className="bg-[#f8f7f4] p-6 md:p-8">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-xl border border-[#dbc6c9] bg-[#f4e9ea] px-3 py-1.5 text-sm font-semibold text-brand-red">{material.file_type}</span>
-            {material.member_only ? <span className="rounded-xl bg-[#f4ede1] px-3 py-1.5 text-sm font-medium text-[#8a6b50]">会员专属</span> : null}
             <span className="rounded-xl border border-brand-line bg-white px-3 py-1.5 text-sm text-neutral-600">{material.topic || material.category}</span>
             {material.stage && material.stage !== (material.topic || material.category) ? <span className="rounded-xl border border-brand-line bg-white px-3 py-1.5 text-sm text-neutral-600">{material.stage}</span> : null}
           </div>
 
-          <h1 className="material-title mt-6 max-w-4xl text-3xl font-semibold leading-[1.18] tracking-tight text-brand-ink md:text-4xl" title={material.title}>{displayMaterialTitle(material.title)}</h1>
+          <h1 className="material-title mt-6 max-w-4xl text-3xl font-semibold leading-[1.18] tracking-tight text-brand-ink md:text-4xl">
+            <Link href={`/materials/${encodeURIComponent(articleSlug)}/preview`} prefetch={false} className="material-preview-title" title="点击预览资料">
+              {displayMaterialTitle(material.title)}
+            </Link>
+          </h1>
           {hasKnowledgeContent(material.description) ? (
             <p className="mt-5 max-w-3xl text-base leading-8 text-neutral-600">{material.description}</p>
           ) : null}
@@ -192,11 +198,12 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           </div>
 
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
+          <MaterialAccessNotice {...materialAccess} />
           {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
           {memberOnlyPrompt ? (
             <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
-              <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
-              <p className="mt-2 text-sm text-neutral-600">开通会员后即可下载，会员有效期为一年。</p>
+              <p className="font-semibold text-[#9a4650]">普通会员的 5 份资料额度已用完</p>
+              <p className="mt-2 text-sm text-neutral-600">已查看的资料可继续使用。开通付费会员后，全部资料可预览和下载。</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
                 <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">成为专属会员</Link>
@@ -229,6 +236,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
         </div>
 
         <div className="grid gap-0 p-6 md:p-8">
+          <MaterialPreview key={articleSlug} slug={articleSlug} title={material.title} />
           {hasKnowledgeContent(material.note) ? <DetailSection title="小宣提醒">{blocks(material.note)}</DetailSection> : null}
           {hasKnowledgeContent(policyContent) ? <DetailSection title="制度依据">{policyLinks(policyContent!)}</DetailSection> : null}
           {hasKnowledgeContent(noticeContent) ? <DetailSection title="填写说明与注意事项">{blocks(noticeContent)}</DetailSection> : null}

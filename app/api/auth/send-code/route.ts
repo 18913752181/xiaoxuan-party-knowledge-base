@@ -27,10 +27,14 @@ export async function POST(request: Request) {
       method: "POST",
       body: JSON.stringify({ email, create_user: true })
     });
-  } catch {
-    // 邮件服务超时或网络异常（authFetch 15 秒超时），给前端明确错误而不是无限“发送中”
+  } catch (error) {
+    const name = error instanceof Error ? error.name : "UnknownError";
+    const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
+    const timedOut = name === "TimeoutError" || cause?.code === "UND_ERR_CONNECT_TIMEOUT" || cause?.code === "ETIMEDOUT";
+    // Do not log email addresses, credentials or upstream response bodies.
+    console.error("OTP request failed", { name, code: cause?.code });
     return NextResponse.json(
-      { error: "邮件服务响应超时，请稍后重试。" },
+      { error: timedOut ? "邮件服务响应超时，请稍后重试。" : "登录服务暂时无法连接，请稍后重试。" },
       { status: 503 }
     );
   }

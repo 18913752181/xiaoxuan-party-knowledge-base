@@ -9,7 +9,7 @@ export function membershipIsActive(status?: string | null, expiresAt?: string | 
 
 export async function getMembership(userId: string, accessToken?: string) {
   if (accessToken) {
-    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!baseUrl || !anonKey) throw new Error("Supabase 环境变量未配置。");
     const response = await fetch(

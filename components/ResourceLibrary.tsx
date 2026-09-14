@@ -10,6 +10,7 @@ import type { Material } from "@/lib/types";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
+import { MaterialAccessNotice, useMaterialAccess } from "@/components/MaterialAccessNotice";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
@@ -37,6 +38,8 @@ export function ResourceLibrary({
   libraryOnly?: boolean;
 }) {
   const router = useRouter();
+  const materialAccess = useMaterialAccess();
+  const canBatchDownload = materialAccess.access?.paid === true;
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
@@ -257,6 +260,7 @@ export function ResourceLibrary({
   }
 
   async function batchDownload() {
+    if (!canBatchDownload) return setMessage("批量下载仅限付费会员。");
     const selectedMaterials = materials.filter((material) => selectedSlugs.includes(getArticleSlug(material)) && material.file_url);
     if (!selectedMaterials.length) return setMessage("请先选择需要下载的资料。");
 
@@ -452,7 +456,8 @@ export function ResourceLibrary({
             </div>
           ) : null}
 
-          {libraryOnly && !isLoading && downloadableVisibleMaterials.length ? (
+          {libraryOnly && <MaterialAccessNotice {...materialAccess} />}
+          {libraryOnly && canBatchDownload && !isLoading && downloadableVisibleMaterials.length ? (
             <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-brand-line bg-[#fafbfc] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <button type="button" onClick={toggleVisibleSelection} className="min-h-10 rounded-xl border border-[#dfe3e7] bg-white px-3.5 font-medium text-neutral-700 transition-[border-color,background-color,transform] duration-150 hover:border-[#cbd2d9] hover:bg-[#f8f9fa] active:scale-[0.98]">
@@ -512,9 +517,9 @@ export function ResourceLibrary({
 
           {memberOnlyMaterial ? (
             <div className="mt-5 rounded-3xl border-2 border-brand-red bg-[#fff8f8] px-6 py-10 text-center shadow-[0_12px_30px_rgba(166,62,71,0.06)]">
-              <span className="inline-flex rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">会员专属资料</span>
+              <span className="inline-flex rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">开通付费会员</span>
               <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{displayMaterialTitle(memberOnlyMaterial.title)}</h3>
-              <p className="mt-4 text-base font-medium text-brand-red">开通会员后即可下载，会员有效期为一年。</p>
+              <p className="mt-4 text-base font-medium text-brand-red">普通会员限预览或下载 5 份资料。付费会员可使用全部资料，并支持批量下载。</p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="rounded-xl border border-brand-line bg-white px-5 py-2.5 text-sm text-neutral-600 transition-colors hover:bg-[#fafbfc]">返回资料列表</button>
                 <Link href="/membership/payment" className="rounded-xl bg-brand-red px-5 py-2.5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">成为专属会员</Link>
@@ -544,7 +549,7 @@ export function ResourceLibrary({
               return (
                 <article key={material.id} className={`grid gap-4 p-5 transition-colors duration-150 md:grid-cols-[1fr_128px] md:items-center ${isSelected ? "bg-[#fff4f5]" : "hover:bg-[#fafbfc]"}`}>
                   <div className="flex min-w-0 items-start gap-4">
-                    {libraryOnly ? (
+                    {libraryOnly && canBatchDownload ? (
                       <label className={`mt-3 flex h-5 w-5 shrink-0 items-center justify-center ${material.file_url ? "cursor-pointer" : "cursor-not-allowed opacity-35"}`}>
                         <input type="checkbox" checked={isSelected} disabled={!material.file_url} onChange={() => toggleSelection(material)} aria-label={`选择${displayMaterialTitle(material.title)}`} className="h-4 w-4 rounded border-[#c7cdd3] accent-[#a63e47] focus:ring-2 focus:ring-[#f5d8db]" />
                       </label>
@@ -553,7 +558,6 @@ export function ResourceLibrary({
                     <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                       <span>{material.topic || material.category}</span><span>·</span><span>{material.file_type}</span>
-                      {material.member_only ? <span className="rounded-full bg-[#fff1f2] px-2 py-0.5 text-[#8d5057]">会员专属</span> : null}
                     </div>
                     <Link href={`/materials/${slug}`} title={material.title} className="material-title mt-2 block text-lg font-semibold leading-7 text-brand-ink transition-colors duration-150 hover:text-brand-red"><span className="xuan-hover-highlight">{displayMaterialTitle(material.title)}</span></Link>
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
