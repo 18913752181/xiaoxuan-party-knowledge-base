@@ -7,9 +7,11 @@ import { DimmoCompanion } from "@/components/DimmoCompanion";
 
 type GuidedDestination = {
   id: "time" | "bases" | "dimmo";
+  eyebrow: string;
   title: string;
   hint: string;
-  keyword: string;
+  qrImage: string;
+  qrAlt: string;
 };
 
 type RecentUse = {
@@ -28,21 +30,27 @@ type WorkbenchFutureState = {
 const guidedDestinations: Record<GuidedDestination["id"], GuidedDestination> = {
   time: {
     id: "time",
-    title: "入党时间核算",
-    hint: "在微信里的「宣知工作助手」打开时间核算，填写关键日期后即可开始核对。",
-    keyword: "宣知工作助手"
+    eyebrow: "喵喵小程序",
+    title: "扫码进入时间核算",
+    hint: "打开小程序，填写关键日期后即可核算发展党员相关时间节点。",
+    qrImage: "/images/education-base-miniprogram-code.jpg",
+    qrAlt: "喵喵小程序码"
   },
   bases: {
     id: "bases",
-    title: "红色教育基地导览",
-    hint: "在微信里的「宣知工作助手」打开教育基地，按地区和类型查找参观信息。",
-    keyword: "宣知工作助手"
+    eyebrow: "喵喵小程序",
+    title: "扫码查看教育基地",
+    hint: "打开小程序，按地区和类型查找红色教育基地、参观信息和路线。",
+    qrImage: "/images/education-base-miniprogram-code.jpg",
+    qrAlt: "喵喵小程序码"
   },
   dimmo: {
     id: "dimmo",
-    title: "问 Dimmo",
-    hint: "在微信服务号「小宣干货社」发送消息，Dimmo 会先接住你的问题、找资料或记下需要社长处理的事。",
-    keyword: "小宣干货社"
+    eyebrow: "小宣干货社服务号",
+    title: "扫码和 Dimmo 聊天",
+    hint: "关注服务号后，直接发消息给 Dimmo，找资料、记录待办或聊聊天。",
+    qrImage: "/images/xiaoxuan-service-account-code.jpg",
+    qrAlt: "小宣干货社服务号二维码"
   }
 };
 
@@ -65,11 +73,27 @@ function FutureWorkspaceSlots({ state }: { state: WorkbenchFutureState }) {
 export function WorkbenchHome() {
   const [greeting, setGreeting] = useState("你好");
   const [activeDestination, setActiveDestination] = useState<GuidedDestination | null>(null);
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
     setGreeting(greetingFor(new Date().getHours()));
   }, []);
+
+  useEffect(() => {
+    if (!activeDestination) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActiveDestination(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [activeDestination]);
 
   const recentSection = useMemo(() => {
     if (!recentUses.length) return null;
@@ -88,19 +112,8 @@ export function WorkbenchHome() {
     );
   }, []);
 
-  async function copyKeyword() {
-    if (!activeDestination) return;
-    try {
-      await navigator.clipboard.writeText(activeDestination.keyword);
-      setCopyState("copied");
-    } catch {
-      setCopyState("failed");
-    }
-  }
-
   function closeGuide() {
     setActiveDestination(null);
-    setCopyState("idle");
   }
 
   return (
@@ -176,16 +189,21 @@ export function WorkbenchHome() {
 
       {activeDestination ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/20 p-4 sm:items-center sm:justify-center" role="presentation" onMouseDown={closeGuide}>
-          <section role="dialog" aria-modal="true" aria-labelledby="guide-title" className="w-full max-w-md rounded-2xl border border-[#e6dfca] bg-white p-6 shadow-[0_24px_70px_rgba(0,0,0,0.16)]" onMouseDown={(event) => event.stopPropagation()}>
-            <p className="text-sm font-semibold text-[#78611f]">{activeDestination.title}</p>
-            <h2 id="guide-title" className="mt-3 text-2xl font-semibold tracking-tight text-[#1a1a1a]">从微信里继续</h2>
-            <p className="mt-4 text-sm leading-7 text-[#666]">{activeDestination.hint}</p>
-            <div className="mt-6 rounded-xl bg-[#fff7df] px-4 py-3 text-sm text-[#303030]">搜索或关注：<strong className="font-semibold">{activeDestination.keyword}</strong></div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button type="button" onClick={copyKeyword} className="rounded-xl bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.98]">{copyState === "copied" ? "已复制" : "复制名称"}</button>
-              <button type="button" onClick={closeGuide} className="rounded-xl border border-[#dedede] px-4 py-2.5 text-sm font-medium text-[#303030] transition-colors duration-150 hover:bg-[#f7f7f7] active:scale-[0.98]">稍后再说</button>
-              {copyState === "failed" ? <p className="w-full text-sm text-[#777]">复制失败，请手动记下名称。</p> : null}
-            </div>
+          <section role="dialog" aria-modal="true" aria-labelledby="guide-title" className="w-full max-w-md rounded-2xl border border-[#e6dfca] bg-white p-6 text-center shadow-[0_24px_70px_rgba(0,0,0,0.16)]" onMouseDown={(event) => event.stopPropagation()}>
+            <p className="text-sm font-semibold text-[#78611f]">{activeDestination.eyebrow}</p>
+            <h2 id="guide-title" className="mt-3 text-2xl font-semibold tracking-tight text-[#1a1a1a]">{activeDestination.title}</h2>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#666]">{activeDestination.hint}</p>
+            <Image
+              className="mx-auto mt-5 h-[258px] w-[258px] rounded-[18px] max-[360px]:h-[215px] max-[360px]:w-[215px] max-[300px]:h-[172px] max-[300px]:w-[172px]"
+              src={activeDestination.qrImage}
+              alt={activeDestination.qrAlt}
+              width={258}
+              height={258}
+              priority
+              unoptimized
+            />
+            <p className="mt-3 text-sm font-medium text-[#81734f]">请使用微信扫一扫</p>
+            <button type="button" onClick={closeGuide} autoFocus className="mt-5 rounded-xl border border-[#dedede] px-5 py-2.5 text-sm font-medium text-[#303030] transition-colors duration-150 hover:bg-[#f7f7f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] focus-visible:ring-offset-2 active:scale-[0.98]">关闭</button>
           </section>
         </div>
       ) : null}
