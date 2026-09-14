@@ -7,7 +7,7 @@ export default function EducationBasesAdminPage() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/admin" className="text-sm font-medium text-[#607d6d] hover:underline">返回后台</Link>
-          <Link href="/api/education-bases" target="_blank" className="text-sm text-[#607d6d] hover:underline">查看小程序接口</Link>
+          <div className="flex gap-4"><Link href="/admin/education-bases/location-review" className="text-sm font-medium text-[#607d6d] hover:underline">腾讯地图地址核验</Link><Link href="/api/education-bases" target="_blank" className="text-sm text-[#607d6d] hover:underline">查看小程序接口</Link></div>
         </div>
         <header className="mt-5 max-w-3xl">
           <p className="text-sm font-medium text-[#607d6d]">小程序内容管理</p>

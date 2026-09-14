@@ -1,5 +1,4 @@
 const rawBases = require("../config/education-bases");
-const locations = require("../config/education-locations");
 const guideServices = require("../config/education-guide-services");
 
 const PI = Math.PI;
@@ -69,8 +68,8 @@ function normalizeRegion(item, location) {
 }
 
 function normalizeBase(item) {
-  const sourceLocation = locations[String(item.id)];
-  const suppliedLocation = Object.prototype.hasOwnProperty.call(item, "location") ? item.location : sourceLocation;
+  // 地图位置只接受基地表接口返回的 location，避免小程序维护另一份地址/坐标。
+  const suppliedLocation = Object.prototype.hasOwnProperty.call(item, "location") ? item.location : null;
   const location = normalizeLocation(suppliedLocation);
   const region = item.city && item.district
     ? { city: item.city, district: item.district }

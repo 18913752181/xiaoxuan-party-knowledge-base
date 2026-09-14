@@ -25,8 +25,18 @@ export async function GET() {
     if (error) throw error;
     rows = (data || []) as EducationBaseRow[];
   } catch (error) {
-    console.warn("教育基地接口使用本地兜底数据", error);
-    rows = getFallbackEducationBases();
+    console.warn("教育基地接口使用不含地图位置的本地兜底数据", error);
+    // 正式地图位置只来自 education_bases；数据库不可用时宁可不展示地图点，也不回退到历史静态坐标。
+    rows = getFallbackEducationBases().map((row) => ({
+      ...row,
+      address: null,
+      latitude: null,
+      longitude: null,
+      coordinate_type: null,
+      location_source_name: null,
+      location_source_url: null,
+      location_confidence: "pending" as const
+    }));
     source = "fallback";
   }
 
