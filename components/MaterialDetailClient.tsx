@@ -202,8 +202,8 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
           {memberOnlyPrompt ? (
             <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
-              <p className="font-semibold text-[#9a4650]">普通会员的 5 份资料额度已用完</p>
-              <p className="mt-2 text-sm text-neutral-600">已查看的资料可继续使用。开通付费会员后，全部资料可预览和下载。</p>
+              <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
+              <p className="mt-2 text-sm text-neutral-600">普通会员可以使用预览额度查看内容，下载原文件需开通付费会员。</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
                 <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">成为专属会员</Link>

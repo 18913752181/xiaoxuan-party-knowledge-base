@@ -3,7 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
-import { authorizeMaterialAccess, materialAccessMessage } from "@/lib/material-access";
+import { getMembership } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,22 +39,30 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   const unit = await getContentUnitBySlug(slug);
   if (!unit) return NextResponse.json({ error: "没有找到资料。" }, { status: 404 });
 
+  if (unit.meta.isVip) {
+    try {
+      const membership = await getMembership(session.user.id, session.accessToken);
+      if (!membership.active) {
+        const response = NextResponse.json(
+          { error: "该资料为会员专属，仅付费会员可下载。", code: "MEMBERSHIP_REQUIRED" },
+          { status: 403, headers: { "Cache-Control": "private, no-store" } }
+        );
+        if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
+        return response;
+      }
+    } catch {
+      return NextResponse.json(
+        { error: "会员状态暂时无法核验，请稍后重试。" },
+        { status: 503, headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
+  }
+
   const result = await getContentUnitDownloadFilePath(slug);
   if (!result) return NextResponse.json({ error: "该资料暂未上传可下载文件。" }, { status: 404 });
 
   const buffer = await readFile(result.path);
   const fileName = result.file?.originalName || `${result.title}${path.extname(result.path)}`;
-
-  try {
-    const access = await authorizeMaterialAccess(session.accessToken, unit.meta.slug, false, session.user.id);
-    if (!access.allowed) {
-      const response = NextResponse.json({ error: materialAccessMessage(access), code: access.code }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
-      if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
-      return response;
-    }
-  } catch {
-    return NextResponse.json({ error: "资料权限暂时无法核验，请稍后重试。" }, { status: 503, headers: { "Cache-Control": "private, no-store" } });
-  }
 
   updateContentUnitCounter(slug, "downloadCount", 1).catch((error) => {
     console.error("Failed to update download count", error);

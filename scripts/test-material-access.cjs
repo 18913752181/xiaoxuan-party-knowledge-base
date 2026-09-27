@@ -18,6 +18,10 @@ async function main() {
   let decision = { allowed: true, paid: false };
   let unavailable = false;
   let missing = false;
+  let memberOnly = true;
+  let membershipActive = false;
+  let membershipUnavailable = false;
+  let membershipCalls = 0;
   let reads = 0;
   let counters = 0;
   const calls = [];
@@ -27,8 +31,15 @@ async function main() {
       authorizeMaterialAccess: async (...args) => { calls.push(args); if (unavailable) throw Error("Database unavailable"); return decision; },
       materialAccessMessage: (access) => access.code
     },
+    "@/lib/membership": {
+      getMembership: async () => {
+        membershipCalls++;
+        if (membershipUnavailable) throw Error("Membership unavailable");
+        return { active: membershipActive };
+      }
+    },
     "@/lib/content-units": {
-      getContentUnitBySlug: async (slug) => ({ meta: { isVip: true, slug } }),
+      getContentUnitBySlug: async (slug) => ({ meta: { isVip: memberOnly, slug } }),
       getContentUnitDownloadFilePath: async () => missing ? null : { path: "test.pdf", file: { originalName: "same.pdf" }, title: "Test" },
       updateContentUnitCounter: async () => { counters++; }
     },
@@ -40,25 +51,41 @@ async function main() {
   const batch = load("app/api/content-units/batch-download/route.ts", mocks).POST;
   const req = new Request("http://localhost/test");
   const context = { params: { id: "content-same-material" } };
-  for (const route of [preview, download]) {
-    assert.equal((await route(req, context)).status, 200, "Old VIP flags must not block a free user's available slot");
-    assert.deepEqual(calls.at(-1), ["token", "same-material", false, "user"], "Preview and download use the same canonical quota key and verified identity");
-  }
+  assert.equal((await preview(req, context)).status, 200, "Member-only files may use an ordinary member's preview allowance");
+  assert.deepEqual(calls.at(-1), ["token", "same-material", false, "user"], "Preview uses the canonical quota key and verified identity");
   decision = { allowed: false, code: "MATERIAL_QUOTA_EXCEEDED" };
-  const beforeCounters = counters;
-  for (const route of [preview, download]) {
-    const response = await route(req, context);
-    assert.equal(response.status, 403);
-    assert.equal((await response.json()).code, "MATERIAL_QUOTA_EXCEEDED");
-  }
-  assert.equal(counters, beforeCounters, "Rejected downloads must not increment counters");
+  let response = await preview(req, context);
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "MATERIAL_QUOTA_EXCEEDED");
   unavailable = true;
-  for (const route of [preview, download]) assert.equal((await route(req, context)).status, 503, "Database failure must never grant access");
+  assert.equal((await preview(req, context)).status, 503, "Quota storage failure must never grant preview access");
   unavailable = false;
   missing = true;
   const beforeCalls = calls.length;
-  for (const route of [preview, download]) assert.equal((await route(req, context)).status, 404);
+  assert.equal((await preview(req, context)).status, 404);
   assert.equal(calls.length, beforeCalls, "Missing files must not consume quota");
+  missing = false;
+
+  const callsBeforePublicDownload = calls.length;
+  memberOnly = false;
+  response = await download(req, context);
+  assert.equal(response.status, 200, "Ordinary materials remain downloadable after preview allowance is exhausted");
+  assert.equal(calls.length, callsBeforePublicDownload, "Downloads must never consume or check preview allowance");
+  assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
+  memberOnly = true;
+  const beforeCounters = counters;
+  response = await download(req, context);
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "MEMBERSHIP_REQUIRED");
+  assert.equal(counters, beforeCounters, "Rejected member-only downloads must not increment counters");
+  membershipActive = true;
+  assert.equal((await download(req, context)).status, 200, "Paid members may download member-only materials");
+  membershipUnavailable = true;
+  assert.equal((await download(req, context)).status, 503, "Membership lookup failure must deny member-only downloads");
+  membershipUnavailable = false;
+  memberOnly = false;
+  missing = true;
+  assert.equal((await download(req, context)).status, 404);
   missing = false;
   const batchRequest = (slugs) => new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs }), headers: { "Content-Type": "application/json" } });
   decision = { allowed: false, code: "BATCH_MEMBERSHIP_REQUIRED" };
@@ -92,6 +119,6 @@ async function main() {
   await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
   membershipFailure = true;
   await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
-  console.log("PASS: shared quota delegation, free/VIP-file access, quota denial, failure handling, paid-only ZIP and duplicate filenames");
+  console.log("PASS: preview-only quota, public downloads, member-only download enforcement, paid-only ZIP and failure handling");
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

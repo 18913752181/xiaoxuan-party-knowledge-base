@@ -519,7 +519,7 @@ export function ResourceLibrary({
             <div className="mt-5 rounded-3xl border-2 border-brand-red bg-[#fff8f8] px-6 py-10 text-center shadow-[0_12px_30px_rgba(166,62,71,0.06)]">
               <span className="inline-flex rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">开通付费会员</span>
               <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{displayMaterialTitle(memberOnlyMaterial.title)}</h3>
-              <p className="mt-4 text-base font-medium text-brand-red">普通会员限预览或下载 5 份资料。付费会员可使用全部资料，并支持批量下载。</p>
+              <p className="mt-4 text-base font-medium text-brand-red">普通会员可预览 5 份资料；会员专属资料仅付费会员可下载。</p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="rounded-xl border border-brand-line bg-white px-5 py-2.5 text-sm text-neutral-600 transition-colors hover:bg-[#fafbfc]">返回资料列表</button>
                 <Link href="/membership/payment" className="rounded-xl bg-brand-red px-5 py-2.5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">成为专属会员</Link>
