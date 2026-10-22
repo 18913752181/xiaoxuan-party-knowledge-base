@@ -1,74 +1,68 @@
-import JSZip from "jszip";
-import * as XLSX from "xlsx";
+import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
+import { copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 
-export type MaterialPreview = {
-  kind: "text" | "table";
-  sections: { title: string; text?: string; rows?: string[][] }[];
-  note: string;
-};
+const execFileAsync = promisify(execFile);
 
-// Return text only: document markup is never inserted into the page as HTML.
-function documentText(xml: string) {
-  return xml.replace(/<\/(?:w|a):p>/g, "\n")
-    .replace(/<(?:w|a):(?:br|cr)\b[^>]*\/>/g, "\n")
-    .replace(/<w:tab\b[^>]*\/>/g, "\t")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (match, entity: string) => {
-      const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
-      if (named[entity]) return named[entity];
-      const code = entity.startsWith("#x") ? parseInt(entity.slice(2), 16) : Number(entity.slice(1));
-      return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
-    }).trim();
+function libreOfficeBinary() {
+  if (process.env.LIBREOFFICE_BIN) return process.env.LIBREOFFICE_BIN;
+  if (process.platform === "win32") {
+    const candidates = [
+      "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe"
+    ];
+    return candidates.find(existsSync) || "soffice.exe";
+  }
+  return "soffice";
 }
 
-async function readXml(zip: JSZip, name: string) {
-  const entry = zip.file(name);
-  if (!entry) throw new Error("Missing document content");
-  const stream = entry.nodeStream() as NodeJS.ReadableStream & { destroy(): void };
-  const chunks: Buffer[] = [];
-  let size = 0;
-  return new Promise<string>((resolve, reject) => {
-    stream.on("data", (chunk: Buffer) => {
-      size += chunk.length;
-      if (size > 8 * 1024 * 1024) {
-        stream.destroy();
-        reject(new Error("Document content too large"));
-        return;
-      }
-      chunks.push(chunk);
-    });
-    stream.on("error", reject);
-    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-  });
+function cacheDirectory() {
+  return process.env.MATERIAL_PREVIEW_CACHE_DIR || path.join(process.cwd(), "data", "material-preview");
 }
 
-export async function createMaterialPreview(buffer: Buffer, extension: string): Promise<MaterialPreview> {
-  if (extension === ".xlsx" || extension === ".xls") {
-    const workbook = XLSX.read(buffer, { type: "buffer", sheetRows: 101, cellHTML: false, cellFormula: false, cellStyles: false });
-    const sections = workbook.SheetNames.slice(0, 10).map((title) => {
-      const sheet = workbook.Sheets[title];
-      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-      range.e.r = Math.min(range.e.r, range.s.r + 99);
-      range.e.c = Math.min(range.e.c, range.s.c + 29);
-      const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: "", range })
-        .map((row) => row.map((cell) => String(cell ?? "").slice(0, 1000)));
-      return { title, rows };
-    });
-    return { kind: "table", sections, note: "表格预览最多显示前 10 个工作表，每表前 100 行、30 列；完整内容及格式请下载原文件。" };
+export async function createMaterialPreviewPdf(sourcePath: string, extension = path.extname(sourcePath).toLowerCase()) {
+  const sourceStat = await stat(sourcePath);
+  const cacheKey = createHash("sha256")
+    .update(`${path.resolve(sourcePath)}\0${sourceStat.size}\0${sourceStat.mtimeMs}`)
+    .digest("hex");
+  const cacheRoot = cacheDirectory();
+  const cachedPath = path.join(cacheRoot, `${cacheKey}.pdf`);
+  try {
+    return await readFile(cachedPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
-  if (extension !== ".docx" && extension !== ".pptx") throw new Error("Unsupported preview format");
-  const zip = await JSZip.loadAsync(buffer);
-  const names = extension === ".docx" ? ["word/document.xml"] : Object.keys(zip.files)
-    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1]) - Number(b.match(/slide(\d+)/)?.[1]));
-  const sections: MaterialPreview["sections"] = [];
-  let remaining = 60000;
-  for (const name of names.slice(0, 30)) {
-    if (!remaining) break;
-    const text = documentText(await readXml(zip, name)).slice(0, remaining);
-    remaining -= text.length;
-    sections.push({ title: extension === ".docx" ? "正文" : `第 ${sections.length + 1} 页`, text });
+
+  await mkdir(cacheRoot, { recursive: true });
+  const workDirectory = await mkdtemp(path.join(tmpdir(), "xiaoxuan-material-preview-"));
+  const inputPath = path.join(workDirectory, `material${extension}`);
+  const outputPath = path.join(workDirectory, "material.pdf");
+  const profilePath = path.join(workDirectory, "libreoffice-profile");
+  try {
+    await copyFile(sourcePath, inputPath);
+    await execFileAsync(libreOfficeBinary(), [
+      `-env:UserInstallation=${pathToFileURL(profilePath).href}`,
+      "--headless",
+      "--nologo",
+      "--nodefault",
+      "--nolockcheck",
+      "--norestore",
+      "--convert-to",
+      "pdf",
+      "--outdir",
+      workDirectory,
+      inputPath
+    ], { timeout: 120_000, windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
+    const pdf = await readFile(outputPath);
+    if (!pdf.subarray(0, 5).equals(Buffer.from("%PDF-"))) throw new Error("LibreOffice did not create a PDF preview");
+    await writeFile(cachedPath, pdf);
+    return pdf;
+  } finally {
+    await rm(workDirectory, { recursive: true, force: true });
   }
-  if (!sections.length) throw new Error("No preview content");
-  return { kind: "text", sections, note: "文字预览不包含图片、版式和动画，最多显示前 6 万字（PPT 前 30 页）；完整内容请下载原文件。" };
 }

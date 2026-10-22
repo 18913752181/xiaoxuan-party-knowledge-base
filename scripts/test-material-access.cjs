@@ -43,7 +43,7 @@ async function main() {
       getContentUnitDownloadFilePath: async () => missing ? null : { path: "test.pdf", file: { originalName: "same.pdf" }, title: "Test" },
       updateContentUnitCounter: async () => { counters++; }
     },
-    "@/lib/material-preview": { createMaterialPreview: async () => ({}) },
+    "@/lib/material-preview": { createMaterialPreviewPdf: async () => Buffer.from("%PDF-1.4") },
     "fs/promises": { stat: async () => ({ size: 8 }), readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); } }
   };
   const preview = load("app/api/content-units/[id]/preview/route.ts", mocks).GET;

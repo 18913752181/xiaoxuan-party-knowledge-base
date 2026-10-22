@@ -21,4 +21,6 @@ dev-*.log
 
 .vercel
 data/material-access/
+data/material-preview/
 ui-shots/
+public/vendor/pdf.worker.min.mjs
