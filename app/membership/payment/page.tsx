@@ -257,7 +257,7 @@ export default function MembershipPaymentPage() {
                 {plans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
                   return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${selected ? "is-selected" : ""}`}>
-                    <span><em>{candidate.code === "annual" ? "推荐" : "DIMMO 会员"}</em><span>{candidate.name} · {candidate.duration}</span><small>{candidate.pointsDescription}</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
+                    <span>{candidate.code === "annual" ? <em>推荐</em> : null}<span>{candidate.name}</span><small>{candidate.pointsDescription}</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
                 })}
               </div>
@@ -284,7 +284,7 @@ export default function MembershipPaymentPage() {
               ) : null}
               {!loading && profile && status === "idle" ? (
                 <>
-                  <p className="mt-6 text-sm text-neutral-500">已选：{plan ? `${plan.name} · ${plan.duration}` : "正在读取套餐"}</p>
+                  <p className="mt-6 text-sm text-neutral-500">已选：{plan ? plan.name : "正在读取套餐"}</p>
                   <p className="mt-2 text-4xl font-semibold text-[#9b4d48]">¥ {price}</p>
                   <button
                     disabled={!configured}
