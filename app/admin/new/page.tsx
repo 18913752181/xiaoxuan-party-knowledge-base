@@ -28,6 +28,7 @@ const emptyForm = {
   topic: "",
   stage: "",
   summary: "",
+  pointsCost: "1",
   status: "published",
   policyBasis: "",
   notices: "",
@@ -333,6 +334,7 @@ export default function AdminNewPage() {
             <Input label="标题" value={form.title} onChange={(value) => setField("title", value)} placeholder={isBatch ? "批量上传时自动使用每份文件名" : "选择文件后自动显示文件名"} readOnly={isBatch} />
             <Select label="所属专题" value={form.topic} options={topics} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage} onChange={(value) => setField("stage", value)} />
+            <Input label="下载所需积分" value={form.pointsCost} onChange={(value) => setField("pointsCost", value.replace(/\D/g, "").slice(0, 4))} />
             <Select label="状态" value={form.status} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary} onChange={(value) => setField("summary", value)} />

@@ -43,6 +43,7 @@ export type GenerateInput = {
   summary?: string;
   status?: "draft" | "published" | "hidden";
   isVip?: boolean;
+  pointsCost?: number;
   introduction?: string;
   policyBasis?: string;
   scenarios?: string;
@@ -84,6 +85,7 @@ export type ContentUnitMeta = {
   author: string;
   source: string;
   isVip: boolean;
+  pointsCost: number;
   downloadable: boolean;
   relatedArticles: string[];
   updatedAt: string;
@@ -234,6 +236,11 @@ const normalizeFolderPath = (value: unknown) =>
     .filter((item) => item && item !== "." && item !== "..")
     .join("/");
 
+export const normalizeMaterialPointsCost = (value: unknown, fallback = 1) => {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 0 && number <= 9999 ? number : fallback;
+};
+
 const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnitMeta => {
   const slug = meta.slug || path.basename(dir);
   const category = meta.category || path.basename(path.dirname(dir));
@@ -250,6 +257,7 @@ const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnit
     author: meta.author || "小宣同志",
     source: meta.source || "本地导入",
     isVip: Boolean(meta.isVip),
+    pointsCost: normalizeMaterialPointsCost(meta.pointsCost),
     downloadable: Boolean(meta.downloadable),
     relatedArticles: Array.isArray(meta.relatedArticles) ? meta.relatedArticles : [],
     updatedAt: meta.updatedAt || now,
@@ -420,6 +428,7 @@ export async function createContentUnit(input: GenerateInput) {
     author: input.author || "小宣同志",
     source: input.source || "后台录入",
     isVip: Boolean(input.isVip),
+    pointsCost: normalizeMaterialPointsCost(input.pointsCost),
     downloadable: Boolean(files.length),
     relatedArticles: [...relatedMap.previous, ...relatedMap.next, ...relatedMap.related],
     updatedAt: now,
@@ -500,6 +509,7 @@ export async function updateContentUnit(slug: string, input: Partial<GenerateInp
     stage: input.stage ?? unit.meta.stage,
     status: input.status || unit.meta.status,
     isVip: typeof input.isVip === "boolean" ? input.isVip : unit.meta.isVip,
+    pointsCost: input.pointsCost === undefined ? unit.meta.pointsCost : normalizeMaterialPointsCost(input.pointsCost),
     tags,
     summary: input.summary ?? unit.meta.summary,
     organizationLevels: input.organizationLevels ?? unit.meta.organizationLevels,
@@ -595,6 +605,7 @@ export function contentUnitToMaterial(unit: ContentUnit): Material {
     uploaded_at: file?.uploadedAt || unit.meta.createdAt,
     updated_at: unit.meta.updatedAt,
     member_only: unit.meta.isVip,
+    points_cost: unit.meta.pointsCost,
     isVip: unit.meta.isVip,
     downloadable: unit.meta.downloadable,
     download_count: unit.meta.downloadCount,
@@ -652,6 +663,7 @@ export function contentUnitToMaterialSummary(unit: ContentUnit): Material {
     uploaded_at: material.uploaded_at,
     updated_at: material.updated_at,
     member_only: material.member_only,
+    points_cost: material.points_cost,
     isVip: material.isVip,
     downloadable: material.downloadable,
     download_count: material.download_count,

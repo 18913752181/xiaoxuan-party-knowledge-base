@@ -6,6 +6,7 @@ import {
   fileTypeFromName,
   getContentUnitBySlug,
   updateContentUnit,
+  normalizeMaterialPointsCost,
 } from "@/lib/content-units";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
@@ -43,6 +44,11 @@ export async function PUT(request: Request, { params }: { params: { slug: string
 
   const formData = await request.formData();
   const file = formData.get("file");
+  const rawPointsCost = formData.get("pointsCost");
+  const parsedPointsCost = Number(rawPointsCost);
+  if (!Number.isInteger(parsedPointsCost) || parsedPointsCost < 0 || parsedPointsCost > 9999) {
+    return NextResponse.json({ error: "所需积分必须是 0 至 9999 的整数。" }, { status: 400 });
+  }
   const payload = {
     title: String(formData.get("title") || "").trim(),
     topic: String(formData.get("topic") || "").trim(),
@@ -51,6 +57,7 @@ export async function PUT(request: Request, { params }: { params: { slug: string
     tags: splitList(formData.get("tags")),
     summary: String(formData.get("summary") || "").trim(),
     isVip: String(formData.get("isVip") || "") === "true",
+    pointsCost: normalizeMaterialPointsCost(parsedPointsCost),
     status: String(formData.get("status") || "published") as "draft" | "published" | "hidden",
     introduction: String(formData.get("introduction") || "").trim(),
     policyBasis: String(formData.get("policyBasis") || "").trim(),
@@ -105,10 +112,17 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
     return NextResponse.json({ error: "请求格式不正确。" }, { status: 400 });
   }
 
-  const updates: { stage?: string; previous?: string[]; next?: string[] } = {};
+  const updates: { stage?: string; previous?: string[]; next?: string[]; pointsCost?: number } = {};
   if (typeof body.stage === "string") updates.stage = body.stage.trim();
   if (Array.isArray(body.previous)) updates.previous = body.previous.map((v: unknown) => String(v || "").trim()).filter(Boolean);
   if (Array.isArray(body.next)) updates.next = body.next.map((v: unknown) => String(v || "").trim()).filter(Boolean);
+  if (body.pointsCost !== undefined) {
+    const pointsCost = Number(body.pointsCost);
+    if (!Number.isInteger(pointsCost) || pointsCost < 0 || pointsCost > 9999) {
+      return NextResponse.json({ error: "所需积分必须是 0 至 9999 的整数。" }, { status: 400 });
+    }
+    updates.pointsCost = pointsCost;
+  }
   if (!Object.keys(updates).length) {
     return NextResponse.json({ error: "没有需要修改的内容。" }, { status: 400 });
   }

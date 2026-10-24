@@ -28,13 +28,22 @@ export async function PATCH(request: Request) {
     ? Array.from(new Set<string>(body.slugs.map((slug: unknown) => String(slug || "").trim()).filter(Boolean)))
     : [];
 
-  if (!slugs.length || typeof body?.memberOnly !== "boolean") {
-    return NextResponse.json({ error: "请选择资料并指定会员状态。" }, { status: 400 });
+  const hasMemberOnly = typeof body?.memberOnly === "boolean";
+  const pointsCost = Number(body?.pointsCost);
+  const hasPointsCost = body?.pointsCost !== undefined;
+  if (!slugs.length || (!hasMemberOnly && !hasPointsCost)) {
+    return NextResponse.json({ error: "请选择资料并指定要修改的内容。" }, { status: 400 });
+  }
+  if (hasPointsCost && (!Number.isInteger(pointsCost) || pointsCost < 0 || pointsCost > 9999)) {
+    return NextResponse.json({ error: "所需积分必须是 0 至 9999 的整数。" }, { status: 400 });
   }
 
   const updated = [];
   for (const slug of slugs) {
-    const unit = await updateContentUnitMeta(slug, { isVip: body.memberOnly });
+    const unit = await updateContentUnitMeta(slug, {
+      ...(hasMemberOnly ? { isVip: body.memberOnly } : {}),
+      ...(hasPointsCost ? { pointsCost } : {}),
+    });
     if (unit) updated.push(contentUnitToMaterial(unit));
   }
 

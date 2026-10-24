@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getServerSession, applyAuthCookies } from "@/lib/server-auth";
 import { authorizeMaterialAccess, materialAccessMessage } from "@/lib/material-access";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
+import { claimMaterialPoints } from "@/lib/material-points";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
       return error("请每次选择 1 至 50 份资料。", 400);
     }
     const slugs = Array.from(new Set<string>(body.slugs.map((slug: string) => slug.replace(/^content-/, ""))));
-    const zip = new JSZip();
+    const files: Array<{ slug: string; path: string; name: string; cost: number; buffer?: Buffer }> = [];
     const used = new Set<string>();
     let size = 0;
     for (const slug of slugs) {
@@ -41,8 +42,20 @@ export async function POST(request: Request) {
       const ext = path.extname(original);
       while (used.has(name)) name = `${original.slice(0, original.length - ext.length)} (${index++})${ext}`;
       used.add(name);
-      zip.file(name, await readFile(file.path));
+      files.push({ slug, path: file.path, name, cost: unit!.meta.pointsCost });
     }
+    await Promise.all(files.map(async (file) => { file.buffer = await readFile(file.path); }));
+    const claim = await claimMaterialPoints(session.user.id, files.map(({ slug, cost }) => ({ slug, cost })));
+    if (!claim.ok) {
+      return finish(NextResponse.json({
+        error: `积分不足，本次最多需要 ${claim.requiredPoints || 0} 积分，当前剩余 ${claim.pointsBalance} 积分。`,
+        code: claim.code,
+        requiredPoints: claim.requiredPoints,
+        pointsBalance: claim.pointsBalance,
+      }, { status: 403 }));
+    }
+    const zip = new JSZip();
+    for (const file of files) zip.file(file.name, file.buffer!);
     const buffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 3 } });
     await Promise.all(slugs.map((slug) => updateContentUnitCounter(slug, "downloadCount", 1).catch(() => {})));
     return finish(new NextResponse(new Uint8Array(buffer), { headers: {

@@ -28,6 +28,7 @@ export type Material = {
   uploaded_at?: string;
   updated_at: string;
   member_only: boolean;
+  points_cost?: number;
   isVip?: boolean;
   downloadable?: boolean;
   download_count: number;

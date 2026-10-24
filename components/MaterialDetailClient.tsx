@@ -190,7 +190,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
           <div className="mt-7 flex flex-wrap gap-3">
             <button type="button" onClick={download} className="rounded-xl bg-brand-red px-7 py-3 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">
-              下载文件
+              下载文件 · {material.points_cost ?? 1} 积分
             </button>
             <button type="button" onClick={onToggleFavorite} className={`rounded-xl border px-6 py-3 text-sm transition-transform duration-150 active:scale-[0.98] ${isFavorite ? "border-[#c79b52] bg-[#fff8e8] text-[#8a6b50]" : "border-brand-line bg-white text-neutral-600"}`}>
               {isFavorite ? "已收藏" : "收藏资料"}
@@ -231,6 +231,10 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
             <div>
               <p className="text-xs text-neutral-400">收藏数</p>
               <p className="mt-1 font-medium text-neutral-700">{material.favorite_count}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-400">下载所需积分</p>
+              <p className="mt-1 font-medium text-neutral-700">{material.points_cost ?? 1} 积分（首次下载扣除）</p>
             </div>
           </div>
         </div>

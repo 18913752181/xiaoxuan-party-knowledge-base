@@ -57,6 +57,7 @@ export default function AdminMaterialEditPage() {
           stage: row.stage || "",
           tags: joinList(row.tags),
           summary: row.summary || row.description || "",
+          pointsCost: String(row.points_cost ?? 1),
           status: row.status || "published",
           introduction: row.introduction || row.article || "",
           policyBasis: row.policyBasis || row.legal_basis || "",
@@ -205,6 +206,7 @@ export default function AdminMaterialEditPage() {
             <Input label="标题" value={form.title || ""} onChange={(value) => setField("title", value)} />
             <Select label="所属专题" value={form.topic || ""} options={topicOptions} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage || ""} onChange={(value) => setField("stage", value)} />
+            <Input label="下载所需积分" value={form.pointsCost || "1"} onChange={(value) => setField("pointsCost", value.replace(/\D/g, "").slice(0, 4))} />
             <Select label="状态" value={form.status || "published"} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary || ""} onChange={(value) => setField("summary", value)} />

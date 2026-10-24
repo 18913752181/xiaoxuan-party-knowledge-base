@@ -24,6 +24,8 @@ async function main() {
   let membershipCalls = 0;
   let reads = 0;
   let counters = 0;
+  let pointClaim = { ok: true, chargedPoints: 1, pointsBalance: 9, unlockedSlugs: ["same-material"] };
+  const pointClaims = [];
   const calls = [];
   const mocks = {
     "@/lib/server-auth": { getServerSession: async () => signedIn ? { user: { id: "user" }, accessToken: "token" } : null, applyAuthCookies: () => {} },
@@ -38,8 +40,11 @@ async function main() {
         return { active: membershipActive };
       }
     },
+    "@/lib/material-points": {
+      claimMaterialPoints: async (...args) => { pointClaims.push(args); return pointClaim; }
+    },
     "@/lib/content-units": {
-      getContentUnitBySlug: async (slug) => ({ meta: { isVip: memberOnly, slug } }),
+      getContentUnitBySlug: async (slug) => ({ meta: { isVip: memberOnly, slug, pointsCost: 1 } }),
       getContentUnitDownloadFilePath: async () => missing ? null : { path: "test.pdf", file: { originalName: "same.pdf" }, title: "Test" },
       updateContentUnitCounter: async () => { counters++; }
     },
@@ -72,6 +77,12 @@ async function main() {
   assert.equal(response.status, 200, "Ordinary materials remain downloadable after preview allowance is exhausted");
   assert.equal(calls.length, callsBeforePublicDownload, "Downloads must never consume or check preview allowance");
   assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
+  assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }]], "A first download claims the configured points atomically");
+  pointClaim = { ok: false, code: "INSUFFICIENT_POINTS", requiredPoints: 1, chargedPoints: 0, pointsBalance: 0, unlockedSlugs: [] };
+  response = await download(req, context);
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "INSUFFICIENT_POINTS");
+  pointClaim = { ok: true, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
   memberOnly = true;
   const beforeCounters = counters;
   response = await download(req, context);
@@ -119,6 +130,6 @@ async function main() {
   await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
   membershipFailure = true;
   await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
-  console.log("PASS: preview-only quota, public downloads, member-only download enforcement, paid-only ZIP and failure handling");
+  console.log("PASS: preview quota, point-gated downloads, member-only enforcement, paid-only ZIP and failure handling");
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

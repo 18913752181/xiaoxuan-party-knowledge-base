@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 import { getMembership } from "@/lib/membership";
+import { claimMaterialPoints } from "@/lib/material-points";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,9 +61,31 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 
   const result = await getContentUnitDownloadFilePath(slug);
   if (!result) return NextResponse.json({ error: "该资料暂未上传可下载文件。" }, { status: 404 });
-
   const buffer = await readFile(result.path);
   const fileName = result.file?.originalName || `${result.title}${path.extname(result.path)}`;
+
+  try {
+    const claim = await claimMaterialPoints(session.user.id, [{ slug, cost: unit.meta.pointsCost }]);
+    if (!claim.ok) {
+      const response = NextResponse.json(
+        {
+          error: `积分不足，本次需要 ${claim.requiredPoints || unit.meta.pointsCost} 积分，当前剩余 ${claim.pointsBalance} 积分。`,
+          code: claim.code,
+          requiredPoints: claim.requiredPoints,
+          pointsBalance: claim.pointsBalance,
+        },
+        { status: 403, headers: { "Cache-Control": "private, no-store" } }
+      );
+      if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
+      return response;
+    }
+  } catch (error) {
+    console.error("Failed to claim material points", error);
+    return NextResponse.json(
+      { error: "积分暂时无法核验，请稍后重试。", code: "POINTS_UNAVAILABLE" },
+      { status: 503, headers: { "Cache-Control": "private, no-store" } }
+    );
+  }
 
   updateContentUnitCounter(slug, "downloadCount", 1).catch((error) => {
     console.error("Failed to update download count", error);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createContentUnit } from "@/lib/content-units";
+import { createContentUnit, normalizeMaterialPointsCost } from "@/lib/content-units";
 import { listTopics } from "@/lib/topics";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     summary: content.slice(0, 160),
     introduction: content,
     isVip,
+    pointsCost: normalizeMaterialPointsCost(payload.pointsCost),
     status: "published"
   });
 

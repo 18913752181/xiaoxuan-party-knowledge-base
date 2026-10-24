@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createContentUnit, fileTypeFromName } from "@/lib/content-units";
+import { createContentUnit, fileTypeFromName, normalizeMaterialPointsCost } from "@/lib/content-units";
 import { listTopics } from "@/lib/topics";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
@@ -27,6 +27,8 @@ export async function POST(request: Request) {
   const topic = String(formData.get("topic") || "").trim();
   const category = String(formData.get("category") || topic || "").trim();
   const file = formData.get("file");
+  const rawPointsCost = formData.get("pointsCost");
+  const pointsCost = normalizeMaterialPointsCost(rawPointsCost);
 
   if (!title || !topic || !category) {
     return NextResponse.json({ error: "标题、专题和分类不能为空。" }, { status: 400 });
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
     tags: splitList(formData.get("tags")),
     summary: String(formData.get("summary") || "").trim(),
     isVip: String(formData.get("isVip") || "") === "true",
+    pointsCost,
     status: String(formData.get("status") || "published") as "draft" | "published" | "hidden",
     introduction: String(formData.get("introduction") || "").trim(),
     policyBasis: String(formData.get("policyBasis") || "").trim(),

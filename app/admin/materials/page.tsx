@@ -24,6 +24,7 @@ export default function AdminMaterialsPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [bulkPointsCost, setBulkPointsCost] = useState("1");
   const [draggingSlug, setDraggingSlug] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const [keyword, setKeyword] = useState("");
@@ -180,6 +181,36 @@ export default function AdminMaterialsPage() {
         current.map((item) => updatedRows.get(item.slug || item.id) || item)
       );
       setMessage(`已将 ${updatedRows.size} 份资料设为${memberOnly ? "会员专属" : "普通资料"}。`);
+      setSelectedSlugs([]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "批量修改失败");
+    } finally {
+      setBulkUpdating(false);
+    }
+  }
+
+  async function updatePointsCost() {
+    if (!selectedSlugs.length) return;
+    const pointsCost = Number(bulkPointsCost);
+    if (!Number.isInteger(pointsCost) || pointsCost < 0 || pointsCost > 9999) {
+      setMessage("所需积分必须是 0 至 9999 的整数。");
+      return;
+    }
+    setBulkUpdating(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/materials", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: selectedSlugs, pointsCost })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "批量修改失败");
+      const updatedRows = new Map<string, Material>(
+        (Array.isArray(data.materials) ? data.materials : []).map((item: Material) => [item.slug || item.id, item])
+      );
+      setMaterials((current) => current.map((item) => updatedRows.get(item.slug || item.id) || item));
+      setMessage(`已将 ${updatedRows.size} 份资料调整为 ${pointsCost} 积分。`);
       setSelectedSlugs([]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "批量修改失败");
@@ -431,6 +462,13 @@ export default function AdminMaterialsPage() {
             >
               设为普通资料
             </button>
+            <label className="flex items-center gap-2 text-sm text-[#59635d]">
+              <span>所需积分</span>
+              <input type="number" min="0" max="9999" step="1" value={bulkPointsCost} onChange={(event) => setBulkPointsCost(event.target.value)} className="h-9 w-24 rounded-xl border border-[#cfc6ba] bg-white px-3 outline-none focus:border-[#6f8f7e]" />
+            </label>
+            <button type="button" onClick={updatePointsCost} disabled={bulkUpdating || bulkDeleting} className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50">
+              批量设置积分
+            </button>
             <button
               type="button"
               onClick={() => setBulkDeleteOpen(true)}
@@ -446,7 +484,7 @@ export default function AdminMaterialsPage() {
         ) : null}
 
         <div className="mt-6 overflow-x-auto rounded-2xl border border-[#e4ded2] bg-white shadow-sm">
-          <table className="w-full min-w-[1080px] text-left text-sm">
+          <table className="w-full min-w-[1160px] text-left text-sm">
             <thead className="bg-[#fbfaf6] text-[#59635d]">
               <tr>
                 <th className="w-12 px-4 py-3">
@@ -465,6 +503,7 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">上一步工作</th>
                 <th className="px-4 py-3">下一步工作</th>
                 <th className="px-4 py-3">是否会员专属</th>
+                <th className="px-4 py-3">所需积分</th>
                 <th className="sticky right-0 bg-[#fbfaf6] px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">操作</th>
               </tr>
             </thead>
@@ -552,6 +591,7 @@ export default function AdminMaterialsPage() {
                         {item.member_only ? "是" : "否"}
                       </span>
                     </td>
+                    <td className="px-4 py-3">{item.points_cost ?? 1}</td>
                     <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
@@ -566,7 +606,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={9} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={10} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>
