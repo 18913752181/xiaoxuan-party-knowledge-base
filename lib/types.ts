@@ -8,6 +8,7 @@ export type Profile = {
   phone?: string | null;
   member_status: MemberStatus;
   member_expires_at?: string | null;
+  points_balance?: number;
   is_admin: boolean;
   created_at?: string;
 };

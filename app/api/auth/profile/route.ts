@@ -31,6 +31,7 @@ export async function GET() {
       avatar_key: null,
       member_status: "free",
       member_expires_at: null,
+      points_balance: 0,
       is_admin: false,
       wechat_openid: null
     } as const);

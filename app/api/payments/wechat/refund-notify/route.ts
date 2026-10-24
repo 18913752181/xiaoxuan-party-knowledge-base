@@ -94,6 +94,14 @@ export async function POST(request: Request) {
     if (updateOrderError) throw updateOrderError;
     if (!updated) return success();
 
+    // 年卡退款后停止该订单未来的每日积分；历史已发积分按规则保留，不作扣减。
+    const { error: revokePointsError } = await admin
+      .from("annual_membership_point_periods")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("source_order_id", order.id)
+      .is("revoked_at", null);
+    if (revokePointsError) throw revokePointsError;
+
     // 退款订单之后还有成功续费：当前会员权益以较新的订单为准，不作取消。
     const { data: otherPaidOrders, error: otherOrdersError } = await admin
       .from("membership_orders")

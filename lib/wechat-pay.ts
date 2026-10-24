@@ -41,6 +41,9 @@ export type MembershipPlan = {
   durationDays: number;
   amountTotal: number;
   description: string;
+  pointsDescription: string;
+  openingBonusPoints: number;
+  dailyPoints: number;
 };
 
 function positiveCents(name: string, fallback: number) {
@@ -53,9 +56,9 @@ function positiveCents(name: string, fallback: number) {
  */
 export function membershipPlans(): MembershipPlan[] {
   return [
-    { code: "monthly", name: "月卡", duration: "30 天", durationDays: 30, amountTotal: positiveCents("DIMMO_MONTHLY_PRICE_CENTS", 2800), description: "小宣干货社会员月卡" },
-    { code: "quarterly", name: "季卡", duration: "90 天", durationDays: 90, amountTotal: positiveCents("DIMMO_QUARTERLY_PRICE_CENTS", 7900), description: "小宣干货社会员季卡" },
-    { code: "annual", name: "年卡", duration: "365 天", durationDays: 365, amountTotal: positiveCents("DIMMO_ANNUAL_PRICE_CENTS", 29900), description: "小宣干货社会员年卡" }
+    { code: "monthly", name: "月卡", duration: "30 天", durationDays: 30, amountTotal: positiveCents("DIMMO_MONTHLY_PRICE_CENTS", 2800), description: "小宣干货社会员月卡", pointsDescription: "开通成功一次性赠送 5 积分", openingBonusPoints: 5, dailyPoints: 0 },
+    { code: "quarterly", name: "季卡", duration: "90 天", durationDays: 90, amountTotal: positiveCents("DIMMO_QUARTERLY_PRICE_CENTS", 7900), description: "小宣干货社会员季卡", pointsDescription: "开通成功一次性赠送 20 积分", openingBonusPoints: 20, dailyPoints: 0 },
+    { code: "annual", name: "年卡", duration: "365 天", durationDays: 365, amountTotal: positiveCents("DIMMO_ANNUAL_PRICE_CENTS", 9900), description: "小宣干货社会员年卡", pointsDescription: "有效期内每天自动获得 10 积分", openingBonusPoints: 0, dailyPoints: 10 }
   ];
 }
 

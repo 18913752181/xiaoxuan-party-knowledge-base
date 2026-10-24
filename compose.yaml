@@ -33,7 +33,7 @@ services:
         max-size: "10m"
         max-file: "5"
 
-  # 每分钟扫描一次到期提醒；只调用容器内部受密钥保护的接口，不暴露公网端口。
+  # 每分钟扫描到期提醒、每小时补齐年度会员每日积分；接口只在容器网络内调用。
   reminder-dispatcher:
     image: xiaoxuan-site:latest
     restart: unless-stopped
@@ -48,4 +48,9 @@ services:
     entrypoint: ["node", "-e"]
     command:
       - >-
-        const secret=process.env.REMINDER_CRON_SECRET||''; const url='http://web:3000/api/internal/reminders/dispatch'; async function run(){if(!secret){console.warn('[member-reminders] REMINDER_CRON_SECRET is not configured');return;}try{const r=await fetch(url,{headers:{authorization:'Bearer '+secret}});if(!r.ok)console.warn('[member-reminders] dispatch failed',r.status);}catch(e){console.warn('[member-reminders] dispatch unavailable',e instanceof Error?e.message:String(e));}}run();setInterval(run,60000);
+        const reminderSecret=process.env.REMINDER_CRON_SECRET||'';
+        const pointsSecret=process.env.MEMBERSHIP_POINTS_CRON_SECRET||reminderSecret;
+        async function call(url,secret,label){if(!secret){console.warn('['+label+'] cron secret is not configured');return;}try{const r=await fetch(url,{headers:{authorization:'Bearer '+secret}});if(!r.ok)console.warn('['+label+'] dispatch failed',r.status);}catch(e){console.warn('['+label+'] dispatch unavailable',e instanceof Error?e.message:String(e));}}
+        const reminders=()=>call('http://web:3000/api/internal/reminders/dispatch',reminderSecret,'member-reminders');
+        const points=()=>call('http://web:3000/api/internal/membership-points/grant-daily',pointsSecret,'membership-points');
+        reminders();points();setInterval(reminders,60000);setInterval(points,3600000);

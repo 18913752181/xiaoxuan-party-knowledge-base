@@ -40,13 +40,17 @@ export default function MePage() {
   return (
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
       <div className="rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} size={64} />
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
             <p className={`mt-2 text-sm ${memberActive ? "text-neutral-400" : "text-neutral-500"}`}>
-              {memberActive ? `会员有效期至 ${profile.member_expires_at}` : maskAccountEmail(profile.email) || "已登录"}
+              {memberActive ? `付费会员 · 有效期至 ${profile.member_expires_at}` : `普通会员 · ${maskAccountEmail(profile.email) || "已登录"}`}
             </p>
+          </div>
+          <div className="shrink-0 rounded-2xl bg-[#fff4cf] px-5 py-3 text-right">
+            <p className="text-xs text-[#80671e]">当前积分</p>
+            <p className="mt-1 text-2xl font-semibold text-[#5f4b14]">{Math.max(0, Number(profile.points_balance) || 0)}</p>
           </div>
         </div>
       </div>
