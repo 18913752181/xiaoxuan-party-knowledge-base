@@ -11,6 +11,8 @@ import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 import { MaterialAccessNotice, useMaterialAccess } from "@/components/MaterialAccessNotice";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasLegacyMaterialBenefits } from "@/lib/membership-benefits";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
@@ -38,6 +40,8 @@ export function ResourceLibrary({
   libraryOnly?: boolean;
 }) {
   const router = useRouter();
+  const { profile } = useAuth();
+  const legacyBenefits = hasLegacyMaterialBenefits(profile);
   const materialAccess = useMaterialAccess();
   const canBatchDownload = materialAccess.access?.paid === true;
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
@@ -269,7 +273,7 @@ export function ResourceLibrary({
 
     setIsBatchDownloading(true);
     const maximumPoints = selectedMaterials.reduce((sum, material) => sum + (material.points_cost ?? 1), 0);
-    setMessage(`正在打包 ${selectedMaterials.length} 份资料，首次下载最多扣除 ${maximumPoints} 积分，请稍候...`);
+    setMessage(legacyBenefits ? `正在打包 ${selectedMaterials.length} 份资料，原会员权益免扣积分，请稍候...` : `正在打包 ${selectedMaterials.length} 份资料，首次下载最多扣除 ${maximumPoints} 积分，请稍候...`);
     setMemberOnlyMaterial(null);
     try {
       const result = await downloadMaterialsAsZip(selectedMaterials);
@@ -506,7 +510,7 @@ export function ResourceLibrary({
                 <p className="text-sm font-medium text-[#6c757d]">使用提示</p>
                 <h2 id="batch-download-notice-title" className="mt-2 text-xl font-semibold text-brand-ink">确认批量下载用途</h2>
                 <p id="batch-download-notice-description" className="mt-3 text-sm leading-6 text-neutral-600">为了保护原创资料和正常会员体验，批量下载仅限本人正常工作使用。</p>
-                <p className="mt-3 rounded-xl bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a633f]">本次首次下载最多扣除 {selectedMaximumPoints} 积分；已解锁资料不会重复扣除。</p>
+                <p className="mt-3 rounded-xl bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a633f]">积分制会员本次首次下载最多扣除 {selectedMaximumPoints} 积分；已解锁资料不会重复扣除。原权益会员有效期内免扣积分。</p>
                 <ul className="mt-4 space-y-2 rounded-xl bg-[#f7f8f9] px-4 py-3 text-sm leading-6 text-neutral-600">
                   <li>仅限本人工作使用</li>
                   <li>请勿转售、公开传播、批量复制或用于搭建同类资料库</li>
@@ -568,7 +572,7 @@ export function ResourceLibrary({
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
-                      <span>{material.points_cost ?? 1} 积分</span>
+                      <span>{legacyBenefits ? "原会员权益 · 免扣积分" : `${material.points_cost ?? 1} 积分`}</span>
                       {material.downloadable || material.file_url ? null : <span>仅查看</span>}
                       {hasFillingGuide(material) ? <span className="text-[#7d6268]">含填写说明</span> : null}
                     </div>
@@ -576,7 +580,7 @@ export function ResourceLibrary({
                   </div>
                   <div className="flex items-center gap-2 md:justify-end">
                     <button type="button" onClick={() => onToggleFavorite(material)} aria-label={isFavorite ? "取消收藏" : "收藏资料"} className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-line text-lg text-[#a7793b] transition-[border-color,background-color,transform] duration-150 ease-out hover:border-[#e2c693] hover:bg-[#fffaf0] active:scale-[0.97]">{isFavorite ? "★" : "☆"}</button>
-                    <button type="button" onClick={() => download(material)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">下载 · {material.points_cost ?? 1}积分</button>
+                    <button type="button" onClick={() => download(material)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">{legacyBenefits ? "下载" : `下载 · ${material.points_cost ?? 1}积分`}</button>
                   </div>
                 </article>
               );

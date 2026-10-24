@@ -269,7 +269,7 @@ export default function MembershipPaymentPage() {
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/education-base-guide.svg" alt="" width={64} height={64} /><span><b>教育基地导览和攻略</b><small>查看参观联系、讲解信息和配套方案</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-daily-companion.png" alt="" width={64} height={64} /><span><b>Dimmo 日常陪伴</b><small>非专业问题，随时找咪聊聊</small></span></li>
-                  <li><span aria-hidden="true" className="dimmo-points-mark">积分</span><span><b>按套餐获得积分</b><small>月卡送 5、季卡送 20；年卡有效期内每天自动获得 10 积分</small></span></li>
+                  <li><span aria-hidden="true" className="dimmo-points-mark">积分</span><span><b>{profile?.legacy_material_benefits ? "保留原会员权益" : "新增会员按积分制"}</b><small>{profile?.legacy_material_benefits ? "有效期内单份和批量下载不扣积分；续费沿用原权益" : "月卡送 5、季卡送 20；年卡每天自动获得 10 积分。原权益会员续费沿用原规则"}</small></span></li>
                 </ul>
               </div>
               <p className="dimmo-membership-legacy">已开通的资料库会员，可直接使用 Dimmo 会员权益，无需重复付费。涉及专业问题，仍由小宣社长处理。</p>

@@ -9,6 +9,7 @@ export type Profile = {
   member_status: MemberStatus;
   member_expires_at?: string | null;
   points_balance?: number;
+  legacy_material_benefits?: boolean;
   is_admin: boolean;
   created_at?: string;
 };

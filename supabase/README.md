@@ -16,6 +16,10 @@
 
 ## 如何执行 SQL
 
+积分规则启用前必须依次执行 `045_membership_points.sql`、`046_material_point_unlocks.sql`、`047_legacy_membership_benefits.sql`，完成后再切换网站版本。047 首次执行的事务时间为规则切换时间：当时仍有效的付费会员只初始化一次 `profiles.legacy_material_benefits` 标记，续费保留原权益，会员到期时原权限失效。新增会员默认使用积分制。`membership_rule_cutovers` 保存切换记录，重跑 047 不扩大存量名单。
+
+047 在数据库扣减函数内统一豁免有效的原权益会员，单份和批量下载均不扣积分；续费不新增积分发放周期。旧会员已有积分余额、积分流水和订单保持不变。浏览器无权修改原权益标记。请勿在 047 后重新执行旧版 045/046，以免覆盖最新兼容逻辑。
+
 1. 打开 Supabase 项目后台。
 2. 进入 `SQL Editor`。
 3. 打开本目录中的目标 SQL 文件。

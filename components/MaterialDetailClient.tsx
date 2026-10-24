@@ -10,6 +10,8 @@ import type { Material } from "@/lib/types";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
 import { MaterialPreview } from "@/components/MaterialPreview";
 import { MaterialAccessNotice, useMaterialAccess } from "@/components/MaterialAccessNotice";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasLegacyMaterialBenefits } from "@/lib/membership-benefits";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -90,6 +92,8 @@ function cleanNetworkItems(items?: string[]) {
 
 export function MaterialDetailClient({ initialMaterial, initialMaterials }: { initialMaterial: Material; initialMaterials: Material[] }) {
   const router = useRouter();
+  const { profile } = useAuth();
+  const legacyBenefits = hasLegacyMaterialBenefits(profile);
   const materialAccess = useMaterialAccess();
   const [material, setMaterial] = useState<Material | null>(initialMaterial);
   const [allMaterials] = useState<Material[]>(initialMaterials);
@@ -190,7 +194,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
           <div className="mt-7 flex flex-wrap gap-3">
             <button type="button" onClick={download} className="rounded-xl bg-brand-red px-7 py-3 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">
-              下载文件 · {material.points_cost ?? 1} 积分
+              {legacyBenefits ? "下载文件 · 原会员权益" : `下载文件 · ${material.points_cost ?? 1} 积分`}
             </button>
             <button type="button" onClick={onToggleFavorite} className={`rounded-xl border px-6 py-3 text-sm transition-transform duration-150 active:scale-[0.98] ${isFavorite ? "border-[#c79b52] bg-[#fff8e8] text-[#8a6b50]" : "border-brand-line bg-white text-neutral-600"}`}>
               {isFavorite ? "已收藏" : "收藏资料"}
@@ -234,7 +238,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
             </div>
             <div>
               <p className="text-xs text-neutral-400">下载所需积分</p>
-              <p className="mt-1 font-medium text-neutral-700">{material.points_cost ?? 1} 积分（首次下载扣除）</p>
+              <p className="mt-1 font-medium text-neutral-700">{material.points_cost ?? 1} 积分（首次下载扣除，原权益会员有效期内免扣）</p>
             </div>
           </div>
         </div>
