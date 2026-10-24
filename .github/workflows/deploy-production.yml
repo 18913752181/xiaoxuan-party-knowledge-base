@@ -31,8 +31,20 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
+          set +e
+          output="$(ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o ServerAliveInterval=15 -o ServerAliveCountMax=40 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4 5 6; do git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1 -c http.lowSpeedTime=600 fetch --prune --depth=1 origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 5s..."; sleep 5; done; [ "$ok" = 1 ] || { echo "git fetch failed after 6 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh'
+            'cd /srv/xiaoxuan/app && ok=0; for i in 1 2 3 4 5 6; do git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1 -c http.lowSpeedTime=600 fetch --prune --depth=1 origin master && { ok=1; break; }; echo "git fetch attempt $i failed, retrying in 5s..."; sleep 5; done; [ "$ok" = 1 ] || { echo "git fetch failed after 6 attempts"; exit 1; }; git reset --hard origin/master && bash deploy/deploy.sh' 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          if [ "$status" -ne 0 ]; then
+            summary="$(printf '%s\n' "$output" | tail -n 30)"
+            summary="${summary//'%'/'%25'}"
+            summary="${summary//$'\r'/'%0D'}"
+            summary="${summary//$'\n'/'%0A'}"
+            echo "::error title=Production deployment failed::$summary"
+            exit "$status"
+          fi
