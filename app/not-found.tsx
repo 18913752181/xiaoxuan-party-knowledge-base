@@ -14,7 +14,7 @@ export default function NotFound() {
           返回资料库
         </Link>
         <Link
-          href="/"
+          href="/library"
           className="rounded-xl border border-[#e4ded5] bg-white px-6 py-3 text-sm font-medium text-neutral-600 transition hover:border-[#c9a2a6] hover:text-[#8d2f32]"
         >
           回到首页

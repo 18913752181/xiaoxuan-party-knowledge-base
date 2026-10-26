@@ -5,14 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 
-const workbenchNavItems = [
-  { href: "/", label: "首页" },
-  { href: "/library", label: "资料" },
-  { href: "/library#submit-question", label: "提问" },
-  { href: "/me", label: "我的" }
-];
-
-const libraryNavItems = [
+// Shared navigation stays in the library on account, login and membership pages.
+const navItems = [
   { href: "/library", label: "首页" },
   { href: "/library/materials", label: "资料" },
   { href: "/library#submit-question", label: "提问" },
@@ -20,7 +14,6 @@ const libraryNavItems = [
 ];
 
 function navItemActive(href: string, pathname: string, hash: string) {
-  if (href === "/") return pathname === "/";
   if (href === "/library") return pathname === "/library" && hash !== "#submit-question";
   if (href === "/library/materials") return pathname === "/library/materials" || pathname.startsWith("/materials/");
   if (href === "/library#submit-question") return pathname === "/library" && hash === "#submit-question";
@@ -33,8 +26,6 @@ export function SiteHeader() {
   const [hash, setHash] = useState("");
   const [sessionProfile, setSessionProfile] = useState<{ id: string; email: string; avatar_key?: string | null } | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const isLibrarySurface = pathname === "/library" || pathname.startsWith("/library/") || pathname.startsWith("/materials/") || pathname.startsWith("/questions/");
-  const navItems = isLibrarySurface ? libraryNavItems : workbenchNavItems;
 
   useEffect(() => {
     const updateHash = () => setHash(window.location.hash);
@@ -68,8 +59,8 @@ export function SiteHeader() {
     <>
       <header className="sticky top-0 z-40 border-b border-brand-line bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-        <Link href={isLibrarySurface ? "/library" : "/"} className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label={isLibrarySurface ? "小宣资料库首页" : "喵喵工作台首页"}>
-          {isLibrarySurface ? "小宣资料库" : "喵喵工作台"}
+        <Link href="/library" className="shrink-0 text-lg font-semibold tracking-tight text-brand-ink" aria-label="小宣资料库首页">
+          小宣资料库
         </Link>
         <nav className="hidden items-center gap-1 text-sm lg:flex" aria-label="主导航">
           {navItems.map((item) => {

@@ -193,7 +193,7 @@ function SupportPageInner() {
           <div className="mt-6 rounded-2xl bg-[#fdf9f2] px-5 py-6 text-center">
             <p className="text-base font-medium text-[#7a5c3a]">已收到你的支持，谢谢你 ❤️</p>
             <p className="mt-2 text-sm leading-6 text-neutral-500">小宣会继续整理更多实用内容。</p>
-            <Link href="/" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
+            <Link href="/library" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
               返回首页
             </Link>
           </div>
@@ -223,7 +223,7 @@ function SupportPageInner() {
             <p className="mt-2 text-sm leading-6 text-neutral-500">
               赞赏支付通道正在配置中，本次未产生任何费用。等通道开放后再来也不迟～
             </p>
-            <Link href="/" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
+            <Link href="/library" className="mt-4 inline-block rounded-xl bg-[#c98a4b] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#b67a3e]">
               返回首页
             </Link>
           </div>
