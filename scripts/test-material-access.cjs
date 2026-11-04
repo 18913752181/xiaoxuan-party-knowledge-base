@@ -14,7 +14,6 @@ function load(file, mocks) {
 }
 
 async function main() {
-  let previewEnabled = true;
   let signedIn = true;
   let decision = { allowed: true, paid: false };
   let unavailable = false;
@@ -29,10 +28,6 @@ async function main() {
   const pointClaims = [];
   const calls = [];
   const mocks = {
-    "@/lib/material-preview-policy": {
-      get MATERIAL_PREVIEW_ENABLED() { return previewEnabled; },
-      MATERIAL_PREVIEW_PAUSED_MESSAGE: "资料预览功能暂时关闭。"
-    },
     "@/lib/server-auth": { getServerSession: async () => signedIn ? { user: { id: "user" }, accessToken: "token" } : null, applyAuthCookies: () => {} },
     "@/lib/material-access": {
       authorizeMaterialAccess: async (...args) => { calls.push(args); if (unavailable) throw Error("Database unavailable"); return decision; },
@@ -53,45 +48,18 @@ async function main() {
       getContentUnitDownloadFilePath: async () => missing ? null : { path: "test.pdf", file: { originalName: "same.pdf" }, title: "Test" },
       updateContentUnitCounter: async () => { counters++; }
     },
-    "@/lib/material-preview": { createMaterialPreviewPdf: async () => Buffer.from("%PDF-1.4") },
     "fs/promises": { stat: async () => ({ size: 8 }), readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); } }
   };
-  const preview = load("app/api/content-units/[id]/preview/route.ts", mocks).GET;
   const download = load("app/api/content-units/[id]/download/route.ts", mocks).GET;
   const batch = load("app/api/content-units/batch-download/route.ts", mocks).POST;
   const req = new Request("http://localhost/test");
   const context = { params: { id: "content-same-material" } };
-  assert.equal((await preview(req, context)).status, 200, "Member-only files may use an ordinary member's preview allowance");
-  assert.deepEqual(calls.at(-1), ["token", "same-material", false, "user"], "Preview uses the canonical quota key and verified identity");
-  decision = { allowed: false, code: "MATERIAL_QUOTA_EXCEEDED" };
-  let response = await preview(req, context);
-  assert.equal(response.status, 403);
-  assert.equal((await response.json()).code, "MATERIAL_QUOTA_EXCEEDED");
-  unavailable = true;
-  assert.equal((await preview(req, context)).status, 503, "Quota storage failure must never grant preview access");
-  unavailable = false;
-  missing = true;
-  const beforeCalls = calls.length;
-  assert.equal((await preview(req, context)).status, 404);
-  assert.equal(calls.length, beforeCalls, "Missing files must not consume quota");
-  missing = false;
-
-  previewEnabled = false;
-  const readsBeforePause = reads;
-  const callsBeforePause = calls.length;
-  response = await preview(req, context);
-  assert.equal(response.status, 503);
-  assert.equal((await response.json()).code, "MATERIAL_PREVIEW_DISABLED");
-  assert.equal(response.headers.get("Cache-Control"), "private, no-store");
-  assert.equal(reads, readsBeforePause, "Paused preview must not read or convert files");
-  assert.equal(calls.length, callsBeforePause, "Paused preview must not consume quota");
-  previewEnabled = true;
-
+  let response;
   const callsBeforePublicDownload = calls.length;
   memberOnly = false;
   response = await download(req, context);
-  assert.equal(response.status, 200, "Ordinary materials remain downloadable after preview allowance is exhausted");
-  assert.equal(calls.length, callsBeforePublicDownload, "Downloads must never consume or check preview allowance");
+  assert.equal(response.status, 200, "Ordinary materials remain downloadable with the configured points");
+  assert.equal(calls.length, callsBeforePublicDownload, "Ordinary downloads must not use batch membership access");
   assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
   assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }]], "A first download claims the configured points atomically");
   pointClaim = { ok: false, code: "INSUFFICIENT_POINTS", requiredPoints: 1, chargedPoints: 0, pointsBalance: 0, unlockedSlugs: [] };
@@ -127,25 +95,22 @@ async function main() {
   assert.deepEqual(Object.keys(zip.files), ["same.pdf", "same (2).pdf"]);
   assert.equal((await batch(batchRequest(Array(51).fill("one")))).status, 400);
   signedIn = false;
-  for (const route of [preview, download]) assert.equal((await route(req, context)).status, 401);
+  for (const route of [download]) assert.equal((await route(req, context)).status, 401);
   assert.equal((await batch(batchRequest(["one"]))).status, 401);
   let paid = true;
   let membershipFailure = false;
-  let rpcCalls = 0;
   const accessService = load("lib/material-access.ts", {
     "server-only": {},
-    "@/lib/membership": { getMembership: async () => { if (membershipFailure) throw Error("Membership unavailable"); return { active: paid }; } },
-    "@/lib/material-quota-store": { claimMaterialQuota: async () => { rpcCalls++; throw Error("Quota storage unavailable"); } }
+    "@/lib/membership": { getMembership: async () => { if (membershipFailure) throw Error("Membership unavailable"); return { active: paid }; } }
   });
   for (const [slug, isBatch] of [[null, false], ["one", false], [null, true]]) {
     assert.equal((await accessService.authorizeMaterialAccess("token", slug, isBatch, "user")).paid, true);
   }
-  assert.equal(rpcCalls, 0, "Paid access must work without free quota migration");
   paid = false;
   assert.equal((await accessService.authorizeMaterialAccess("token", null, true, "user")).allowed, false);
-  await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
+  assert.equal((await accessService.authorizeMaterialAccess("token", null, false, "user")).paid, false);
   membershipFailure = true;
   await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
-  console.log("PASS: preview quota, point-gated downloads, member-only enforcement, paid-only ZIP and failure handling");
+  console.log("PASS: point-gated downloads, member-only enforcement, paid-only ZIP and failure handling");
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

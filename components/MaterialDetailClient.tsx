@@ -8,11 +8,8 @@ import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
-import { MaterialPreview } from "@/components/MaterialPreview";
-import { MaterialAccessNotice, useMaterialAccess } from "@/components/MaterialAccessNotice";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasLegacyMaterialBenefits } from "@/lib/membership-benefits";
-import { MATERIAL_PREVIEW_ENABLED } from "@/lib/material-preview-policy";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -95,7 +92,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
   const router = useRouter();
   const { profile } = useAuth();
   const legacyBenefits = hasLegacyMaterialBenefits(profile);
-  const materialAccess = useMaterialAccess();
   const [material, setMaterial] = useState<Material | null>(initialMaterial);
   const [allMaterials] = useState<Material[]>(initialMaterials);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
@@ -185,9 +181,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           </div>
 
           <h1 className="material-title mt-6 max-w-4xl text-3xl font-semibold leading-[1.18] tracking-tight text-brand-ink md:text-4xl">
-            {MATERIAL_PREVIEW_ENABLED ? <Link href={`/materials/${encodeURIComponent(articleSlug)}/preview`} prefetch={false} className="material-preview-title" title="点击预览资料">
-              {displayMaterialTitle(material.title)}
-            </Link> : displayMaterialTitle(material.title)}
+            {displayMaterialTitle(material.title)}
           </h1>
           {hasKnowledgeContent(material.description) ? (
             <p className="mt-5 max-w-3xl text-base leading-8 text-neutral-600">{material.description}</p>
@@ -203,12 +197,11 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           </div>
 
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
-          <MaterialAccessNotice {...materialAccess} />
           {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
           {memberOnlyPrompt ? (
             <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
               <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
-              <p className="mt-2 text-sm text-neutral-600">{MATERIAL_PREVIEW_ENABLED ? "普通会员可以使用预览额度查看内容，下载原文件需开通付费会员。" : "下载会员专属资料需开通付费会员。"}</p>
+              <p className="mt-2 text-sm text-neutral-600">下载会员专属资料需开通付费会员。</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
                 <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">成为专属会员</Link>
@@ -245,7 +238,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
         </div>
 
         <div className="grid gap-0 p-6 md:p-8">
-          {MATERIAL_PREVIEW_ENABLED && <MaterialPreview key={articleSlug} slug={articleSlug} title={material.title} />}
           {hasKnowledgeContent(material.note) ? <DetailSection title="小宣提醒">{blocks(material.note)}</DetailSection> : null}
           {hasKnowledgeContent(policyContent) ? <DetailSection title="制度依据">{policyLinks(policyContent!)}</DetailSection> : null}
           {hasKnowledgeContent(noticeContent) ? <DetailSection title="填写说明与注意事项">{blocks(noticeContent)}</DetailSection> : null}

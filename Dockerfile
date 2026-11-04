@@ -23,16 +23,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-RUN sed -i 's|deb.debian.org|mirrors.cloud.tencent.com|g' /etc/apt/sources.list.d/debian.sources \
-  && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update \
-  && apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends \
-    libreoffice-writer \
-    libreoffice-calc \
-    libreoffice-impress \
-    fonts-noto-cjk \
-    fonts-liberation \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
