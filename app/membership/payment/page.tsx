@@ -229,6 +229,7 @@ export default function MembershipPaymentPage() {
 
   const useJsapi = inWechat && jsapiReady;
 
+  const orderedPlans = ["annual", "quarterly", "monthly"].flatMap((code) => plans.filter((candidate) => candidate.code === code));
   const plan = plans.find((candidate) => candidate.code === selectedPlanCode) || null;
   const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
   const isActiveMember = Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date(Date.now() + (profile.material_download_policy === "annual_daily" ? 8 * 3600000 : 0)).toISOString().slice(0, 10));
@@ -263,18 +264,18 @@ export default function MembershipPaymentPage() {
                 {protectedMember ? <small>您是老会员，原下载权益及续费规则继续保留。</small> : <small>已购买的老会员保留原权益，不受新购规则影响。</small>}
               </aside>
               <div className="dimmo-plan-list">
-                {plans.map((candidate) => {
+                {orderedPlans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
                   const annual = candidate.code === "annual";
                   return <button key={candidate.code} type="button" aria-pressed={selected} onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${annual ? "is-annual" : ""} ${selected ? "is-selected" : ""}`}>
                     <span className="dimmo-plan-main">
                       {annual ? <em>推荐</em> : null}
-                      <span className="dimmo-plan-name">{candidate.name}{annual ? <b className="dimmo-download-badge">含资料库下载</b> : null}</span>
-                      <small className={annual ? "dimmo-plan-permission" : "dimmo-plan-exclusion"}>{protectedMember ? "保留原资料库下载权益，续费不变" : annual ? "年卡专属：单份下载 ＋ 批量打包" : "不含资料库下载权限"}</small>
+                      <span className="dimmo-plan-name">{annual ? "年卡（资料库专属会员）" : candidate.name}</span>
+                      {!annual ? <small className="dimmo-plan-exclusion">{protectedMember ? "保留原资料库下载权益，续费不变" : "不含资料库下载权限"}</small> : null}
                       {annual && !protectedMember ? <>
-                        <span className="dimmo-annual-facts"><span><b>10</b> 个不同文件 / 天</span><span>开通送 <b>10</b> 积分</span><span>每天再送 <b>5</b> 积分</span></span>
+                        <span className="dimmo-annual-facts"><span>开通送 <b>10</b> 积分</span><span>每天再送 <b>5</b> 积分</span></span>
                         <small>开通赠送长期有效；每日赠送含开通当天，当天有效、优先消耗。</small>
-                      </> : <small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : protectedMember && annual ? "沿用原规则：有效期内每天赠送10积分" : candidate.pointsDescription}</small>}
+                      </> : annual ? <small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : "沿用原规则：有效期内每天赠送10积分"}</small> : null}
                     </span>
                     <strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
@@ -296,7 +297,7 @@ export default function MembershipPaymentPage() {
 
                 </ul>
               </div>
-              <p className="dimmo-membership-legacy">{protectedMember ? "您的原下载、扣分和积分赠送规则继续保留，续费不变。" : "月卡开通赠送5积分，季卡开通赠送20积分，均不含资料库下载权限。已购买的老会员保留原权益。"}涉及专业问题，仍由小宣社长处理。</p>
+              <p className="dimmo-membership-legacy">{protectedMember ? "您的原下载、扣分和积分赠送规则继续保留，续费不变。" : "月卡、季卡不含资料库下载权限。已购买的老会员保留原权益。"}涉及专业问题，仍由小宣社长处理。</p>
             </div>
             <div className="dimmo-checkout">
               {loading ? <p className="py-24 text-sm text-neutral-500">正在确认登录状态…</p> : null}
