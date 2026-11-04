@@ -5,11 +5,18 @@ import { getContentUnitBySlug, getContentUnitDownloadFilePath } from "@/lib/cont
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 import { authorizeMaterialAccess, materialAccessMessage } from "@/lib/material-access";
 import { createMaterialPreviewPdf } from "@/lib/material-preview";
+import { MATERIAL_PREVIEW_ENABLED, MATERIAL_PREVIEW_PAUSED_MESSAGE } from "@/lib/material-preview-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  if (!MATERIAL_PREVIEW_ENABLED) {
+    return NextResponse.json({ error: MATERIAL_PREVIEW_PAUSED_MESSAGE, code: "MATERIAL_PREVIEW_DISABLED" }, {
+      status: 503,
+      headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" }
+    });
+  }
   const session = await getServerSession();
   const finish = (response: NextResponse) => {
     response.headers.set("Cache-Control", "private, no-store");

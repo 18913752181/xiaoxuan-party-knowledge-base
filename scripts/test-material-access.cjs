@@ -14,6 +14,7 @@ function load(file, mocks) {
 }
 
 async function main() {
+  let previewEnabled = true;
   let signedIn = true;
   let decision = { allowed: true, paid: false };
   let unavailable = false;
@@ -28,6 +29,10 @@ async function main() {
   const pointClaims = [];
   const calls = [];
   const mocks = {
+    "@/lib/material-preview-policy": {
+      get MATERIAL_PREVIEW_ENABLED() { return previewEnabled; },
+      MATERIAL_PREVIEW_PAUSED_MESSAGE: "资料预览功能暂时关闭。"
+    },
     "@/lib/server-auth": { getServerSession: async () => signedIn ? { user: { id: "user" }, accessToken: "token" } : null, applyAuthCookies: () => {} },
     "@/lib/material-access": {
       authorizeMaterialAccess: async (...args) => { calls.push(args); if (unavailable) throw Error("Database unavailable"); return decision; },
@@ -70,6 +75,17 @@ async function main() {
   assert.equal((await preview(req, context)).status, 404);
   assert.equal(calls.length, beforeCalls, "Missing files must not consume quota");
   missing = false;
+
+  previewEnabled = false;
+  const readsBeforePause = reads;
+  const callsBeforePause = calls.length;
+  response = await preview(req, context);
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "MATERIAL_PREVIEW_DISABLED");
+  assert.equal(response.headers.get("Cache-Control"), "private, no-store");
+  assert.equal(reads, readsBeforePause, "Paused preview must not read or convert files");
+  assert.equal(calls.length, callsBeforePause, "Paused preview must not consume quota");
+  previewEnabled = true;
 
   const callsBeforePublicDownload = calls.length;
   memberOnly = false;

@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { MATERIAL_PREVIEW_ENABLED } from "@/lib/material-preview-policy";
 
 type ScanPage = { src: string; width: number; height: number };
 
@@ -44,7 +45,7 @@ export function MaterialPreview({ slug, title, standalone = false }: { slug: str
   const zoomLabel = useMemo(() => `${Math.round(zoom * 100)}%`, [zoom]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!MATERIAL_PREVIEW_ENABLED || !open) return;
     const controller = new AbortController();
     setLoading(true);
     setError("");
@@ -80,6 +81,7 @@ export function MaterialPreview({ slug, title, standalone = false }: { slug: str
     return () => controller.abort();
   }, [open, slug, attempt]);
 
+  if (!MATERIAL_PREVIEW_ENABLED) return null;
   return <section className={standalone ? "" : "border-t border-brand-line py-6 first:border-t-0 first:pt-0"}>
     {!standalone && <div className="flex items-center justify-between gap-4">
       <div>

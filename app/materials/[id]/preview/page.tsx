@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getContentUnitBySlug } from "@/lib/content-units";
 import { MaterialPreview } from "@/components/MaterialPreview";
+import { MATERIAL_PREVIEW_ENABLED } from "@/lib/material-preview-policy";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "资料预览", robots: { index: false, follow: false } };
 
 export default async function MaterialPreviewPage({ params }: { params: { id: string } }) {
+  if (!MATERIAL_PREVIEW_ENABLED) redirect(`/materials/${encodeURIComponent(params.id.replace(/^content-/, ""))}`);
   const unit = await getContentUnitBySlug(params.id.replace(/^content-/, ""));
   if (!unit) notFound();
   const title = unit.meta.title.replace(/^【小宣资料库】\s*/, "").trim();

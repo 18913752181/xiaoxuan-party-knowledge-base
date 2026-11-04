@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { MATERIAL_PREVIEW_ENABLED, MATERIAL_PREVIEW_PAUSED_MESSAGE } from "@/lib/material-preview-policy";
 
 export function useMaterialAccess() {
   const [access, setAccess] = useState<{ paid: boolean; used: number; remaining: number } | null>(null);
@@ -27,6 +28,9 @@ export function useMaterialAccess() {
 }
 
 export function MaterialAccessNotice({ access, message }: ReturnType<typeof useMaterialAccess>) {
+  if (!MATERIAL_PREVIEW_ENABLED) return <div className="my-4 rounded-xl border border-brand-line bg-[#faf9f6] px-4 py-3 text-sm leading-6 text-neutral-600">
+    <p>{MATERIAL_PREVIEW_PAUSED_MESSAGE}</p>
+  </div>;
   return <div className="my-4 rounded-xl border border-brand-line bg-[#faf9f6] px-4 py-3 text-sm leading-6 text-neutral-600" aria-live="polite">
     <p>{access ? access.paid ? "付费会员：全部资料可预览、下载，支持批量下载。"
       : `普通会员：已预览 ${access.used} / 5 份，还可预览 ${access.remaining} 份新资料。` : message}</p>
