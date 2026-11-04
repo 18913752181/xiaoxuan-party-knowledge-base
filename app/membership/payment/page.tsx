@@ -48,10 +48,12 @@ function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMs
 export default function MembershipPaymentPage() {
   const router = useRouter();
   const { profile, loading, refreshProfile } = useAuth();
+  const protectedMember = Boolean(profile && (profile.legacy_material_benefits || (profile.material_download_policy && profile.material_download_policy !== "annual_daily")));
   const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [selectedPlanCode, setSelectedPlanCode] = useState<Plan["code"]>("annual");
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
+  const [purchasedPlanCode, setPurchasedPlanCode] = useState<Plan["code"] | null>(null);
   const [qrCode, setQrCode] = useState("");
   // 服务端二维码接口输出真实 PNG 图片地址（可长按保存/识别，兼容性优于 data URL），加载失败时回退到 data URL
   const [qrSrc, setQrSrc] = useState("");
@@ -98,14 +100,14 @@ export default function MembershipPaymentPage() {
     }
   }, []);
 
-  // 支付成功后自动跳转到资料库
+  // 按已支付套餐跳转，月/季卡不引导至没有权限的资料下载。
   useEffect(() => {
     if (status !== "paid") return;
     const timer = window.setTimeout(() => {
-      router.push("/library");
+      router.push(protectedMember || purchasedPlanCode === "annual" ? "/library" : "/me");
     }, REDIRECT_DELAY);
     return () => window.clearTimeout(timer);
-  }, [status, router]);
+  }, [status, router, protectedMember, purchasedPlanCode]);
 
   // 轮询订单支付状态
   useEffect(() => {
@@ -138,6 +140,7 @@ export default function MembershipPaymentPage() {
         const data = await response.json();
         if (data.order?.status === "paid") {
           window.clearInterval(timer);
+          setPurchasedPlanCode(data.order.plan_code || null);
           setStatus("paid");
           setExpiry(data.order.member_expires_at || "");
           setMessage("支付成功，会员权益已自动开通。");
@@ -227,7 +230,6 @@ export default function MembershipPaymentPage() {
   const useJsapi = inWechat && jsapiReady;
 
   const plan = plans.find((candidate) => candidate.code === selectedPlanCode) || null;
-  const protectedMember = Boolean(profile && (profile.legacy_material_benefits || (profile.material_download_policy && profile.material_download_policy !== "annual_daily")));
   const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
   const isActiveMember = Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date(Date.now() + (profile.material_download_policy === "annual_daily" ? 8 * 3600000 : 0)).toISOString().slice(0, 10));
   const daysRemaining = isActiveMember && profile?.member_expires_at
@@ -353,7 +355,7 @@ export default function MembershipPaymentPage() {
                   <p className="mt-5 text-lg font-semibold">会员已开通</p>
                   <p className="mt-2 text-sm text-neutral-500">有效期至 {expiry}</p>
                   <p className="mt-3 text-xs text-neutral-400">{REDIRECT_DELAY / 1000} 秒后自动跳转…</p>
-                  <Link href="/library" className="mt-4 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">去下载资料</Link>
+                  <Link href={protectedMember || purchasedPlanCode === "annual" ? "/library" : "/me"} className="mt-4 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">{protectedMember || purchasedPlanCode === "annual" ? "去下载资料" : "前往会员中心"}</Link>
                 </div>
               ) : null}
               {message ? <p className="mt-4 text-sm leading-6 text-[#a64550]">{message}</p> : null}

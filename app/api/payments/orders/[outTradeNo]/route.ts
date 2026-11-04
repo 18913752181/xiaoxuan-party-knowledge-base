@@ -6,7 +6,7 @@ import { queryNativeOrder, wechatPayConfigured } from "@/lib/wechat-pay";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ORDER_COLUMNS = "out_trade_no,status,amount_total,paid_at,member_expires_at,created_at";
+const ORDER_COLUMNS = "out_trade_no,status,plan_code,amount_total,paid_at,member_expires_at,created_at";
 
 /**
  * 查询订单支付状态。

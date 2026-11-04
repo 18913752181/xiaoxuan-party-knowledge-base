@@ -282,7 +282,7 @@ export function ResourceLibrary({
   }
 
   async function batchDownload() {
-    if (!canBatchDownload) return setMessage("批量下载仅限付费会员。");
+    if (!canBatchDownload) return setMessage("当前会员不包含批量下载权限，请查看会员中心。");
     const selectedMaterials = materials.filter((material) => batchQuote?.slugs.includes(getArticleSlug(material)) && material.file_url);
     if (!batchQuote || batchQuote.shortfallPoints || batchQuote.dailyExceeded) return;
     if (!selectedMaterials.length) return setMessage("请先选择需要下载的资料。");
