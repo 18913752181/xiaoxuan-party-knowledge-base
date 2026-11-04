@@ -273,8 +273,8 @@ export default function MembershipPaymentPage() {
                       {!annual ? <small className="dimmo-plan-summary">{candidate.code === "quarterly" ? "工作计划持续跟进，重要事项到点提醒" : "待办随手记录，Dimmo 日常陪伴"}</small> : null}
                       {!annual ? <small>任务小本本 · 教育基地攻略 · 日常陪伴</small> : null}
                       {annual && !protectedMember ? <>
-                        <span className="dimmo-annual-facts">开通即送<b>10</b>积分，还有每日积分送不停</span>
-                        <small>开通赠送长期有效；每日赠送含开通当天，当天有效、优先消耗。</small>
+                        <span className="dimmo-annual-facts">开通即送<b>15</b>积分，还有每日积分送不停</span>
+                        <small>首日含10长期积分和5当日积分；有效期内每天送5积分，当天有效、优先消耗。</small>
                       </> : annual ? <small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : "沿用原规则：有效期内每天赠送10积分"}</small> : null}
                     </span>
                     <strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
