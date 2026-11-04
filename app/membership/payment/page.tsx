@@ -256,26 +256,47 @@ export default function MembershipPaymentPage() {
           <div className="grid gap-7 pb-16 pt-8 md:grid-cols-[minmax(0,1fr)_330px]">
             <div>
               {isActiveMember && profile ? <div className="dimmo-member-summary"><strong>★ 当前已是付费会员</strong><span>续费后将在当前有效期后顺延</span><small>当前账号：{maskAccountEmail(profile.email)}</small></div> : null}
+              <aside className="dimmo-download-rule" aria-label="资料库下载权限说明">
+                <p>资料库下载权限</p>
+                <h2>新购会员，仅年卡可下载资料</h2>
+                <span>月卡、季卡不含资料库单份及批量下载权限。</span>
+                {protectedMember ? <small>您是老会员，原下载权益及续费规则继续保留。</small> : <small>已购买的老会员保留原权益，不受新购规则影响。</small>}
+              </aside>
               <div className="dimmo-plan-list">
                 {plans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
-                  return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${selected ? "is-selected" : ""}`}>
-                    <span>{candidate.code === "annual" ? <em>推荐</em> : null}<span>{candidate.name}</span><small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : protectedMember && candidate.code === "annual" ? "沿用原规则：有效期内每天赠送10积分" : candidate.pointsDescription}</small><small>{protectedMember ? "保留原资料库下载权益" : candidate.code === "annual" ? "可单份/批量下载，每天最多10个不同文件" : "不含资料库下载权限，其他会员权益不变"}</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
+                  const annual = candidate.code === "annual";
+                  return <button key={candidate.code} type="button" aria-pressed={selected} onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${annual ? "is-annual" : ""} ${selected ? "is-selected" : ""}`}>
+                    <span className="dimmo-plan-main">
+                      {annual ? <em>推荐</em> : null}
+                      <span className="dimmo-plan-name">{candidate.name}{annual ? <b className="dimmo-download-badge">含资料库下载</b> : null}</span>
+                      <small className={annual ? "dimmo-plan-permission" : "dimmo-plan-exclusion"}>{protectedMember ? "保留原资料库下载权益，续费不变" : annual ? "年卡专属：单份下载 ＋ 批量打包" : "不含资料库下载权限"}</small>
+                      {annual && !protectedMember ? <>
+                        <span className="dimmo-annual-facts"><span><b>10</b> 个不同文件 / 天</span><span>开通送 <b>10</b> 积分</span><span>每天再送 <b>5</b> 积分</span></span>
+                        <small>开通赠送长期有效；每日赠送含开通当天，当天有效、优先消耗。</small>
+                      </> : <small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : protectedMember && annual ? "沿用原规则：有效期内每天赠送10积分" : candidate.pointsDescription}</small>}
+                    </span>
+                    <strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
                 })}
               </div>
               <div className="dimmo-membership-note">
-                <p>通行卡会员权益</p><ul>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>会员专属资料下载</b><small>{protectedMember ? "保留原下载权益，续费不变" : selectedPlanCode === "annual" ? "年卡每天最多下载10个不同文件，首次解锁扣积分" : "月卡、季卡不含资料库下载权限"}</small></span></li>
+                <p>{protectedMember ? "保留您的原资料库权益" : "年卡专属 · 资料库权益"}</p>
+                <div className="dimmo-benefit-scope">{protectedMember ? "原下载、扣分和积分赠送规则不变，续费继续保留。" : "以下资料库下载权益仅年卡享有，月卡、季卡不包含。"}</div><ul>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>{protectedMember ? "原会员资料下载" : "年卡专属资料下载"}</b><small>{protectedMember ? "保留原下载权益，续费不变" : "每天最多下载10个不同文件；首次解锁扣积分，再次下载免费"}</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/continuous-updates.png" alt="" width={64} height={64} /><span><b>资料持续更新</b><small>新增资料和优化版本持续同步</small></span></li>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>{protectedMember ? "保留原批量下载权益" : selectedPlanCode === "annual" ? "批量按文件数占用当天名额，已解锁不再扣积分" : "仅年卡包含资料库批量下载"}</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>{protectedMember ? "保留原批量下载权益" : "批量按文件数占用当天名额，确认后下载，已解锁不再扣积分"}</small></span></li>
+                </ul>
+                <div className="dimmo-annual-points-note">{protectedMember ? "您的原积分发放规则继续保留。" : "年卡开通即送10长期积分，含开通当天每天另送5积分；每日赠送仅当天有效，不累计到次日。"}</div>
+                <h2 className="dimmo-common-heading">月卡 / 季卡 / 年卡 · 通用权益</h2>
+                <ul>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/education-base-guide.svg" alt="" width={64} height={64} /><span><b>教育基地导览和攻略</b><small>查看参观联系、讲解信息和配套方案</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-daily-companion.png" alt="" width={64} height={64} /><span><b>Dimmo 日常陪伴</b><small>非专业问题，随时找咪聊聊</small></span></li>
-                  <li><span aria-hidden="true" className="dimmo-points-mark">积分</span><span><b>{protectedMember ? "保留原会员规则" : "年卡积分与下载规则"}</b><small>{protectedMember ? "原下载、扣分和积分发放规则不变，续费继续保留" : "年卡开通送10积分（长期有效）；从开通当天起每天再送5积分（当天有效、优先消耗），不累计到次日。首次解锁扣积分，再次下载免费。月卡送5积分、季卡送20积分，不含资料下载"}</small></span></li>
+
                 </ul>
               </div>
-              <p className="dimmo-membership-legacy">已开通的资料库会员，可直接使用 Dimmo 会员权益，无需重复付费。涉及专业问题，仍由小宣社长处理。</p>
+              <p className="dimmo-membership-legacy">{protectedMember ? "您的原下载、扣分和积分赠送规则继续保留，续费不变。" : "月卡开通赠送5积分，季卡开通赠送20积分，均不含资料库下载权限。已购买的老会员保留原权益。"}涉及专业问题，仍由小宣社长处理。</p>
             </div>
             <div className="dimmo-checkout">
               {loading ? <p className="py-24 text-sm text-neutral-500">正在确认登录状态…</p> : null}
@@ -371,6 +392,7 @@ export default function MembershipPaymentPage() {
       ` }} />
       <style dangerouslySetInnerHTML={{ __html: `body:has(.dimmo-membership-page)>header,body:has(.dimmo-membership-page)>footer,body:has(.dimmo-membership-page) nav[aria-label="移动端导航"]{display:none}body:has(.dimmo-membership-page)>main{padding-bottom:0}` }} />
       <style dangerouslySetInnerHTML={{ __html: `.dimmo-membership-nav-label{color:var(--ink);font-size:13px;font-weight:650;text-decoration:none;text-decoration-thickness:1px;text-underline-offset:5px;transition:font-weight .16s ease,text-decoration-color .16s ease}.dimmo-membership-nav-label:hover{font-weight:800;text-decoration:underline}.dimmo-membership-cat{overflow:visible;border-radius:0;background:transparent}.dimmo-membership-cat img{display:block;width:306px;margin:0 0 -12px 8px}.dimmo-membership-ticket:before{display:none}.dimmo-membership-ticket span,.dimmo-membership-ticket small{color:#8d8066}.dimmo-membership-ticket strong{color:#5d574b;font-weight:650}.dimmo-membership-ticket b{color:#ab8129}.dimmo-membership-hero.is-welcome{min-height:235px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-bottom:8px;padding:17px 18px}.dimmo-welcome-link{display:inline-flex;margin-top:10px;padding:5px 10px;border:1px solid #ddd0aa;border-radius:999px;color:#786944;font-size:12px;font-weight:600;text-decoration:none}.dimmo-welcome-link:hover{background:#fff8df}.dimmo-membership-intro p{color:#354942}.dimmo-member-summary{display:grid;gap:4px;margin-bottom:13px;padding:15px 18px;border:1px solid #efd58a;border-radius:18px;background:#fff5cf;color:#695719;text-align:left}.dimmo-member-summary strong{font-size:15px}.dimmo-member-summary span{font-size:12px;line-height:1.55}.dimmo-member-summary small{color:#817144;font-size:12px}.dimmo-membership-note ul{gap:13px}.dimmo-membership-note li{grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center}.dimmo-benefit-icon{width:48px;height:48px;object-fit:contain}.dimmo-points-mark{display:flex!important;width:48px;height:38px;align-items:center;justify-content:center;border-radius:13px;background:var(--yellow);color:#4f411c!important;font-size:12px!important;font-weight:760;letter-spacing:.06em}.dimmo-membership-note b,.dimmo-membership-note small{display:block}.dimmo-membership-note b{font-size:14px}.dimmo-membership-note small{margin-top:3px;color:var(--muted);font-size:13px;line-height:1.55}.dimmo-checkout{padding:18px 20px;border-radius:18px}.dimmo-checkout .mt-6{margin-top:.85rem!important}.dimmo-checkout .mt-2{margin-top:.35rem!important}.dimmo-checkout .mt-3{margin-top:.7rem!important}.dimmo-checkout-button{margin-top:18px;padding:12px}@media(max-width:700px){.dimmo-membership-cat img{width:262px;margin-left:-2px}.dimmo-membership-hero.is-welcome{min-height:212px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-left:-38px;padding:14px 10px}.dimmo-welcome-link{margin-top:7px;padding:4px 8px;font-size:11px}.dimmo-membership-note li{grid-template-columns:48px minmax(0,1fr);gap:10px}.dimmo-benefit-icon{width:44px;height:44px}.dimmo-points-mark{width:44px}}` }} />
+      <style dangerouslySetInnerHTML={{ __html: "\n        .dimmo-download-rule{margin:0 0 18px;padding:21px 22px;border:1px solid #e8ca73;border-left:5px solid #c39323;border-radius:18px;background:#fff6d9;text-align:left}.dimmo-download-rule p{margin:0 0 7px;color:#856619;font-size:12px;font-weight:700;letter-spacing:.08em}.dimmo-download-rule h2{margin:0;color:#5c4615;font-size:21px;font-weight:800;line-height:1.45;letter-spacing:-.03em}.dimmo-download-rule>span{display:block;margin-top:8px;color:#705e36;font-size:14px;line-height:1.65}.dimmo-download-rule small{display:block;margin-top:10px;padding-top:10px;border-top:1px solid #ebdcad;color:#7d7257;font-size:12px;line-height:1.65}\n        .dimmo-plan{gap:14px}.dimmo-plan-main{min-width:0}.dimmo-plan.is-annual{border:2px solid #e7c45a;background:#fffaf0;box-shadow:0 7px 20px rgba(143,100,12,.06)}.dimmo-plan.is-annual.is-selected{background:repeating-linear-gradient(-45deg,#fffdf6 0,#fffdf6 12px,#fff8df 12px,#fff8df 24px);box-shadow:0 9px 24px rgba(143,100,12,.11)}.dimmo-plan .dimmo-plan-name{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.dimmo-download-badge{display:inline-flex;padding:3px 8px;border-radius:6px;background:#f2d475;color:#634b11;font-size:11px;font-weight:750;line-height:1.5;letter-spacing:0}.dimmo-plan .dimmo-plan-permission{margin-top:7px;color:#765619;font-size:14px;font-weight:750;line-height:1.6}.dimmo-plan .dimmo-plan-exclusion{margin-top:5px;color:#756d5c;font-size:13px;font-weight:650}.dimmo-plan .dimmo-annual-facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;font-size:12px;font-weight:500;line-height:1.6}.dimmo-annual-facts>span{padding:4px 8px;border:1px solid #ead8a8;border-radius:7px;background:rgba(255,255,255,.85);color:#796031}.dimmo-annual-facts b{color:#6c4f13;font-size:15px}.dimmo-plan.is-annual>strong{align-self:center;color:#946b11}.dimmo-plan:focus-visible{outline:3px solid #b58c25;outline-offset:3px}\n        .dimmo-benefit-scope{margin:-5px 0 20px;padding:10px 12px;border:1px solid #ebd59c;border-radius:10px;background:#fffcf3;color:#775719;font-size:13px;font-weight:650;line-height:1.65}.dimmo-common-heading{margin:25px 0 17px;padding-top:21px;border-top:1px solid #e8d8ae;color:#605a4a;font-size:15px;font-weight:750;line-height:1.6}.dimmo-annual-points-note{margin-top:18px;padding:12px;border-radius:10px;background:#fffdf5;color:#796437;font-size:13px;line-height:1.8}@media(max-width:700px){.dimmo-download-rule{padding:18px}.dimmo-download-rule h2{font-size:20px}.dimmo-plan.is-annual{padding:20px 18px}.dimmo-plan.is-annual>strong{font-size:30px}.dimmo-annual-facts{max-width:300px}}@media(prefers-reduced-motion:reduce){.dimmo-plan{transition:none}.dimmo-plan:hover{transform:none}}\n" }} />
     </main>
   );
 }
