@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getContentUnitBySlug, getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
 import { getMembership } from "@/lib/membership";
+import { materialClaimError } from "@/lib/material-download-message";
 import { claimMaterialPoints } from "@/lib/material-points";
 
 export const runtime = "nodejs";
@@ -64,17 +65,27 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   const buffer = await readFile(result.path);
   const fileName = result.file?.originalName || `${result.title}${path.extname(result.path)}`;
 
+  let chargedPoints = 0;
+  let pointsBalance = 0;
+  let dailyRemaining: number | undefined;
+  let dailyLimit: number | null | undefined;
   try {
     const claim = await claimMaterialPoints(session.user.id, [{ slug, cost: unit.meta.pointsCost }]);
+    chargedPoints = claim.chargedPoints;
+    pointsBalance = claim.pointsBalance;
+    dailyRemaining = claim.dailyRemaining;
+    dailyLimit = claim.dailyLimit;
     if (!claim.ok) {
       const response = NextResponse.json(
         {
-          error: `积分不足，本次需要 ${claim.requiredPoints || unit.meta.pointsCost} 积分，当前剩余 ${claim.pointsBalance} 积分。`,
+          error: materialClaimError(claim),
           code: claim.code,
+          dailyUsed: claim.dailyUsed, dailyRemaining: claim.dailyRemaining, dailyLimit: claim.dailyLimit, requestedNew: claim.requestedNew,
           requiredPoints: claim.requiredPoints,
           pointsBalance: claim.pointsBalance,
+          shortfallPoints: Math.max(0, (claim.requiredPoints || 0) - claim.pointsBalance),
         },
-        { status: 403, headers: { "Cache-Control": "private, no-store" } }
+        { status: claim.code === "POINTS_QUOTE_CHANGED" ? 409 : 403, headers: { "Cache-Control": "private, no-store" } }
       );
       if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);
       return response;
@@ -95,6 +106,9 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     headers: {
       "Content-Type": contentType(fileName),
       "Content-Length": String(buffer.byteLength),
+      "X-Material-Points-Charged": String(chargedPoints),
+      "X-Material-Points-Balance": String(pointsBalance),
+      ...(dailyLimit ? { "X-Material-Daily-Remaining": String(dailyRemaining ?? 0) } : {}),
       "Content-Disposition": downloadFileName(fileName),
       "Cache-Control": "private, no-store"
     }

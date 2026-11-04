@@ -40,6 +40,9 @@ async function main() {
         return { active: membershipActive };
       }
     },
+    "@/lib/material-point-state": { getMaterialPointState: async () => ({ paid: true, legacyBenefits: false, pointsBalance: 9, unlockedSlugs: [] }) },
+    "@/lib/material-point-view": load("lib/material-point-view.ts", {}),
+    "@/lib/material-download-message": load("lib/material-download-message.ts", {}),
     "@/lib/material-points": {
       claimMaterialPoints: async (...args) => { pointClaims.push(args); return pointClaim; }
     },
@@ -59,6 +62,8 @@ async function main() {
   memberOnly = false;
   response = await download(req, context);
   assert.equal(response.status, 200, "Ordinary materials remain downloadable with the configured points");
+  assert.equal(response.headers.get("X-Material-Points-Charged"), "1");
+  assert.equal(response.headers.get("X-Material-Points-Balance"), "9");
   assert.equal(calls.length, callsBeforePublicDownload, "Ordinary downloads must not use batch membership access");
   assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
   assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }]], "A first download claims the configured points atomically");
@@ -66,6 +71,13 @@ async function main() {
   response = await download(req, context);
   assert.equal(response.status, 403);
   assert.equal((await response.json()).code, "INSUFFICIENT_POINTS");
+  pointClaim = { ok:false,code:"DAILY_DOWNLOAD_LIMIT",chargedPoints:0,pointsBalance:9,unlockedSlugs:[],dailyLimit:10,dailyUsed:10,dailyRemaining:0,requestedNew:1 };
+  response = await download(req,context);
+  assert.equal(response.status,403);
+  assert.equal((await response.json()).dailyRemaining,0);
+  pointClaim = { ok:false,code:"ANNUAL_MEMBERSHIP_REQUIRED",chargedPoints:0,pointsBalance:9,unlockedSlugs:[] };
+  response = await download(req,context);
+  assert.equal((await response.json()).code,"ANNUAL_MEMBERSHIP_REQUIRED");
   pointClaim = { ok: true, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
   memberOnly = true;
   const beforeCounters = counters;
@@ -82,15 +94,24 @@ async function main() {
   missing = true;
   assert.equal((await download(req, context)).status, 404);
   missing = false;
-  const batchRequest = (slugs) => new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs }), headers: { "Content-Type": "application/json" } });
+  const batchRequest = (slugs, expectedPoints) => new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs, expectedPoints }), headers: { "Content-Type": "application/json" } });
   decision = { allowed: false, code: "BATCH_MEMBERSHIP_REQUIRED" };
   const beforeReads = reads;
   assert.equal((await batch(batchRequest(["one"]))).status, 403);
   assert.equal(reads, beforeReads, "Free batch requests must be denied before reading files");
   assert.deepEqual(calls.at(-1), ["token", null, true, "user"]);
   decision = { allowed: true, paid: true };
+  pointClaim = { ok: false, code: "POINTS_QUOTE_CHANGED", requiredPoints: 2, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
+  const claimsBeforeStaleQuote = pointClaims.length;
+  response = await batch(batchRequest(["one", "two"], 1));
+  assert.equal(response.status, 409, "An increased batch price requires fresh confirmation");
+  assert.equal(pointClaims.length, claimsBeforeStaleQuote + 1, "The database validates confirmed prices atomically");
+  assert.equal(pointClaims.at(-1)[2],1);
+  pointClaim = { ok: true, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
   const archive = await batch(batchRequest(["one", "two", "one"]));
   assert.equal(archive.status, 200);
+  assert.equal(archive.headers.get("X-Material-Points-Charged"), "0");
+  assert.equal(archive.headers.get("X-Material-Points-Balance"), "9");
   const zip = await JSZip.loadAsync(await archive.arrayBuffer());
   assert.deepEqual(Object.keys(zip.files), ["same.pdf", "same (2).pdf"]);
   assert.equal((await batch(batchRequest(Array(51).fill("one")))).status, 400);
@@ -101,6 +122,7 @@ async function main() {
   let membershipFailure = false;
   const accessService = load("lib/material-access.ts", {
     "server-only": {},
+    "@/lib/material-point-state": { getMaterialPointState: async () => ({policy:"legacy_points"}) },
     "@/lib/membership": { getMembership: async () => { if (membershipFailure) throw Error("Membership unavailable"); return { active: paid }; } }
   });
   for (const [slug, isBatch] of [[null, false], ["one", false], [null, true]]) {

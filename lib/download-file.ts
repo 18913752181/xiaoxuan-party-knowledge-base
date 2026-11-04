@@ -7,13 +7,19 @@ export type DownloadResult = {
   error?: string;
   needsLogin?: boolean;
   membershipRequired?: boolean;
+  insufficientPoints?: boolean;
+  requiredPoints?: number;
+  pointsBalance?: number;
+  chargedPoints?: number;
+  dailyRemaining?: number;
+  dailyLimitExceeded?: boolean;
 };
 
 export type BatchDownloadFailure = DownloadResult & {
   material: Material;
 };
 
-export type BatchDownloadResult = {
+export type BatchDownloadResult = DownloadResult & {
   ok: boolean;
   downloaded: Material[];
   failures: BatchDownloadFailure[];
@@ -149,14 +155,18 @@ async function responseError(response: Response): Promise<DownloadResult> {
 
   let error = "";
   let code = "";
+  let requiredPoints = 0;
+  let pointsBalance = 0;
   try {
     const body = await response.json();
     error = body?.error || body?.message || `下载失败：${response.status}`;
     code = body?.code || "";
+    requiredPoints = Number(body?.requiredPoints || 0);
+    pointsBalance = Number(body?.pointsBalance || 0);
   } catch {
     error = `下载失败：${response.status}`;
   }
-  return { ok: false, error, membershipRequired: ["MEMBERSHIP_REQUIRED", "MATERIAL_QUOTA_EXCEEDED", "BATCH_MEMBERSHIP_REQUIRED"].includes(code) };
+  return { ok: false, error, insufficientPoints: code === "INSUFFICIENT_POINTS", requiredPoints, pointsBalance, dailyLimitExceeded: code === "DAILY_DOWNLOAD_LIMIT", membershipRequired: ["ANNUAL_MEMBERSHIP_REQUIRED", "MEMBERSHIP_REQUIRED", "MATERIAL_QUOTA_EXCEEDED", "BATCH_MEMBERSHIP_REQUIRED"].includes(code) };
 }
 
 export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
@@ -166,6 +176,7 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
     return responseError(response);
   }
 
+  window.dispatchEvent(new Event("material-points-changed"));
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -176,28 +187,32 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
   link.remove();
   URL.revokeObjectURL(objectUrl);
 
-  return { ok: true };
+  return { ok: true, chargedPoints: Number(response.headers.get("X-Material-Points-Charged") || 0), pointsBalance: Number(response.headers.get("X-Material-Points-Balance") || 0), dailyRemaining: response.headers.has("X-Material-Daily-Remaining") ? Number(response.headers.get("X-Material-Daily-Remaining")) : undefined };
 }
 
 export async function downloadMaterialFile(material: Material): Promise<DownloadResult> {
   if (!material.file_url) return { ok: false, error: "该资料暂未上传可下载文件。" };
-  const result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title);
+  let result: DownloadResult;
+  try { result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title); }
+  catch { result = { ok: false, error: "网络异常，请重试。若资料已解锁，再次下载不会重复扣分。" }; }
+  if (!result.ok) window.dispatchEvent(new Event("material-points-changed"));
   if (result.ok) await rememberDownload(material);
   window.dispatchEvent(new Event("material-access-changed"));
   return result;
 }
 
-export async function downloadMaterialsAsZip(materials: Material[]): Promise<BatchDownloadResult> {
+export async function downloadMaterialsAsZip(materials: Material[], expectedPoints?: number): Promise<BatchDownloadResult> {
   if (!materials.length) return { ok: false, downloaded: [], failures: [], error: "请先选择需要下载的资料。" };
   const response = await fetch("/api/content-units/batch-download", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slugs: materials.map((item) => item.slug || item.id) })
+    body: JSON.stringify({ slugs: materials.map((item) => item.slug || item.id), expectedPoints })
   });
   if (!response.ok) {
     const failure = await responseError(response);
     return { ok: false, downloaded: [], failures: [{ material: materials[0], ...failure }], error: failure.error };
   }
+  window.dispatchEvent(new Event("material-points-changed"));
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -209,5 +224,5 @@ export async function downloadMaterialsAsZip(materials: Material[]): Promise<Bat
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   await Promise.all(materials.map((material) => rememberDownload(material)));
   window.dispatchEvent(new Event("material-access-changed"));
-  return { ok: true, downloaded: materials, failures: [] };
+  return { ok: true, downloaded: materials, failures: [], chargedPoints: Number(response.headers.get("X-Material-Points-Charged") || 0), pointsBalance: Number(response.headers.get("X-Material-Points-Balance") || 0), dailyRemaining: response.headers.has("X-Material-Daily-Remaining") ? Number(response.headers.get("X-Material-Daily-Remaining")) : undefined };
 }

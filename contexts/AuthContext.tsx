@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Profile } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -20,25 +20,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadProfile() {
+  const sequence = useRef(0);
+  const loadProfile = useCallback(async () => {
+    const ticket = ++sequence.current;
     try {
       const response = await fetch("/api/auth/profile", { cache: "no-store" });
       if (!response.ok) {
-        setProfile(null);
+        if (response.status === 401 && ticket === sequence.current) setProfile(null);
         return;
       }
       const data = await response.json();
-      setProfile(data.profile || null);
+      if (ticket === sequence.current) setProfile(data.profile || null);
     } catch {
-      setProfile(null);
+      // Keep the account while a background refresh is temporarily unavailable.
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadProfile();
   }, []);
+  useEffect(() => {
+    const refresh = () => { void loadProfile(); };
+    const visible = () => { if (document.visibilityState === "visible") refresh(); };
+    refresh();
+    window.addEventListener("material-points-changed", refresh);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener("material-points-changed", refresh);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [loadProfile]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -50,10 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUp: async () => ({ error: "首次使用邮箱验证码后会自动创建账号。" }),
       signOut: async () => {
         await fetch("/api/auth/logout", { method: "POST" });
+        sequence.current++;
         setProfile(null);
       }
     }),
-    [profile, loading]
+    [profile, loading, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

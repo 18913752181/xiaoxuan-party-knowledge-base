@@ -9,6 +9,9 @@ export type Profile = {
   member_status: MemberStatus;
   member_expires_at?: string | null;
   points_balance?: number;
+  permanent_points_balance?: number;
+  daily_points_balance?: number;
+  material_download_policy?: "legacy_free" | "legacy_points" | "annual_daily";
   legacy_material_benefits?: boolean;
   is_admin: boolean;
   created_at?: string;

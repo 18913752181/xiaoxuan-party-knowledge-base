@@ -19,7 +19,7 @@ type Plan = {
 const DEFAULT_PLANS: Plan[] = [
   { code: "monthly", name: "月卡", duration: "30 天", amountTotal: 2800, pointsDescription: "开通成功一次性赠送 5 积分" },
   { code: "quarterly", name: "季卡", duration: "90 天", amountTotal: 7900, pointsDescription: "开通成功一次性赠送 20 积分" },
-  { code: "annual", name: "年卡", duration: "365 天", amountTotal: 9900, pointsDescription: "有效期内每天自动获得 10 积分" }
+  { code: "annual", name: "年卡", duration: "365 天", amountTotal: 9900, pointsDescription: "开通送10积分，含开通当天每天再送5积分（当天有效）" }
 ];
 
 const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
@@ -227,8 +227,9 @@ export default function MembershipPaymentPage() {
   const useJsapi = inWechat && jsapiReady;
 
   const plan = plans.find((candidate) => candidate.code === selectedPlanCode) || null;
+  const protectedMember = Boolean(profile && (profile.legacy_material_benefits || (profile.material_download_policy && profile.material_download_policy !== "annual_daily")));
   const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
-  const isActiveMember = Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date().toISOString().slice(0, 10));
+  const isActiveMember = Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date(Date.now() + (profile.material_download_policy === "annual_daily" ? 8 * 3600000 : 0)).toISOString().slice(0, 10));
   const daysRemaining = isActiveMember && profile?.member_expires_at
     ? Math.max(0, Math.ceil((new Date(`${profile.member_expires_at}T00:00:00`).getTime() - Date.now()) / 86400000))
     : 0;
@@ -257,19 +258,19 @@ export default function MembershipPaymentPage() {
                 {plans.map((candidate) => {
                   const selected = candidate.code === selectedPlanCode;
                   return <button key={candidate.code} type="button" onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${selected ? "is-selected" : ""}`}>
-                    <span>{candidate.code === "annual" ? <em>推荐</em> : null}<span>{candidate.name}</span><small>{candidate.pointsDescription}</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
+                    <span>{candidate.code === "annual" ? <em>推荐</em> : null}<span>{candidate.name}</span><small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : protectedMember && candidate.code === "annual" ? "沿用原规则：有效期内每天赠送10积分" : candidate.pointsDescription}</small><small>{protectedMember ? "保留原资料库下载权益" : candidate.code === "annual" ? "可单份/批量下载，每天最多10个不同文件" : "不含资料库下载权限，其他会员权益不变"}</small></span><strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
                   </button>;
                 })}
               </div>
               <div className="dimmo-membership-note">
                 <p>通行卡会员权益</p><ul>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>会员专属资料下载</b><small>付费会员可下载会员专属资料</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>会员专属资料下载</b><small>{protectedMember ? "保留原下载权益，续费不变" : selectedPlanCode === "annual" ? "年卡每天最多下载10个不同文件，首次解锁扣积分" : "月卡、季卡不含资料库下载权限"}</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/continuous-updates.png" alt="" width={64} height={64} /><span><b>资料持续更新</b><small>新增资料和优化版本持续同步</small></span></li>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>多份资料一次打包为 ZIP</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>{protectedMember ? "保留原批量下载权益" : selectedPlanCode === "annual" ? "批量按文件数占用当天名额，已解锁不再扣积分" : "仅年卡包含资料库批量下载"}</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/education-base-guide.svg" alt="" width={64} height={64} /><span><b>教育基地导览和攻略</b><small>查看参观联系、讲解信息和配套方案</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-daily-companion.png" alt="" width={64} height={64} /><span><b>Dimmo 日常陪伴</b><small>非专业问题，随时找咪聊聊</small></span></li>
-                  <li><span aria-hidden="true" className="dimmo-points-mark">积分</span><span><b>{profile?.legacy_material_benefits ? "保留原会员权益" : "新增会员按积分制"}</b><small>{profile?.legacy_material_benefits ? "有效期内单份和批量下载不扣积分；续费沿用原权益" : "月卡送 5、季卡送 20；年卡每天自动获得 10 积分。原权益会员续费沿用原规则"}</small></span></li>
+                  <li><span aria-hidden="true" className="dimmo-points-mark">积分</span><span><b>{protectedMember ? "保留原会员规则" : "年卡积分与下载规则"}</b><small>{protectedMember ? "原下载、扣分和积分发放规则不变，续费继续保留" : "年卡开通送10积分（长期有效）；从开通当天起每天再送5积分（当天有效、优先消耗），不累计到次日。首次解锁扣积分，再次下载免费。月卡送5积分、季卡送20积分，不含资料下载"}</small></span></li>
                 </ul>
               </div>
               <p className="dimmo-membership-legacy">已开通的资料库会员，可直接使用 Dimmo 会员权益，无需重复付费。涉及专业问题，仍由小宣社长处理。</p>

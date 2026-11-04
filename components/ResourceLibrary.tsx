@@ -10,14 +10,15 @@ import type { Material } from "@/lib/types";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
-import { useMaterialAccess } from "@/components/useMaterialAccess";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasLegacyMaterialBenefits } from "@/lib/membership-benefits";
+import { MaterialDownloadStatus, DownloadQuotaNotice } from "@/components/MaterialDownloadStatus";
+import { useMaterialPoints } from "@/components/useMaterialPoints";
+import { materialDownloadLabel, type MaterialPointQuote } from "@/lib/material-point-view";
+import { InsufficientPointsNotice, type PointsShortfall } from "@/components/InsufficientPointsNotice";
 
 const topicAllOption = "全部专题";
 const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会一课", "组织生活会", "支部建设"];
 const libraryPageSize = 12;
-const batchDownloadNoticeSessionKey = "xiaoxuan-batch-download-notice-confirmed";
 type SortMode = "updated" | "popular";
 
 /** 数量按量级展示，不暴露精确值：9 → 9+，67 → 60+，934 → 900+ */
@@ -41,9 +42,11 @@ export function ResourceLibrary({
 }) {
   const router = useRouter();
   const { profile } = useAuth();
-  const legacyBenefits = hasLegacyMaterialBenefits(profile);
-  const materialAccess = useMaterialAccess();
-  const canBatchDownload = materialAccess.access?.paid === true;
+  const pointInfo = useMaterialPoints();
+  const legacyBenefits = pointInfo.state?.legacyBenefits === true;
+  const [quotaError, setQuotaError] = useState("");
+  const [shortfall, setShortfall] = useState<PointsShortfall | null>(null);
+  const canBatchDownload = pointInfo.state?.canDownload ?? pointInfo.state?.paid === true;
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
@@ -58,6 +61,10 @@ export function ResourceLibrary({
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [isBatchDownloading, setIsBatchDownloading] = useState(false);
   const [isBatchDownloadNoticeOpen, setIsBatchDownloadNoticeOpen] = useState(false);
+  const [batchQuote, setBatchQuote] = useState<MaterialPointQuote | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const [isQuoting, setIsQuoting] = useState(false);
+  const [downloadingSlug, setDownloadingSlug] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState("");
 
   useEffect(() => {
@@ -177,9 +184,6 @@ export function ResourceLibrary({
     : scopedMaterials.slice(0, 3);
   const downloadableVisibleMaterials = visibleMaterials.filter((material) => Boolean(material.file_url));
   const allVisibleSelected = downloadableVisibleMaterials.length > 0 && downloadableVisibleMaterials.every((material) => selectedSlugs.includes(getArticleSlug(material)));
-  const selectedMaximumPoints = materials
-    .filter((material) => selectedSlugs.includes(getArticleSlug(material)) && material.file_url)
-    .reduce((sum, material) => sum + (material.points_cost ?? 1), 0);
 
   function changePage(nextPage: number) {
     setPage(Math.min(Math.max(nextPage, 1), totalPages));
@@ -232,9 +236,20 @@ export function ResourceLibrary({
   }
 
   async function download(material: Material) {
+    if (downloadingSlug) return;
+    setDownloadingSlug(getArticleSlug(material));
+    setShortfall(null);
+    setQuotaError("");
     setMessage("正在准备下载...");
     const result = await downloadMaterialFile(material);
+    setDownloadingSlug(null);
     if (!result.ok) {
+      if (result.dailyLimitExceeded) { setQuotaError(result.error || "今日下载名额不足。"); setMessage(""); return; }
+      if (result.insufficientPoints) {
+        setShortfall({ requiredPoints: result.requiredPoints ?? 0, pointsBalance: result.pointsBalance ?? 0 });
+        setMessage("");
+        return;
+      }
       if (result.membershipRequired) {
         setMemberOnlyMaterial(material);
         setMessage("");
@@ -248,7 +263,7 @@ export function ResourceLibrary({
       return;
     }
     updateMaterialCount(getArticleSlug(material), "download_count", material.download_count + 1);
-    setMessage("文件下载已开始。");
+    setMessage(`文件下载已开始。本次扣除 ${result.chargedPoints ?? 0} 积分，余额 ${result.pointsBalance ?? 0} 积分。${result.dailyRemaining !== undefined ? `今日还可下载 ${result.dailyRemaining} 个不同文件。` : ""}`);
     if (shouldShowSupportCard()) setSupportMaterial(material);
   }
 
@@ -268,32 +283,38 @@ export function ResourceLibrary({
 
   async function batchDownload() {
     if (!canBatchDownload) return setMessage("批量下载仅限付费会员。");
-    const selectedMaterials = materials.filter((material) => selectedSlugs.includes(getArticleSlug(material)) && material.file_url);
+    const selectedMaterials = materials.filter((material) => batchQuote?.slugs.includes(getArticleSlug(material)) && material.file_url);
+    if (!batchQuote || batchQuote.shortfallPoints || batchQuote.dailyExceeded) return;
     if (!selectedMaterials.length) return setMessage("请先选择需要下载的资料。");
 
     setIsBatchDownloading(true);
-    const maximumPoints = selectedMaterials.reduce((sum, material) => sum + (material.points_cost ?? 1), 0);
-    setMessage(legacyBenefits ? `正在打包 ${selectedMaterials.length} 份资料，原会员权益免扣积分，请稍候...` : `正在打包 ${selectedMaterials.length} 份资料，首次下载最多扣除 ${maximumPoints} 积分，请稍候...`);
+    setShortfall(null);
+    setQuotaError("");
+    setMessage(legacyBenefits ? `正在打包 ${selectedMaterials.length} 份资料，原会员权益免扣积分，请稍候...` : `正在打包 ${selectedMaterials.length} 份资料，本次需扣除 ${batchQuote.requiredPoints} 积分，请稍候...`);
     setMemberOnlyMaterial(null);
     try {
-      const result = await downloadMaterialsAsZip(selectedMaterials);
+      const result = await downloadMaterialsAsZip(selectedMaterials, batchQuote.requiredPoints);
       const downloadedSlugs = result.downloaded.map(getArticleSlug);
       setSelectedSlugs((current) => current.filter((slug) => !downloadedSlugs.includes(slug)));
       result.downloaded.forEach((material) => {
         updateMaterialCount(getArticleSlug(material), "download_count", material.download_count + 1);
       });
 
+      const quotaFailure = result.failures.find((failure) => failure.dailyLimitExceeded);
+      if (quotaFailure) setQuotaError(quotaFailure.error || "今日下载名额不足。");
+      const pointsFailure = result.failures.find((failure) => failure.insufficientPoints);
+      if (pointsFailure) setShortfall({ requiredPoints: pointsFailure.requiredPoints ?? 0, pointsBalance: pointsFailure.pointsBalance ?? 0 });
       const loginFailure = result.failures.find((failure) => failure.needsLogin);
       const membershipFailure = result.failures.find((failure) => failure.membershipRequired);
       if (!result.ok && membershipFailure) {
         setMemberOnlyMaterial(membershipFailure.material);
         setMessage("");
       } else if (!result.ok) {
-        setMessage(result.error || "批量下载失败，请稍后重试。");
+        setMessage(pointsFailure || quotaFailure ? "" : result.error || "批量下载失败，请稍后重试。");
       } else if (result.failures.length) {
         setMessage(`已打包 ${result.downloaded.length} 份资料，另有 ${result.failures.length} 份因权限或文件状态未能下载。`);
       } else {
-        setMessage(`已将 ${result.downloaded.length} 份资料打包为 ZIP，下载已开始。`);
+        setMessage(`已将 ${result.downloaded.length} 份资料打包为 ZIP，下载已开始。本次扣除 ${result.chargedPoints ?? 0} 积分，余额 ${result.pointsBalance ?? 0} 积分。${result.dailyRemaining !== undefined ? `今日还可下载 ${result.dailyRemaining} 个不同文件。` : ""}`);
       }
 
       if (loginFailure) {
@@ -304,6 +325,7 @@ export function ResourceLibrary({
       setMessage("资料打包失败，请稍后重试。");
     } finally {
       setIsBatchDownloading(false);
+      window.dispatchEvent(new Event("material-points-changed"));
     }
   }
 
@@ -313,17 +335,27 @@ export function ResourceLibrary({
     window.requestAnimationFrame(() => document.getElementById("latest-materials")?.scrollIntoView({ block: "start" }));
   }
 
-  function requestBatchDownload() {
-    if (!selectedSlugs.length || isBatchDownloading) return;
-    if (window.sessionStorage.getItem(batchDownloadNoticeSessionKey) === "true") {
-      void batchDownload();
-      return;
-    }
+  async function requestBatchDownload() {
+    if (!selectedSlugs.length || isBatchDownloading || isQuoting) return;
+    setBatchQuote(null);
+    setQuoteError("");
+    setIsQuoting(true);
     setIsBatchDownloadNoticeOpen(true);
+    try {
+      const response = await fetch("/api/material-points", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: selectedSlugs }), cache: "no-store"
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "积分核验失败，请重试。");
+      setBatchQuote(data);
+    } catch (error) {
+      setQuoteError(error instanceof Error ? error.message : "积分核验失败，请重试。");
+    } finally { setIsQuoting(false); }
   }
 
   function confirmBatchDownload() {
-    window.sessionStorage.setItem(batchDownloadNoticeSessionKey, "true");
+    if (!batchQuote || batchQuote.shortfallPoints || batchQuote.dailyExceeded || isQuoting) return;
     setIsBatchDownloadNoticeOpen(false);
     void batchDownload();
   }
@@ -474,7 +506,7 @@ export function ResourceLibrary({
                 {selectedSlugs.length ? <button type="button" onClick={() => setSelectedSlugs([])} className="min-h-10 px-1 text-neutral-500 hover:text-brand-red">清空选择</button> : null}
               </div>
               <div className="w-full shrink-0 sm:w-80">
-                <button type="button" onClick={requestBatchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="min-h-11 w-full rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98] disabled:cursor-not-allowed disabled:border-[#e7e9ec] disabled:bg-[#f7f8f9] disabled:text-[#a4abb2]">
+                <button type="button" onClick={requestBatchDownload} disabled={!selectedSlugs.length || isBatchDownloading} className="disabled:cursor-not-allowed disabled:opacity-50 min-h-11 w-full rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98] disabled:cursor-not-allowed disabled:border-[#e7e9ec] disabled:bg-[#f7f8f9] disabled:text-[#a4abb2]">
                   {isBatchDownloading ? "正在打包..." : `批量下载${selectedSlugs.length ? `（${selectedSlugs.length}）` : ""}`}
                 </button>
                 <p className="mt-2 text-xs leading-5 text-neutral-400">仅限本人工作使用，请勿转售、公开传播或异常高频下载。</p>
@@ -505,11 +537,20 @@ export function ResourceLibrary({
 
           {isBatchDownloadNoticeOpen ? (
             <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#172f35]/20 p-4 sm:items-center" role="presentation" onMouseDown={() => setIsBatchDownloadNoticeOpen(false)}>
-              <section role="dialog" aria-modal="true" aria-labelledby="batch-download-notice-title" aria-describedby="batch-download-notice-description" className="w-full max-w-md rounded-2xl border border-[#dfe3e7] bg-white p-6 shadow-[0_20px_60px_rgba(35,43,52,0.18)]" onMouseDown={(event) => event.stopPropagation()}>
+              <section role="dialog" aria-modal="true" aria-labelledby="batch-download-notice-title" aria-describedby="batch-download-notice-description" className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-[#dfe3e7] bg-white p-6 shadow-[0_20px_60px_rgba(35,43,52,0.18)]" onMouseDown={(event) => event.stopPropagation()}>
                 <p className="text-sm font-medium text-[#6c757d]">使用提示</p>
-                <h2 id="batch-download-notice-title" className="mt-2 text-xl font-semibold text-brand-ink">确认批量下载用途</h2>
+                <h2 id="batch-download-notice-title" className="mt-2 text-xl font-semibold text-brand-ink">确认批量下载</h2>
                 <p id="batch-download-notice-description" className="mt-3 text-sm leading-6 text-neutral-600">为了保护原创资料和正常会员体验，批量下载仅限本人正常工作使用。</p>
-                <p className="mt-3 rounded-xl bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a633f]">积分制会员本次首次下载最多扣除 {selectedMaximumPoints} 积分；已解锁资料不会重复扣除。原权益会员有效期内免扣积分。</p>
+                {isQuoting ? <p role="status" className="mt-3 text-sm">正在核算实际需扣积分…</p> : null}
+                {quoteError ? <p role="alert" className="mt-3 text-sm text-brand-red">{quoteError}</p> : null}
+                {batchQuote ? <div className="mt-3 rounded-xl bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a633f]">
+                  <p>已选择 {batchQuote.slugs.length} 份资料，已解锁 {batchQuote.unlockedCount} 份。</p>
+                  <p className="font-semibold">本次实际需扣 {batchQuote.requiredPoints} 积分，现有 {batchQuote.pointsBalance} 积分。</p>
+                  <p>{batchQuote.dailyLimit ? `本次占用 ${batchQuote.requestedNew} 个新名额，今日剩余 ${batchQuote.dailyRemaining}/10。` : "沿用老会员下载规则，无新增每日限制。"}</p>
+                  <p>{batchQuote.legacyBenefits ? "原会员权益，免扣积分。" : "已解锁资料免费下载，不重复扣分。"}</p>
+                </div> : null}
+                {batchQuote?.dailyExceeded ? <DownloadQuotaNotice message={`本次需要 ${batchQuote.requestedNew} 个名额，今日仅剩 ${batchQuote.dailyRemaining} 个，请减少选择或明天再来。`} /> : null}
+                {batchQuote && batchQuote.shortfallPoints > 0 ? <InsufficientPointsNotice {...batchQuote} /> : null}
                 <ul className="mt-4 space-y-2 rounded-xl bg-[#f7f8f9] px-4 py-3 text-sm leading-6 text-neutral-600">
                   <li>仅限本人工作使用</li>
                   <li>请勿转售、公开传播、批量复制或用于搭建同类资料库</li>
@@ -517,7 +558,7 @@ export function ResourceLibrary({
                 </ul>
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button type="button" onClick={() => setIsBatchDownloadNoticeOpen(false)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-white px-4 text-sm font-medium text-neutral-600 transition-colors hover:bg-[#f7f8f9] active:scale-[0.98]">取消</button>
-                  <button type="button" onClick={confirmBatchDownload} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">确认并下载</button>
+                  <button type="button" onClick={confirmBatchDownload} disabled={isQuoting || !batchQuote || batchQuote.shortfallPoints > 0 || batchQuote.dailyExceeded} className="disabled:cursor-not-allowed disabled:opacity-50 min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">确认并下载</button>
                 </div>
               </section>
             </div>
@@ -527,7 +568,7 @@ export function ResourceLibrary({
             <div className="mt-5 rounded-3xl border-2 border-brand-red bg-[#fff8f8] px-6 py-10 text-center shadow-[0_12px_30px_rgba(166,62,71,0.06)]">
               <span className="inline-flex rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">开通付费会员</span>
               <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{displayMaterialTitle(memberOnlyMaterial.title)}</h3>
-              <p className="mt-4 text-base font-medium text-brand-red">会员专属资料仅付费会员可下载。</p>
+              <p className="mt-4 text-base font-medium text-brand-red">新会员仅年卡可下载资料，每天最多10个不同文件；月卡和季卡不含下载权限，老会员保留原权益。</p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="rounded-xl border border-brand-line bg-white px-5 py-2.5 text-sm text-neutral-600 transition-colors hover:bg-[#fafbfc]">返回资料列表</button>
                 <Link href="/membership/payment" className="rounded-xl bg-brand-red px-5 py-2.5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">成为专属会员</Link>
@@ -535,6 +576,10 @@ export function ResourceLibrary({
             </div>
           ) : (
           <>
+          <MaterialDownloadStatus state={pointInfo.state} />
+          {quotaError ? <DownloadQuotaNotice message={quotaError} /> : null}
+          {shortfall ? <InsufficientPointsNotice {...shortfall} /> : null}
+          {pointInfo.error ? <button type="button" onClick={() => void pointInfo.refresh()} className="mt-4 text-sm text-brand-red">{pointInfo.error} 点击重试</button> : null}
           {message ? <div className="mt-4 rounded-xl border border-[#efd5d8] bg-[#fff8f8] px-4 py-3 text-sm text-[#7d4d53]">{message}</div> : null}
           {supportMaterial ? <SupportCard material={supportMaterial} onClose={() => setSupportMaterial(null)} /> : null}
           {isLoading ? (
@@ -555,7 +600,7 @@ export function ResourceLibrary({
               const isFavorite = favoriteSlugs.includes(slug);
               const isSelected = selectedSlugs.includes(slug);
               return (
-                <article key={material.id} className={`grid gap-4 p-5 transition-colors duration-150 md:grid-cols-[1fr_128px] md:items-center ${isSelected ? "bg-[#fff4f5]" : "hover:bg-[#fafbfc]"}`}>
+                <article key={material.id} className={`grid gap-4 p-5 transition-colors duration-150 md:grid-cols-[minmax(0,1fr)_240px] md:items-center ${isSelected ? "bg-[#fff4f5]" : "hover:bg-[#fafbfc]"}`}>
                   <div className="flex min-w-0 items-start gap-4">
                     {libraryOnly && canBatchDownload ? (
                       <label className={`mt-3 flex h-5 w-5 shrink-0 items-center justify-center ${material.file_url ? "cursor-pointer" : "cursor-not-allowed opacity-35"}`}>
@@ -571,7 +616,7 @@ export function ResourceLibrary({
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
-                      <span>{legacyBenefits ? "原会员权益 · 免扣积分" : `${material.points_cost ?? 1} 积分`}</span>
+                      <span>{legacyBenefits ? "原会员权益 · 免扣积分" : pointInfo.state?.unlockedSlugs.includes(slug) ? "已解锁 · 免扣积分" : `${material.points_cost ?? 1} 积分`}</span>
                       {material.downloadable || material.file_url ? null : <span>仅查看</span>}
                       {hasFillingGuide(material) ? <span className="text-[#7d6268]">含填写说明</span> : null}
                     </div>
@@ -579,7 +624,7 @@ export function ResourceLibrary({
                   </div>
                   <div className="flex items-center gap-2 md:justify-end">
                     <button type="button" onClick={() => onToggleFavorite(material)} aria-label={isFavorite ? "取消收藏" : "收藏资料"} className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-line text-lg text-[#a7793b] transition-[border-color,background-color,transform] duration-150 ease-out hover:border-[#e2c693] hover:bg-[#fffaf0] active:scale-[0.97]">{isFavorite ? "★" : "☆"}</button>
-                    <button type="button" onClick={() => download(material)} className="min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">{legacyBenefits ? "下载" : `下载 · ${material.points_cost ?? 1}积分`}</button>
+                    <button type="button" onClick={() => download(material)} disabled={Boolean(downloadingSlug) || Boolean(profile && !pointInfo.state && !pointInfo.error)} className="disabled:cursor-not-allowed disabled:opacity-50 min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">{downloadingSlug === slug ? "正在下载…" : profile && !pointInfo.state ? (pointInfo.error ? "重试下载" : "正在核验积分…") : materialDownloadLabel(pointInfo.state, slug, material.points_cost ?? 1, material.member_only)}</button>
                   </div>
                 </article>
               );

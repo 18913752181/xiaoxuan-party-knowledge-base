@@ -35,8 +35,8 @@ async function main() {
   assert.equal(result.ok, true);
   assert.equal(result.chargedPoints, 3);
   assert.deepEqual(rpcCalls, [[
-    "unlock_materials_with_points",
-    { p_user_id: "user", p_materials: [{ slug: "one", cost: 1 }, { slug: "two", cost: 2 }] }
+    "claim_material_downloads",
+    { p_user_id: "user", p_materials: [{ slug: "one", cost: 1 }, { slug: "two", cost: 2 }], p_expected_points: null }
   ]]);
 
   const sql = fs.readFileSync(path.join(__dirname, "..", "supabase", "046_material_point_unlocks.sql"), "utf8");

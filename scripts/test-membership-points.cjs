@@ -60,7 +60,7 @@ async function main() {
   const { membershipPlans } = load("lib/wechat-pay.ts", { "server-only": {}, fs: { readFileSync: () => "" } });
   const plans = membershipPlans();
   assert.deepEqual(plans.map((plan) => [plan.code, plan.amountTotal]), [["monthly", 2800], ["quarterly", 7900], ["annual", 9900]]);
-  assert.deepEqual(plans.map((plan) => [plan.openingBonusPoints, plan.dailyPoints]), [[5, 0], [20, 0], [0, 10]]);
+  assert.deepEqual(plans.map((plan) => [plan.openingBonusPoints, plan.dailyPoints]), [[5, 0], [20, 0], [10, 5]]);
   if (previousAnnual === undefined) delete process.env.DIMMO_ANNUAL_PRICE_CENTS;
   else process.env.DIMMO_ANNUAL_PRICE_CENTS = previousAnnual;
 
@@ -102,7 +102,7 @@ async function main() {
 
   const compose = fs.readFileSync(path.join(__dirname, "..", "compose.yaml"), "utf8");
   assert.match(compose, /membership-points\/grant-daily/);
-  assert.match(compose, /setInterval\(points,3600000\)/);
+  assert.match(compose, /setInterval\(points,60000\)/);
 
   let grants = 0;
   process.env.REMINDER_CRON_SECRET = "test-secret";
@@ -115,7 +115,7 @@ async function main() {
   assert.equal((await response.json()).totalPoints, 10);
   assert.equal(grants, 1);
 
-  console.log("PASS: plan prices, opening bonuses, annual daily grants, expiry, renewal, refund and idempotency");
+  console.log("PASS: current plan config and preserved legacy points opening/daily/expiry/renewal/refund idempotency");
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; });
