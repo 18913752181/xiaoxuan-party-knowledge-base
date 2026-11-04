@@ -8,10 +8,9 @@ import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
-import { useAuth } from "@/contexts/AuthContext";
 import { MaterialDownloadStatus, DownloadQuotaNotice } from "@/components/MaterialDownloadStatus";
+import { MaterialDownloadConfirmation } from "@/components/MaterialDownloadConfirmation";
 import { useMaterialPoints } from "@/components/useMaterialPoints";
-import { materialDownloadLabel } from "@/lib/material-point-view";
 import { InsufficientPointsNotice, type PointsShortfall } from "@/components/InsufficientPointsNotice";
 
 function blocks(text?: string) {
@@ -93,7 +92,6 @@ function cleanNetworkItems(items?: string[]) {
 
 export function MaterialDetailClient({ initialMaterial, initialMaterials }: { initialMaterial: Material; initialMaterials: Material[] }) {
   const router = useRouter();
-  const { profile } = useAuth();
   const pointInfo = useMaterialPoints();
   const legacyBenefits = pointInfo.state?.legacyBenefits === true;
   const [quotaError, setQuotaError] = useState("");
@@ -103,6 +101,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
+  const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
@@ -122,13 +121,13 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
     setMessage(result.favorited ? "已收藏。" : "已取消收藏。");
   }
 
-  async function download() {
+  async function download(expectedPoints: number) {
     if (!material || isDownloading) return;
     setIsDownloading(true);
     setShortfall(null);
     setQuotaError("");
     setMessage("正在准备下载...");
-    const result = await downloadMaterialFile(material);
+    const result = await downloadMaterialFile(material, expectedPoints);
     setIsDownloading(false);
     if (!result.ok) {
       if (result.dailyLimitExceeded) { setQuotaError(result.error || "今日下载名额不足。"); setMessage(""); return; }
@@ -185,6 +184,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-8 lg:px-8 lg:py-10">
+      {downloadConfirmOpen ? <MaterialDownloadConfirmation material={material} onClose={() => setDownloadConfirmOpen(false)} onConfirm={(points) => { setDownloadConfirmOpen(false); void download(points); }} /> : null}
       <Link href="/library" className="inline-flex items-center gap-1 text-sm font-medium text-neutral-600 transition-colors duration-150 hover:text-brand-red">
         <span aria-hidden="true">←</span> 返回资料库
       </Link>
@@ -205,8 +205,8 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           ) : null}
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <button type="button" onClick={download} disabled={isDownloading || Boolean(profile && !pointInfo.state && !pointInfo.error)} className="disabled:cursor-not-allowed disabled:opacity-50 rounded-xl bg-brand-red px-7 py-3 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">
-              {isDownloading ? "正在下载…" : profile && !pointInfo.state ? (pointInfo.error ? "积分核验失败，点击重试下载" : "正在核验积分…") : materialDownloadLabel(pointInfo.state, getArticleSlug(material), material.points_cost ?? 1, material.member_only)}
+            <button type="button" onClick={() => setDownloadConfirmOpen(true)} disabled={isDownloading} className="disabled:cursor-not-allowed disabled:opacity-50 rounded-xl border border-[#eee1c7] bg-[#fff9ec] px-7 py-3 text-sm font-medium text-[#80612e] transition-[background-color,transform] duration-150 hover:border-[#e3c98f] hover:bg-[#fff1d2] active:scale-[0.98]">
+              {isDownloading ? "下载中…" : "下载"}
             </button>
             <button type="button" onClick={onToggleFavorite} className={`rounded-xl border px-6 py-3 text-sm transition-transform duration-150 active:scale-[0.98] ${isFavorite ? "border-[#c79b52] bg-[#fff8e8] text-[#8a6b50]" : "border-brand-line bg-white text-neutral-600"}`}>
               {isFavorite ? "已收藏" : "收藏资料"}

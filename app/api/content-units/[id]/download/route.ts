@@ -31,12 +31,15 @@ function downloadFileName(headerName: string) {
   return `attachment; filename*=UTF-8''${encoded}`;
 }
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession();
   if (!session) {
     return NextResponse.json({ error: "请先登录后再下载文件。" }, { status: 401 });
   }
 
+  const expected = new URL(request.url).searchParams.get("expectedPoints");
+  const expectedPoints = expected === null ? undefined : Number(expected);
+  if (expectedPoints !== undefined && (!Number.isInteger(expectedPoints) || expectedPoints < 0)) return NextResponse.json({ error: "积分确认参数无效，请重新确认下载。" }, { status: 400 });
   const slug = decodeURIComponent(params.id).replace(/^content-/, "");
   const unit = await getContentUnitBySlug(slug);
   if (!unit) return NextResponse.json({ error: "没有找到资料。" }, { status: 404 });
@@ -70,7 +73,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   let dailyRemaining: number | undefined;
   let dailyLimit: number | null | undefined;
   try {
-    const claim = await claimMaterialPoints(session.user.id, [{ slug, cost: unit.meta.pointsCost }]);
+    const claim = await claimMaterialPoints(session.user.id, [{ slug, cost: unit.meta.pointsCost }], expectedPoints);
     chargedPoints = claim.chargedPoints;
     pointsBalance = claim.pointsBalance;
     dailyRemaining = claim.dailyRemaining;

@@ -66,7 +66,10 @@ async function main() {
   assert.equal(response.headers.get("X-Material-Points-Balance"), "9");
   assert.equal(calls.length, callsBeforePublicDownload, "Ordinary downloads must not use batch membership access");
   assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
-  assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }]], "A first download claims the configured points atomically");
+  assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }], undefined], "A first download claims the configured points atomically");
+  response = await download(new Request("http://localhost/test?expectedPoints=1"),context);
+  assert.equal(pointClaims.at(-1)[2],1,"Confirmed single-download prices reach the atomic claim");
+  assert.equal((await download(new Request("http://localhost/test?expectedPoints=-1"),context)).status,400);
   pointClaim = { ok: false, code: "INSUFFICIENT_POINTS", requiredPoints: 1, chargedPoints: 0, pointsBalance: 0, unlockedSlugs: [] };
   response = await download(req, context);
   assert.equal(response.status, 403);

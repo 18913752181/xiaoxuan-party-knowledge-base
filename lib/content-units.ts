@@ -1,5 +1,6 @@
 import path from "path";
-import { mkdir, readFile, readdir, rm, stat, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "fs/promises";
+import { randomUUID } from "crypto";
 import { existsSync } from "fs";
 import type { Material } from "@/lib/types";
 
@@ -154,7 +155,41 @@ const readJson = async <T>(filePath: string, defaultValue: T) => {
   }
 };
 
-const writeJson = async (filePath: string, value: unknown) => writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+const writeJson = async (filePath: string, value: unknown) => {
+  const temporary = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+    for (let attempt = 0; ; attempt++) {
+      try { await rename(temporary, filePath); break; }
+      catch (error) {
+        // Windows can briefly hold a read handle. Never fall back to truncating
+        // the destination, which would expose partial JSON to other readers.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (attempt >= 6 || !["EPERM", "EBUSY", "EACCES"].includes(code || "")) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 5 * 2 ** attempt));
+      }
+    }
+  } finally {
+    await rm(temporary, { force: true }).catch(() => {});
+  }
+};
+
+// The web server shares one content volume. Serialize read/modify/write for
+// each unit so counters cannot overwrite an admin edit or saved ordering.
+const sharedState = globalThis as typeof globalThis & { __xiaoxuanContentMutations?: Map<string, Promise<void>> };
+const mutations = sharedState.__xiaoxuanContentMutations ||= new Map<string, Promise<void>>();
+async function mutateUnit<T>(slug: string, action: () => Promise<T>): Promise<T> {
+  const previous = mutations.get(slug) || Promise.resolve();
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => { release = resolve; });
+  mutations.set(slug, pending);
+  await previous;
+  try { return await action(); }
+  finally {
+    release();
+    if (mutations.get(slug) === pending) mutations.delete(slug);
+  }
+}
 
 const simpleHash = (value: string) => {
   let hash = 0;
@@ -245,7 +280,7 @@ const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnit
   const slug = meta.slug || path.basename(dir);
   const category = meta.category || path.basename(path.dirname(dir));
   const title = meta.title || slug;
-  const now = new Date().toISOString();
+  const originalDate = meta.createdAt || (slug.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ? `${slug.slice(0, 10)}T00:00:00.000Z` : "1970-01-01T00:00:00.000Z");
   return {
     title,
     slug,
@@ -260,8 +295,8 @@ const normalizeMeta = (meta: Partial<ContentUnitMeta>, dir: string): ContentUnit
     pointsCost: normalizeMaterialPointsCost(meta.pointsCost),
     downloadable: Boolean(meta.downloadable),
     relatedArticles: Array.isArray(meta.relatedArticles) ? meta.relatedArticles : [],
-    updatedAt: meta.updatedAt || now,
-    createdAt: meta.createdAt || meta.updatedAt || now,
+    updatedAt: meta.updatedAt || originalDate,
+    createdAt: meta.createdAt || meta.updatedAt || originalDate,
     downloadCount: Number(meta.downloadCount || 0),
     favoriteCount: Number(meta.favoriteCount || 0),
     fileType: meta.fileType || "知识单元",
@@ -307,7 +342,12 @@ const normalizeNetwork = (value: unknown, meta: ContentUnitMeta, related: Relate
 const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
   const metaPath = path.join(dir, "meta.json");
   if (!existsSync(metaPath)) return null;
-  const meta = normalizeMeta(await readJson<Partial<ContentUnitMeta>>(metaPath, {}), dir);
+  const storedMeta = await readJson<Partial<ContentUnitMeta> | null>(metaPath, null);
+  if (!storedMeta || typeof storedMeta.title !== "string" || !storedMeta.title.trim()) {
+    console.error("Content metadata unreadable; refusing to fabricate a published material", metaPath);
+    return null;
+  }
+  const meta = normalizeMeta(storedMeta, dir);
   const tagsFromFile = await readJson<string[]>(path.join(dir, "tags.json"), []);
   const tags = meta.tags.length ? meta.tags : tagsFromFile;
   const relatedMap = normalizeRelated(await readJson<Partial<RelatedMap>>(path.join(dir, "related.json"), emptyRelated()));
@@ -374,8 +414,7 @@ export async function updateContentUnitOrder(slugs: string[]) {
 
   await Promise.all(
     orderedUnits.map(async (unit, index) => {
-      const meta = normalizeMeta({ ...unit.meta, sortOrder: index }, unit.dir);
-      await writeJson(path.join(unit.dir, "meta.json"), meta);
+      await updateContentUnitMeta(unit.slug, { sortOrder: index });
     })
   );
 
@@ -473,86 +512,90 @@ export async function createContentUnit(input: GenerateInput) {
 }
 
 export async function updateContentUnit(slug: string, input: Partial<GenerateInput>) {
-  const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-  if (!unit) return null;
-  const now = new Date().toISOString();
-  const files = [...unit.files];
+  return mutateUnit(slug, async () => {
+    const unit = await getContentUnitBySlug(slug, { includeHidden: true });
+    if (!unit) return null;
+    const now = new Date().toISOString();
+    const files = [...unit.files];
 
-  if (input.file) {
-    const storedName = storedFileName(input.file.name);
-    await writeFile(path.join(unit.dir, storedName), input.file.buffer);
-    files.splice(0, files.length, {
-      originalName: input.file.name,
-      storedName,
-      fileType: input.file.fileType,
-      fileSize: input.file.fileSize,
-      fileSizeText: formatSize(input.file.fileSize),
-      downloadPath: `/api/content-units/${slug}/download`,
-      uploadedAt: now,
+    if (input.file) {
+      const storedName = storedFileName(input.file.name);
+      await writeFile(path.join(unit.dir, storedName), input.file.buffer);
+      files.splice(0, files.length, {
+        originalName: input.file.name,
+        storedName,
+        fileType: input.file.fileType,
+        fileSize: input.file.fileSize,
+        fileSizeText: formatSize(input.file.fileSize),
+        downloadPath: `/api/content-units/${slug}/download`,
+        uploadedAt: now,
+      });
+    }
+
+    const relatedMap = normalizeRelated({
+      previous: input.previous ?? unit.relatedMap.previous,
+      next: input.next ?? unit.relatedMap.next,
+      related: input.related ?? unit.relatedMap.related,
+      sameTopic: input.sameTopic ?? unit.relatedMap.sameTopic,
+      recommended: input.recommended ?? unit.relatedMap.recommended,
     });
-  }
+    const tags = input.tags?.length ? input.tags : unit.tags;
+    const meta: ContentUnitMeta = {
+      ...unit.meta,
+      title: input.title || unit.meta.title,
+      category: input.category || unit.meta.category,
+      topic: input.topic || unit.meta.topic,
+      folderPath: input.folderPath === undefined ? unit.meta.folderPath : normalizeFolderPath(input.folderPath),
+      stage: input.stage ?? unit.meta.stage,
+      status: input.status || unit.meta.status,
+      isVip: typeof input.isVip === "boolean" ? input.isVip : unit.meta.isVip,
+      pointsCost: input.pointsCost === undefined ? unit.meta.pointsCost : normalizeMaterialPointsCost(input.pointsCost),
+      tags,
+      summary: input.summary ?? unit.meta.summary,
+      organizationLevels: input.organizationLevels ?? unit.meta.organizationLevels,
+      workSections: input.workSections ?? unit.meta.workSections,
+      workItems: input.workItems ?? unit.meta.workItems,
+      downloadable: Boolean(files.length),
+      fileType: files[0]?.fileType || unit.meta.fileType,
+      relatedArticles: [...relatedMap.previous, ...relatedMap.next, ...relatedMap.related],
+      hidden: input.status === "hidden",
+      updatedAt: now,
+    };
+    const network = normalizeNetwork({}, meta, relatedMap);
 
-  const relatedMap = normalizeRelated({
-    previous: input.previous ?? unit.relatedMap.previous,
-    next: input.next ?? unit.relatedMap.next,
-    related: input.related ?? unit.relatedMap.related,
-    sameTopic: input.sameTopic ?? unit.relatedMap.sameTopic,
-    recommended: input.recommended ?? unit.relatedMap.recommended,
+    await writeFile(path.join(unit.dir, "introduction.md"), input.introduction ?? unit.introduction, "utf8");
+    await writeFile(path.join(unit.dir, "article.md"), input.introduction ?? unit.article, "utf8");
+    await writeFile(path.join(unit.dir, "summary.md"), input.summary ?? unit.summary, "utf8");
+    await writeFile(path.join(unit.dir, "policy.md"), input.policyBasis ?? unit.policyBasis, "utf8");
+    await writeFile(path.join(unit.dir, "legal_basis.md"), input.policyBasis ?? unit.legalBasis, "utf8");
+    await writeFile(path.join(unit.dir, "scenarios.md"), input.scenarios ?? unit.scenarios, "utf8");
+    await writeFile(path.join(unit.dir, "process.md"), input.process ?? unit.process, "utf8");
+    await writeFile(path.join(unit.dir, "notices.md"), input.notices ?? unit.notices, "utf8");
+    await writeFile(path.join(unit.dir, "faq.md"), input.faq ?? unit.faq, "utf8");
+    await writeFile(path.join(unit.dir, "download_note.md"), input.downloadNote ?? unit.downloadNote, "utf8");
+    await writeFile(path.join(unit.dir, "note.md"), input.note ?? unit.note, "utf8");
+    await writeJson(path.join(unit.dir, "related.json"), relatedMap);
+    await writeJson(path.join(unit.dir, "network.json"), network);
+    await writeJson(path.join(unit.dir, "seo.json"), {
+      seoTitle: input.seoTitle || unit.seo.seoTitle || meta.title,
+      seoDescription: input.seoDescription || unit.seo.seoDescription || meta.summary,
+      seoKeywords: input.seoKeywords?.length ? input.seoKeywords : unit.seo.seoKeywords || tags,
+    });
+    await writeJson(path.join(unit.dir, "files.json"), files);
+    await writeJson(path.join(unit.dir, "tags.json"), tags);
+    await writeJson(path.join(unit.dir, "meta.json"), meta);
+    return getContentUnitBySlug(slug, { includeHidden: true });
   });
-  const tags = input.tags?.length ? input.tags : unit.tags;
-  const meta: ContentUnitMeta = {
-    ...unit.meta,
-    title: input.title || unit.meta.title,
-    category: input.category || unit.meta.category,
-    topic: input.topic || unit.meta.topic,
-    folderPath: input.folderPath === undefined ? unit.meta.folderPath : normalizeFolderPath(input.folderPath),
-    stage: input.stage ?? unit.meta.stage,
-    status: input.status || unit.meta.status,
-    isVip: typeof input.isVip === "boolean" ? input.isVip : unit.meta.isVip,
-    pointsCost: input.pointsCost === undefined ? unit.meta.pointsCost : normalizeMaterialPointsCost(input.pointsCost),
-    tags,
-    summary: input.summary ?? unit.meta.summary,
-    organizationLevels: input.organizationLevels ?? unit.meta.organizationLevels,
-    workSections: input.workSections ?? unit.meta.workSections,
-    workItems: input.workItems ?? unit.meta.workItems,
-    downloadable: Boolean(files.length),
-    fileType: files[0]?.fileType || unit.meta.fileType,
-    relatedArticles: [...relatedMap.previous, ...relatedMap.next, ...relatedMap.related],
-    hidden: input.status === "hidden",
-    updatedAt: now,
-  };
-  const network = normalizeNetwork({}, meta, relatedMap);
-
-  await writeFile(path.join(unit.dir, "introduction.md"), input.introduction ?? unit.introduction, "utf8");
-  await writeFile(path.join(unit.dir, "article.md"), input.introduction ?? unit.article, "utf8");
-  await writeFile(path.join(unit.dir, "summary.md"), input.summary ?? unit.summary, "utf8");
-  await writeFile(path.join(unit.dir, "policy.md"), input.policyBasis ?? unit.policyBasis, "utf8");
-  await writeFile(path.join(unit.dir, "legal_basis.md"), input.policyBasis ?? unit.legalBasis, "utf8");
-  await writeFile(path.join(unit.dir, "scenarios.md"), input.scenarios ?? unit.scenarios, "utf8");
-  await writeFile(path.join(unit.dir, "process.md"), input.process ?? unit.process, "utf8");
-  await writeFile(path.join(unit.dir, "notices.md"), input.notices ?? unit.notices, "utf8");
-  await writeFile(path.join(unit.dir, "faq.md"), input.faq ?? unit.faq, "utf8");
-  await writeFile(path.join(unit.dir, "download_note.md"), input.downloadNote ?? unit.downloadNote, "utf8");
-  await writeFile(path.join(unit.dir, "note.md"), input.note ?? unit.note, "utf8");
-  await writeJson(path.join(unit.dir, "related.json"), relatedMap);
-  await writeJson(path.join(unit.dir, "network.json"), network);
-  await writeJson(path.join(unit.dir, "seo.json"), {
-    seoTitle: input.seoTitle || unit.seo.seoTitle || meta.title,
-    seoDescription: input.seoDescription || unit.seo.seoDescription || meta.summary,
-    seoKeywords: input.seoKeywords?.length ? input.seoKeywords : unit.seo.seoKeywords || tags,
-  });
-  await writeJson(path.join(unit.dir, "files.json"), files);
-  await writeJson(path.join(unit.dir, "tags.json"), tags);
-  await writeJson(path.join(unit.dir, "meta.json"), meta);
-  return getContentUnitBySlug(slug, { includeHidden: true });
 }
 
 export async function updateContentUnitMeta(slug: string, updates: Partial<ContentUnitMeta>) {
-  const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-  if (!unit) return null;
-  const meta = normalizeMeta({ ...unit.meta, ...updates, updatedAt: new Date().toISOString() }, unit.dir);
-  await writeJson(path.join(unit.dir, "meta.json"), meta);
-  return { ...unit, meta };
+  return mutateUnit(slug, async () => {
+    const unit = await getContentUnitBySlug(slug, { includeHidden: true });
+    if (!unit) return null;
+    const meta = normalizeMeta({ ...unit.meta, ...updates }, unit.dir);
+    await writeJson(path.join(unit.dir, "meta.json"), meta);
+    return { ...unit, meta };
+  });
 }
 
 export async function deleteContentUnit(slug: string) {
@@ -580,12 +623,15 @@ export async function getContentUnitTemplatePath(slug: string) {
 }
 
 export async function updateContentUnitCounter(slug: string, type: "download" | "favorite" | "downloadCount" | "favoriteCount", delta = 1) {
-  const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-  if (!unit) return null;
-  const key = type === "download" || type === "downloadCount" ? "downloadCount" : "favoriteCount";
-  const nextValue = Math.max(0, Number(unit.meta[key] || 0) + delta);
-  const updated = await updateContentUnitMeta(slug, { [key]: nextValue } as Partial<ContentUnitMeta>);
-  return updated?.meta ?? null;
+  return mutateUnit(slug, async () => {
+    const unit = await getContentUnitBySlug(slug, { includeHidden: true });
+    if (!unit) return null;
+    const key = type === "download" || type === "downloadCount" ? "downloadCount" : "favoriteCount";
+    const nextValue = Math.max(0, Number(unit.meta[key] || 0) + delta);
+    const meta = { ...unit.meta, [key]: nextValue };
+    await writeJson(path.join(unit.dir, "meta.json"), meta);
+    return meta;
+  });
 }
 
 export function contentUnitToMaterial(unit: ContentUnit): Material {

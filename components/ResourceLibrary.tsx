@@ -10,10 +10,10 @@ import type { Material } from "@/lib/types";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { DimmoCompanion } from "@/components/DimmoCompanion";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
-import { useAuth } from "@/contexts/AuthContext";
 import { MaterialDownloadStatus, DownloadQuotaNotice } from "@/components/MaterialDownloadStatus";
+import { MaterialDownloadConfirmation } from "@/components/MaterialDownloadConfirmation";
 import { useMaterialPoints } from "@/components/useMaterialPoints";
-import { materialDownloadLabel, type MaterialPointQuote } from "@/lib/material-point-view";
+import { type MaterialPointQuote } from "@/lib/material-point-view";
 import { InsufficientPointsNotice, type PointsShortfall } from "@/components/InsufficientPointsNotice";
 
 const topicAllOption = "全部专题";
@@ -41,7 +41,6 @@ export function ResourceLibrary({
   libraryOnly?: boolean;
 }) {
   const router = useRouter();
-  const { profile } = useAuth();
   const pointInfo = useMaterialPoints();
   const legacyBenefits = pointInfo.state?.legacyBenefits === true;
   const [quotaError, setQuotaError] = useState("");
@@ -64,6 +63,7 @@ export function ResourceLibrary({
   const [batchQuote, setBatchQuote] = useState<MaterialPointQuote | null>(null);
   const [quoteError, setQuoteError] = useState("");
   const [isQuoting, setIsQuoting] = useState(false);
+  const [downloadCandidate, setDownloadCandidate] = useState<Material | null>(null);
   const [downloadingSlug, setDownloadingSlug] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState("");
 
@@ -235,13 +235,13 @@ export function ResourceLibrary({
     setMessage(result.favorited ? "已收藏。" : "已取消收藏。");
   }
 
-  async function download(material: Material) {
+  async function download(material: Material, expectedPoints: number) {
     if (downloadingSlug) return;
     setDownloadingSlug(getArticleSlug(material));
     setShortfall(null);
     setQuotaError("");
     setMessage("正在准备下载...");
-    const result = await downloadMaterialFile(material);
+    const result = await downloadMaterialFile(material, expectedPoints);
     setDownloadingSlug(null);
     if (!result.ok) {
       if (result.dailyLimitExceeded) { setQuotaError(result.error || "今日下载名额不足。"); setMessage(""); return; }
@@ -362,6 +362,7 @@ export function ResourceLibrary({
 
   return (
     <div className="xuan-shell">
+      {downloadCandidate ? <MaterialDownloadConfirmation material={downloadCandidate} onClose={() => setDownloadCandidate(null)} onConfirm={(points) => { const selected = downloadCandidate; setDownloadCandidate(null); void download(selected, points); }} /> : null}
       <section className={libraryOnly ? "bg-white" : "bg-brand-paper"}>
         <div className={`mx-auto px-5 ${libraryOnly ? "max-w-6xl py-8 lg:px-8 lg:py-10" : "max-w-5xl py-12 text-center lg:px-8 lg:py-16"}`}>
           {libraryOnly ? (
@@ -600,7 +601,7 @@ export function ResourceLibrary({
               const isFavorite = favoriteSlugs.includes(slug);
               const isSelected = selectedSlugs.includes(slug);
               return (
-                <article key={material.id} className={`grid gap-4 p-5 transition-colors duration-150 md:grid-cols-[minmax(0,1fr)_240px] md:items-center ${isSelected ? "bg-[#fff4f5]" : "hover:bg-[#fafbfc]"}`}>
+                <article key={material.id} className={`grid gap-4 p-5 transition-colors duration-150 md:grid-cols-[minmax(0,1fr)_150px] md:items-center ${isSelected ? "bg-[#fff4f5]" : "hover:bg-[#fafbfc]"}`}>
                   <div className="flex min-w-0 items-start gap-4">
                     {libraryOnly && canBatchDownload ? (
                       <label className={`mt-3 flex h-5 w-5 shrink-0 items-center justify-center ${material.file_url ? "cursor-pointer" : "cursor-not-allowed opacity-35"}`}>
@@ -616,7 +617,6 @@ export function ResourceLibrary({
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
-                      <span>{legacyBenefits ? "原会员权益 · 免扣积分" : pointInfo.state?.unlockedSlugs.includes(slug) ? "已解锁 · 免扣积分" : `${material.points_cost ?? 1} 积分`}</span>
                       {material.downloadable || material.file_url ? null : <span>仅查看</span>}
                       {hasFillingGuide(material) ? <span className="text-[#7d6268]">含填写说明</span> : null}
                     </div>
@@ -624,7 +624,7 @@ export function ResourceLibrary({
                   </div>
                   <div className="flex items-center gap-2 md:justify-end">
                     <button type="button" onClick={() => onToggleFavorite(material)} aria-label={isFavorite ? "取消收藏" : "收藏资料"} className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-line text-lg text-[#a7793b] transition-[border-color,background-color,transform] duration-150 ease-out hover:border-[#e2c693] hover:bg-[#fffaf0] active:scale-[0.97]">{isFavorite ? "★" : "☆"}</button>
-                    <button type="button" onClick={() => download(material)} disabled={Boolean(downloadingSlug) || Boolean(profile && !pointInfo.state && !pointInfo.error)} className="disabled:cursor-not-allowed disabled:opacity-50 min-h-11 rounded-xl border border-[#dfe3e7] bg-[#f4f5f6] px-4 py-2.5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.97]">{downloadingSlug === slug ? "正在下载…" : profile && !pointInfo.state ? (pointInfo.error ? "重试下载" : "正在核验积分…") : materialDownloadLabel(pointInfo.state, slug, material.points_cost ?? 1, material.member_only)}</button>
+                    <button type="button" onClick={() => setDownloadCandidate(material)} disabled={Boolean(downloadingSlug)} className="disabled:cursor-not-allowed disabled:opacity-50 min-h-11 rounded-xl border border-[#eee1c7] bg-[#fff9ec] px-5 py-2.5 text-sm font-medium text-[#80612e] transition-[background-color,border-color,transform] duration-150 ease-out hover:border-[#e3c98f] hover:bg-[#fff1d2] active:scale-[0.97]">{downloadingSlug === slug ? "下载中…" : "下载"}</button>
                   </div>
                 </article>
               );

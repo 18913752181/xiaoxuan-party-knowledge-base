@@ -53,7 +53,7 @@ async function main() {
     "@/lib/material-point-view": view,
     "@/lib/content-units": { getContentUnitBySlug: async (slug) => slug === "missing" ? null : { meta: { pointsCost: 3 } }, getContentUnitDownloadFilePath: async () => ({ path: "file.docx" }) }
   });
-  const quoteRequest = (slugs) => new Request("http://localhost/api/material-points", { method: "POST", body: JSON.stringify({ slugs, cost: 0, userId: "another-user" }) });
+  const quoteRequest = (slugs, batch = true) => new Request("http://localhost/api/material-points", { method: "POST", body: JSON.stringify({ slugs, batch, cost: 0, userId: "another-user" }) });
   let response = await api.POST(quoteRequest(["old", "content-new", "new"]));
   assert.equal(response.status, 200);
   assert.match(response.headers.get("cache-control"), /no-store/);
@@ -66,6 +66,9 @@ async function main() {
   assert.equal((await (await api.POST(quoteRequest(["new"]))).json()).requiredPoints, 0);
   current = { ...state, paid: false };
   assert.equal((await api.POST(quoteRequest(["new"]))).status, 403);
+  assert.equal((await api.POST(quoteRequest(["new"], false))).status, 200, "An ordinary legacy single download keeps its existing point-based permission");
+  current = { ...state, policy: "annual_daily", canDownload: false };
+  assert.equal((await api.POST(quoteRequest(["new"], false))).status, 403, "New monthly members cannot bypass annual access through a single quote");
   signedIn = false;
   assert.equal((await api.GET()).status, 401);
   assert.equal((await api.POST(quoteRequest(["new"]))).status, 401);

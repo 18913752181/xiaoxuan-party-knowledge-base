@@ -190,10 +190,11 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
   return { ok: true, chargedPoints: Number(response.headers.get("X-Material-Points-Charged") || 0), pointsBalance: Number(response.headers.get("X-Material-Points-Balance") || 0), dailyRemaining: response.headers.has("X-Material-Daily-Remaining") ? Number(response.headers.get("X-Material-Daily-Remaining")) : undefined };
 }
 
-export async function downloadMaterialFile(material: Material): Promise<DownloadResult> {
+export async function downloadMaterialFile(material: Material, expectedPoints?: number): Promise<DownloadResult> {
   if (!material.file_url) return { ok: false, error: "该资料暂未上传可下载文件。" };
   let result: DownloadResult;
-  try { result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title); }
+  const url = expectedPoints === undefined ? material.file_url : `${material.file_url}${material.file_url.includes("?") ? "&" : "?"}expectedPoints=${expectedPoints}`;
+  try { result = await downloadAuthenticatedUrl(url, material.file_name || material.title); }
   catch { result = { ok: false, error: "网络异常，请重试。若资料已解锁，再次下载不会重复扣分。" }; }
   if (!result.ok) window.dispatchEvent(new Event("material-points-changed"));
   if (result.ok) await rememberDownload(material);
