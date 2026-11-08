@@ -421,7 +421,7 @@ export function ResourceLibrary({
         </div>
       </section>
 
-      {!libraryOnly && !showSearchMode && !isLoading && materials.length >= 1000 ? (
+      {!libraryOnly && !showSearchMode && !isLoading && materials.length > 0 ? (
         <div className="bg-white">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-x-7 gap-y-2 px-5 py-4 text-sm text-neutral-600 lg:px-8">
             <span><b className="font-semibold text-brand-ink">{magnitudeLabel(materials.length)}</b> 份常用资料</span>
