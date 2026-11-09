@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { WechatAvatarImage } from "@/components/WechatAvatarImage";
+import { wechatAvatarUrl } from "@/lib/wechat-profile";
 
 export const AVATAR_OPTIONS = [
   { key: "fox", name: "小狐狸", src: "/images/avatars/avatar-fox.webp" },
@@ -39,15 +41,17 @@ export function resolveAvatarKey(userId?: string, savedKey?: string | null): Ava
 type ProfileAvatarProps = {
   userId?: string;
   avatarKey?: string | null;
+  avatarUrl?: string | null;
   size?: number;
   className?: string;
   title?: string;
 };
 
 /** 直接使用 ip-as-logo 参考图中的独立角色，首次登录按用户 ID 稳定随机分配。 */
-export function ProfileAvatar({ userId, avatarKey, size = 64, className = "", title = "用户头像" }: ProfileAvatarProps) {
+export function ProfileAvatar({ userId, avatarKey, avatarUrl, size = 64, className = "", title = "用户头像" }: ProfileAvatarProps) {
   const key = resolveAvatarKey(userId, avatarKey);
   const avatar = AVATAR_OPTIONS.find((item) => item.key === key) || AVATAR_OPTIONS[0];
+  const wechatImage = avatarKey ? null : wechatAvatarUrl(avatarUrl);
 
   return (
     <span
@@ -62,6 +66,7 @@ export function ProfileAvatar({ userId, avatarKey, size = 64, className = "", ti
         className="scale-[1.07] object-cover"
         priority={size >= 64}
       />
+      {wechatImage ? <WechatAvatarImage key={wechatImage} src={wechatImage} /> : null}
     </span>
   );
 }

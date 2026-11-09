@@ -13,6 +13,7 @@ export default function UserPage() {
   const { refreshProfile } = useAuth();
   const [state, setState] = useState<PageState>("loading");
   const [email, setEmail] = useState("");
+  const [nickname, setNickname] = useState("");
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
   const [favorites, setFavorites] = useState<FavoriteRow[]>([]);
@@ -24,6 +25,7 @@ export default function UserPage() {
   const [wechatMessageKind, setWechatMessageKind] = useState<"ok" | "error">("ok");
   const [unbinding, setUnbinding] = useState(false);
   const [avatarKey, setAvatarKey] = useState<AvatarKey | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [pendingAvatarKey, setPendingAvatarKey] = useState<AvatarKey | null>(null);
   const [savingAvatar, setSavingAvatar] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState("");
@@ -71,7 +73,10 @@ export default function UserPage() {
             setMemberStatus(profileData.profile.member_status || "free");
             setMemberExpiresAt(profileData.profile.member_expires_at || null);
             setWechatBound(Boolean(profileData.profile.wechat_bound));
-            const resolvedAvatarKey = resolveAvatarKey(data.user.id, profileData.profile.avatar_key);
+            setNickname(profileData.profile.nickname || "");
+            const importedAvatar = profileData.profile.avatar_url || null;
+            const resolvedAvatarKey = importedAvatar ? null : resolveAvatarKey(data.user.id, profileData.profile.avatar_key);
+            setAvatarUrl(importedAvatar);
             setAvatarKey(resolvedAvatarKey);
             setPendingAvatarKey(resolvedAvatarKey);
           }
@@ -92,6 +97,8 @@ export default function UserPage() {
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
     setEmail("");
+    setNickname("");
+    setAvatarUrl(null);
     setUserId("");
     setFavorites([]);
     setState("guest");
@@ -145,6 +152,7 @@ export default function UserPage() {
       }
 
       setAvatarKey(data.avatar_key);
+      setAvatarUrl(null);
       setPendingAvatarKey(data.avatar_key);
       await refreshProfile();
       window.dispatchEvent(new CustomEvent("profile-avatar-updated"));
@@ -187,11 +195,11 @@ export default function UserPage() {
           <>
             <div className="mt-6 rounded-xl border border-[#cfe4d5] bg-[#f1f8f3] px-5 py-4">
               <div className="flex flex-wrap gap-5">
-                <ProfileAvatar userId={userId} avatarKey={pendingAvatarKey || avatarKey} size={76} />
+                <ProfileAvatar userId={userId} avatarKey={pendingAvatarKey || avatarKey} avatarUrl={avatarUrl} size={76} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-neutral-600">当前用户</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <p className="text-xl font-semibold text-brand-ink">{maskAccountEmail(email)}</p>
+                    <p className="break-all text-xl font-semibold text-brand-ink">{isWechatOnlyAccount && nickname ? nickname : maskAccountEmail(email)}</p>
                     {memberActive ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#c79b52]/15 px-3 py-1 text-xs font-semibold text-[#8a6b50] ring-1 ring-[#c79b52]/40">
                     ★ 会员

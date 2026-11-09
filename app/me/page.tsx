@@ -44,7 +44,7 @@ export default function MePage() {
     <section className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
       <div className="rounded-[2rem] border border-[#ebe5dc] bg-white p-8 shadow-sm">
         <div className="flex flex-wrap items-center gap-4">
-          <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} size={64} />
+          <ProfileAvatar userId={profile.id} avatarKey={profile.avatar_key} avatarUrl={profile.avatar_url} size={64} />
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
             <p className={`mt-2 text-sm ${memberActive ? "text-neutral-400" : "text-neutral-500"}`}>
@@ -53,9 +53,7 @@ export default function MePage() {
           </div>
         </div>
         {result?.error ? <p className="mt-4 text-sm text-brand-red">{result.error}</p> : null}
-        {access?.canDownload ? (
-          <p className="mt-4 text-sm text-neutral-600">可下载全站资料{access.downloadExpiresAt ? " · 下载权限有效期至 " + access.downloadExpiresAt : ""}</p>
-        ) : access ? (
+        {access && !access.canDownload ? (
           <Link href="/membership/payment" className="mt-4 inline-flex rounded-xl bg-[#fff4cf] px-4 py-2 text-sm font-medium text-[#6e5618]">开通资料库年卡</Link>
         ) : null}
       </div>

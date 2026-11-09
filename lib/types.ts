@@ -5,6 +5,7 @@ export type Profile = {
   nickname: string;
   email: string;
   avatar_key?: string | null;
+  avatar_url?: string | null;
   phone?: string | null;
   member_status: MemberStatus;
   member_expires_at?: string | null;

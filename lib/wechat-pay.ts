@@ -249,31 +249,54 @@ function siteUrl() {
   return (env("NEXT_PUBLIC_SITE_URL") || "https://xiaoxuanvip.com").replace(/\/$/, "");
 }
 
-export function wechatOauthUrl(state: string, redirectPath = "/api/payments/wechat/oauth/callback") {
+export function wechatOauthUrl(
+  state: string,
+  redirectPath = "/api/payments/wechat/oauth/callback",
+  scope: "snsapi_base" | "snsapi_userinfo" = "snsapi_base"
+) {
   const params = new URLSearchParams({
     appid: officialAppId(),
     redirect_uri: `${siteUrl()}${redirectPath}`,
     response_type: "code",
-    scope: "snsapi_base",
+    scope,
     state
   });
   return `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
 }
 
-/** 用授权 code 换取用户在当前服务号下的 openid（snsapi_base 静默授权） */
-export async function fetchWechatOpenid(code: string) {
+/** 用一次性授权 code 换取当前服务号下的用户身份。 */
+export async function exchangeWechatOauthCode(code: string) {
   const params = new URLSearchParams({
     appid: officialAppId(),
     secret: officialAppSecret(),
     code,
     grant_type: "authorization_code"
   });
-  const response = await fetch(`https://api.weixin.qq.com/sns/oauth2/access_token?${params.toString()}`, { cache: "no-store" });
+  const response = await fetch(`https://api.weixin.qq.com/sns/oauth2/access_token?${params.toString()}`, { cache: "no-store", signal: AbortSignal.timeout(10000) });
   const result = await response.json();
-  if (!response.ok || !result.openid) {
+  if (!response.ok || typeof result.openid !== "string" || !result.openid) {
     throw new Error(result.errmsg ? `微信授权失败：${result.errmsg}` : "微信授权失败。");
   }
-  return result.openid as string;
+  return {
+    openid: result.openid as string,
+    accessToken: typeof result.access_token === "string" ? result.access_token : "",
+    userInfoGranted: typeof result.scope === "string" && result.scope.split(/[ ,]+/).includes("snsapi_userinfo")
+  };
+}
+
+export async function fetchWechatOpenid(code: string) {
+  return (await exchangeWechatOauthCode(code)).openid;
+}
+
+export async function fetchWechatOauthProfile(identity: Awaited<ReturnType<typeof exchangeWechatOauthCode>>) {
+  if (!identity.userInfoGranted || !identity.accessToken) return null;
+  const params = new URLSearchParams({ access_token: identity.accessToken, openid: identity.openid, lang: "zh_CN" });
+  const response = await fetch(`https://api.weixin.qq.com/sns/userinfo?${params.toString()}`, {
+    cache: "no-store", signal: AbortSignal.timeout(5000)
+  });
+  const result = await response.json();
+  if (!response.ok || result.errcode || result.openid !== identity.openid) return null;
+  return { nickname: result.nickname as unknown, avatarUrl: result.headimgurl as unknown };
 }
 
 export async function createJsapiOrder(input: {

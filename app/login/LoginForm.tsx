@@ -20,6 +20,8 @@ export default function LoginForm() {
   const [verificationCode, setVerificationCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   const [inWechat, setInWechat] = useState(false);
+  const [useWechatName, setUseWechatName] = useState(false);
+  const [useWechatAvatar, setUseWechatAvatar] = useState(false);
   const [loading, setLoading] = useState<"send" | "verify" | "logout" | "">("");
   const [countdown, setCountdown] = useState(0);
   const [message, setMessage] = useState("");
@@ -160,7 +162,10 @@ export default function LoginForm() {
 
   function startWechatLogin() {
     const target = safeRedirectPath(searchParams.get("redirect")) || "/user";
-    window.location.href = `/api/auth/wechat?return=${encodeURIComponent(target)}`;
+    const params = new URLSearchParams({ return: target });
+    if (useWechatName) params.set("name", "1");
+    if (useWechatAvatar) params.set("avatar", "1");
+    window.location.href = `/api/auth/wechat?${params}`;
   }
 
   return (
@@ -200,6 +205,18 @@ export default function LoginForm() {
 
           {inWechat ? (
             <>
+              <fieldset className="mb-4 rounded-xl border border-brand-line px-4 py-2">
+                <legend className="px-1 text-sm font-medium text-brand-ink">首次注册时的资料（选填）</legend>
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
+                  <input type="checkbox" checked={useWechatName} onChange={(event) => setUseWechatName(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
+                  使用微信名称
+                </label>
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
+                  <input type="checkbox" checked={useWechatAvatar} onChange={(event) => setUseWechatAvatar(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
+                  使用微信头像
+                </label>
+                <p className="pb-2 text-xs leading-5 text-neutral-600">未勾选或微信未提供的项目会使用默认资料。已有账号的资料保持原样。</p>
+              </fieldset>
               <button
                 type="button"
                 onClick={startWechatLogin}
@@ -210,7 +227,7 @@ export default function LoginForm() {
                     <path d="M9.5 4C5.36 4 2 6.91 2 10.5c0 2.02 1.15 3.83 2.93 5.02l-.73 2.56 2.9-1.52c.42.1.86.17 1.32.2-.12-.45-.19-.92-.19-1.42 0-3.26 3.13-5.9 7-5.9.24 0 .48.01.71.03C15.32 6.42 12.72 4 9.5 4zM7.3 8.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zm4.4 0a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7zM15.5 11c-3.31 0-6 2.24-6 5s2.69 5 6 5c.62 0 1.22-.08 1.78-.23l2.47 1.3-.62-2.18A4.72 4.72 0 0 0 22 16c0-2.76-3.19-5-6.5-5zm-2.2 2.55a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4.4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z" />
                   </svg>
                 </span>
-                微信一键登录
+                微信登录 / 注册
               </button>
               <p className="mt-2.5 text-center text-xs leading-6 text-neutral-400">
                 无需输入邮箱，授权后自动登录 / 注册

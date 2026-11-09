@@ -11,14 +11,17 @@ export const ACCESS_COOKIE = "xx_access_token";
 export const REFRESH_COOKIE = "xx_refresh_token";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
+type SessionUser = {
+  id: string;
+  email?: string;
+  app_metadata?: { wechat_avatar_url?: unknown };
+};
+
 type AuthTokens = {
   access_token: string;
   refresh_token: string;
   expires_in?: number;
-  user?: {
-    id: string;
-    email?: string;
-  };
+  user?: SessionUser;
 };
 
 function authHeaders(accessToken?: string) {
@@ -107,7 +110,7 @@ async function getUser(accessToken: string) {
     cache: "no-store"
   });
   if (!response.ok) return null;
-  return response.json() as Promise<{ id: string; email?: string }>;
+  return response.json() as Promise<SessionUser>;
 }
 
 // Refresh-token single-flight + rotation grace cache.

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
+import { wechatAvatarUrl } from "@/lib/wechat-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,11 @@ export async function GET() {
   // openid 属于敏感标识，只向前端暴露“是否已绑定微信”
   const { wechat_openid, points_balance: _historicalPoints, ...publicProfile } = profile as Record<string, unknown>;
   const response = NextResponse.json({
-    profile: { ...publicProfile, wechat_bound: Boolean(wechat_openid) },
+    profile: {
+      ...publicProfile,
+      wechat_bound: Boolean(wechat_openid),
+      avatar_url: publicProfile.avatar_key ? null : wechatAvatarUrl(session.user.app_metadata?.wechat_avatar_url)
+    },
     error: ""
   }, { headers: { "Cache-Control": "private, no-store" } });
   if (session.refreshedTokens) applyAuthCookies(response, session.refreshedTokens);

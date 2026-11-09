@@ -24,7 +24,7 @@ function navItemActive(href: string, pathname: string, hash: string) {
 export function SiteHeader() {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
-  const [sessionProfile, setSessionProfile] = useState<{ id: string; email: string; avatar_key?: string | null } | null>(null);
+  const [sessionProfile, setSessionProfile] = useState<{ id: string; email: string; avatar_key?: string | null; avatar_url?: string | null } | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export function SiteHeader() {
               title="我的"
               aria-label="进入我的页面"
             >
-              <ProfileAvatar userId={sessionProfile.id} avatarKey={sessionProfile.avatar_key} size={38} />
+              <ProfileAvatar userId={sessionProfile.id} avatarKey={sessionProfile.avatar_key} avatarUrl={sessionProfile.avatar_url} size={38} />
             </Link>
           ) : (
             <Link href="/login" className="rounded-xl bg-brand-red px-4 py-2 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">登录</Link>

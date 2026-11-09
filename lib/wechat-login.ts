@@ -5,7 +5,7 @@ import { authFetch, recordLoginEvent } from "@/lib/server-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
- * 微信一键登录（服务号网页授权 snsapi_base）。
+ * 微信一键登录（服务号网页授权）。
  *
  * 两种账号形态：
  * 1. 纯微信账号：微信用户没有邮箱，账号系统（Supabase Auth）以邮箱为主键，
@@ -114,25 +114,32 @@ async function boundAccountSignIn(email: string): Promise<AuthTokens | null> {
   }
 }
 
-async function createWechatUser(email: string, password: string, openid: string) {
+type RegistrationProfile = { nickname: string | null; avatarUrl: string | null };
+
+async function createWechatUser(email: string, password: string, openid: string, profile: RegistrationProfile) {
   const admin = getSupabaseAdmin();
-  const { error } = await admin.auth.admin.createUser({
+  const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { provider: "wechat", wechat_openid: openid }
+    user_metadata: { provider: "wechat", wechat_openid: openid, nickname: profile.nickname || "微信用户" },
+    ...(profile.avatarUrl ? { app_metadata: { wechat_avatar_url: profile.avatarUrl } } : {})
   });
   // 并发或重试导致“用户已存在”不算失败，后续直接走密码登录
   if (error && !/already|exists|duplicate/i.test(error.message)) {
     throw new Error(error.message);
   }
+  return data?.user?.id;
 }
 
 /**
  * 用微信 openid 登录（首次自动注册），返回 Supabase 会话令牌。
  * 失败抛错，由调用方转成用户可读提示。
  */
-export async function loginWithWechatOpenid(openid: string): Promise<AuthTokens> {
+export async function loginWithWechatOpenid(
+  openid: string,
+  loadRegistrationProfile?: () => Promise<RegistrationProfile>
+): Promise<AuthTokens> {
   // 该微信已绑定邮箱账号：直接登录邮箱账号，会员/收藏等全部沿用
   const binding = await findWechatBinding(openid);
   if (binding && !binding.isPseudoAccount) {
@@ -152,20 +159,26 @@ export async function loginWithWechatOpenid(openid: string): Promise<AuthTokens>
   const password = derivedPassword(openid);
 
   let tokens = await passwordSignIn(email, password);
+  let newUserId: string | undefined;
+  let registrationProfile: RegistrationProfile = { nickname: null, avatarUrl: null };
   if (!tokens) {
-    await createWechatUser(email, password, openid);
+    if (!binding && loadRegistrationProfile) registrationProfile = await loadRegistrationProfile();
+    newUserId = await createWechatUser(email, password, openid, registrationProfile);
     tokens = await passwordSignIn(email, password);
   }
   if (!tokens || !tokens.user?.id) {
     throw new Error("微信登录失败，请稍后重试。");
   }
 
-  // 补一份 profiles 记录（存在则只更新邮箱/昵称/openid，不动会员等字段）
+  // 只在首次创建时应用资料选择，重新登录不覆盖已有昵称和头像。
   try {
     const admin = getSupabaseAdmin();
     await admin
       .from("profiles")
-      .upsert({ id: tokens.user.id, email, nickname: "微信用户", wechat_openid: openid }, { onConflict: "id" });
+      .upsert({
+        id: tokens.user.id, email, wechat_openid: openid,
+        ...(newUserId === tokens.user.id ? { nickname: registrationProfile.nickname || "微信用户" } : {})
+      }, { onConflict: "id" });
   } catch {
     // 资料记录失败不影响登录
   }
