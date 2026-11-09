@@ -41,7 +41,7 @@ export function ResourceLibrary({
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(initialMaterials.length === 0);
   const [page, setPage] = useState(1);
-  const [memberOnlyMaterial, setMemberOnlyMaterial] = useState<Material | null>(null);
+  const [showMembershipNotice, setShowMembershipNotice] = useState(false);
   const [supportMaterial, setSupportMaterial] = useState<Material | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("updated");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
@@ -226,7 +226,7 @@ export function ResourceLibrary({
     setDownloadingSlug(null);
     if (!result.ok) {
       if (result.membershipRequired) {
-        setMemberOnlyMaterial(material);
+        setShowMembershipNotice(true);
         setMessage("");
         return;
       }
@@ -263,7 +263,7 @@ export function ResourceLibrary({
 
     setIsBatchDownloading(true);
     setMessage("正在打包资料，请稍候…");
-    setMemberOnlyMaterial(null);
+    setShowMembershipNotice(false);
     try {
       const result = await downloadMaterialsAsZip(selectedMaterials);
       const downloadedSlugs = result.downloaded.map(getArticleSlug);
@@ -273,9 +273,9 @@ export function ResourceLibrary({
       });
 
       const loginFailure = result.failures.find((failure) => failure.needsLogin);
-      const membershipFailure = result.failures.find((failure) => failure.membershipRequired);
+      const membershipFailure = result.failures.some((failure) => failure.membershipRequired);
       if (!result.ok && membershipFailure) {
-        setMemberOnlyMaterial(membershipFailure.material);
+        setShowMembershipNotice(true);
         setMessage("");
       } else if (!result.ok) {
         setMessage(result.error || "批量下载失败，请稍后重试。");
@@ -418,7 +418,7 @@ export function ResourceLibrary({
               {libraryOnly ? (
                 <>
                   <label htmlFor="topic-filter" className="sr-only">按专题筛选资料</label>
-                  <select id="topic-filter" value={topic} onChange={(event) => { setTopic(event.target.value); setMemberOnlyMaterial(null); }} className="h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 outline-none transition-colors focus:border-[#d9a6ac] focus:ring-2 focus:ring-[#f5d8db]">
+                  <select id="topic-filter" value={topic} onChange={(event) => { setTopic(event.target.value); setShowMembershipNotice(false); }} className="h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 outline-none transition-colors focus:border-[#d9a6ac] focus:ring-2 focus:ring-[#f5d8db]">
                     <option value={topicAllOption}>{topicAllOption}</option>
                     {Array.from(topicCounts.keys()).map((name) => <option key={name} value={name}>{name}</option>)}
                   </select>
@@ -442,7 +442,7 @@ export function ResourceLibrary({
                 <button
                   key={name}
                   type="button"
-                  onClick={() => { setTopic(name); setMemberOnlyMaterial(null); }}
+                  onClick={() => { setTopic(name); setShowMembershipNotice(false); }}
                   aria-pressed={topic === name}
                   className={`min-h-10 shrink-0 rounded-xl px-3.5 text-sm transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${topic === name ? "border border-brand-red bg-[#fff1f2] font-medium text-brand-red" : "border border-brand-line bg-white text-neutral-600 hover:border-[#d9a6ac] hover:bg-[#fafbfc]"}`}
                 >
@@ -512,13 +512,11 @@ export function ResourceLibrary({
             </div>
           ) : null}
 
-          {memberOnlyMaterial ? (
-            <div className="mt-5 rounded-3xl border-2 border-brand-red bg-[#fff8f8] px-6 py-10 text-center shadow-[0_12px_30px_rgba(166,62,71,0.06)]">
-              <span className="inline-flex rounded-full bg-brand-red px-4 py-1.5 text-sm font-semibold text-white">年卡专享下载</span>
-              <h3 className="mx-auto mt-5 max-w-2xl text-xl font-semibold leading-8 text-brand-ink">{displayMaterialTitle(memberOnlyMaterial.title)}</h3>
-              <p className="mt-4 text-base font-medium text-brand-red">开通资料库年卡，有效期内可下载全站资料。</p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <button type="button" onClick={() => setMemberOnlyMaterial(null)} className="rounded-xl border border-brand-line bg-white px-5 py-2.5 text-sm text-neutral-600 transition-colors hover:bg-[#fafbfc]">返回资料列表</button>
+          {showMembershipNotice ? (
+            <div className="mt-5 rounded-3xl border-2 border-brand-red bg-[#fff8f8] px-6 py-7 text-center shadow-[0_12px_30px_rgba(166,62,71,0.06)]">
+              <p role="status" className="text-base font-medium text-brand-red">开通资料库年卡，有效期内可下载全站资料。</p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <button type="button" onClick={() => setShowMembershipNotice(false)} className="rounded-xl border border-brand-line bg-white px-5 py-2.5 text-sm text-neutral-600 transition-colors hover:bg-[#fafbfc]">返回资料列表</button>
                 <Link href="/membership/payment" className="rounded-xl bg-brand-red px-5 py-2.5 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-darkRed active:scale-[0.98]">开通资料库年卡</Link>
               </div>
             </div>
