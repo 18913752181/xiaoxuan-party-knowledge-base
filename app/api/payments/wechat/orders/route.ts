@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const plan = membershipPlan(body?.planCode);
-  if (!plan) return NextResponse.json({ error: "请选择月卡、季卡或年卡。" }, { status: 400 });
+  if (!plan) return NextResponse.json({ error: "目前仅开放资料库年卡购买。" }, { status: 400 });
   const amountTotal = plan.amountTotal;
   const outTradeNo = `XX${Date.now()}${crypto.randomBytes(5).toString("hex").toUpperCase()}`.slice(0, 32);
   const admin = getSupabaseAdmin();

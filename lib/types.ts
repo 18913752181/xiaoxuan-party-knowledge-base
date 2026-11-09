@@ -8,9 +8,6 @@ export type Profile = {
   phone?: string | null;
   member_status: MemberStatus;
   member_expires_at?: string | null;
-  points_balance?: number;
-  permanent_points_balance?: number;
-  daily_points_balance?: number;
   material_download_policy?: "legacy_free" | "legacy_points" | "annual_daily";
   legacy_material_benefits?: boolean;
   is_admin: boolean;
@@ -32,7 +29,6 @@ export type Material = {
   uploaded_at?: string;
   updated_at: string;
   member_only: boolean;
-  points_cost?: number;
   isVip?: boolean;
   downloadable?: boolean;
   download_count: number;
@@ -98,4 +94,11 @@ export type DownloadRecord = {
   material_id: string;
   created_at: string;
   material?: Material;
+};
+
+export type MaterialEntitlement = {
+  memberActive: boolean;
+  canDownload: boolean;
+  planCode: "annual" | "quarterly" | "monthly" | null;
+  downloadExpiresAt: string | null;
 };

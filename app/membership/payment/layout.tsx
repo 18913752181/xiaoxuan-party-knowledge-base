@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: { absolute: "喵喵工作台会员" },
-  description: "开通喵喵工作台会员，使用会员专属资料与工作工具。",
+  title: { absolute: "小宣资料库年卡" },
+  description: "开通资料库年卡，有效期内可下载全站资料。",
   alternates: { canonical: "/membership/payment" },
   openGraph: {
-    title: "喵喵工作台会员",
-    description: "开通会员，使用专属资料与工作工具。",
+    title: "小宣资料库年卡",
+    description: "有效期内可单份或批量下载全站资料。",
     url: "/membership/payment"
   }
 };

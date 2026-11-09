@@ -1,20 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMaterialPoints } from "@/components/useMaterialPoints";
-import { MaterialDownloadStatus } from "@/components/MaterialDownloadStatus";
+import { useMaterialAccess } from "@/components/useMaterialAccess";
 import { useAuth } from "@/contexts/AuthContext";
 import { maskAccountEmail } from "@/lib/display";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 
 export default function MePage() {
   const { profile, loading } = useAuth();
-  const pointInfo = useMaterialPoints();
-  const planName = pointInfo.state?.planCode === "monthly" ? "月卡会员" : pointInfo.state?.planCode === "quarterly" ? "季卡会员" : pointInfo.state?.planCode === "annual" ? "年卡会员" : "付费会员";
 
-  const memberActive = pointInfo.state?.paid ?? Boolean(
-    profile?.member_status === "member" &&
-    profile.member_expires_at &&
+  const result = useMaterialAccess();
+  const access = result?.access;
+  const planName = access?.planCode === "monthly" ? "月卡会员" : access?.planCode === "quarterly" ? "季卡会员" : access?.planCode === "annual" ? "年卡会员" : "付费会员";
+  const memberActive = access?.memberActive ?? Boolean(
+    profile?.member_status === "member" && profile.member_expires_at &&
     profile.member_expires_at >= new Date().toISOString().slice(0, 10)
   );
 
@@ -49,16 +48,16 @@ export default function MePage() {
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold text-brand-ink">{profile.nickname || "小宣用户"}</h1>
             <p className={`mt-2 text-sm ${memberActive ? "text-neutral-400" : "text-neutral-500"}`}>
-              {memberActive ? `${profile.legacy_material_benefits ? "原权益会员" : (pointInfo.state?.policy || profile.material_download_policy) === "legacy_points" ? "原积分制会员" : pointInfo.state?.canDownload ? "年卡会员" : planName} · 有效期至 ${profile.member_expires_at}` : `普通会员 · ${maskAccountEmail(profile.email) || "已登录"}`}
+              {memberActive ? `${planName} · 有效期至 ${profile.member_expires_at}` : `普通会员 · ${maskAccountEmail(profile.email) || "已登录"}`}
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl bg-[#fff4cf] px-5 py-3 text-right">
-            <p className="text-xs text-[#80671e]">当前积分</p>
-            <p className="mt-1 text-2xl font-semibold text-[#5f4b14]">{Math.max(0, pointInfo.state?.pointsBalance ?? (Number(profile.points_balance) || 0))}</p>
-          </div>
         </div>
-        <MaterialDownloadStatus state={pointInfo.state} />
-        {pointInfo.error ? <button type="button" onClick={() => void pointInfo.refresh()} className="mt-4 text-sm text-brand-red">积分和下载额度读取失败，点击重试</button> : null}
+        {result?.error ? <p className="mt-4 text-sm text-brand-red">{result.error}</p> : null}
+        {access?.canDownload ? (
+          <p className="mt-4 text-sm text-neutral-600">可下载全站资料{access.downloadExpiresAt ? " · 下载权限有效期至 " + access.downloadExpiresAt : ""}</p>
+        ) : access ? (
+          <Link href="/membership/payment" className="mt-4 inline-flex rounded-xl bg-[#fff4cf] px-4 py-2 text-sm font-medium text-[#6e5618]">开通资料库年卡</Link>
+        ) : null}
       </div>
 
       <div className="mt-5 overflow-hidden rounded-[2rem] border border-[#ebe5dc] bg-white shadow-sm">

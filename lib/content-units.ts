@@ -607,9 +607,9 @@ export async function deleteContentUnit(slug: string) {
   return true;
 }
 
-export async function getContentUnitDownloadFilePath(slug: string) {
-  const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-  if (!unit) return null;
+export async function getContentUnitDownloadFilePath(slug: string, options: ListOptions = {}) {
+  const unit = await getContentUnitBySlug(slug, options);
+  if (!unit || (!options.includeHidden && unit.meta.status !== "published")) return null;
   const file = unit.files[0];
   const candidate = file ? path.join(unit.dir, file.storedName) : path.join(unit.dir, "template.docx");
   if (!existsSync(candidate)) return null;
@@ -618,7 +618,7 @@ export async function getContentUnitDownloadFilePath(slug: string) {
 }
 
 export async function getContentUnitTemplatePath(slug: string) {
-  const result = await getContentUnitDownloadFilePath(slug);
+  const result = await getContentUnitDownloadFilePath(slug, { includeHidden: true });
   return result?.path ?? null;
 }
 
@@ -651,12 +651,11 @@ export function contentUnitToMaterial(unit: ContentUnit): Material {
     uploaded_at: file?.uploadedAt || unit.meta.createdAt,
     updated_at: unit.meta.updatedAt,
     member_only: unit.meta.isVip,
-    points_cost: unit.meta.pointsCost,
     isVip: unit.meta.isVip,
     downloadable: unit.meta.downloadable,
     download_count: unit.meta.downloadCount,
     favorite_count: unit.meta.favoriteCount,
-    file_url: file?.downloadPath || (unit.hasTemplate ? `/api/content-units/${unit.slug}/download` : ""),
+    file_url: (file || unit.hasTemplate) && unit.meta.status === "published" ? `/api/content-units/${encodeURIComponent(unit.slug)}/download` : "",
     tags: unit.tags,
     organizationLevels: unit.meta.organizationLevels,
     workSections: unit.meta.workSections,
@@ -709,7 +708,6 @@ export function contentUnitToMaterialSummary(unit: ContentUnit): Material {
     uploaded_at: material.uploaded_at,
     updated_at: material.updated_at,
     member_only: material.member_only,
-    points_cost: material.points_cost,
     isVip: material.isVip,
     downloadable: material.downloadable,
     download_count: material.download_count,

@@ -5,22 +5,15 @@ import Image from "next/image";
 import QRCode from "qrcode";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMaterialAccess } from "@/components/useMaterialAccess";
 import { useAuth } from "@/contexts/AuthContext";
 import { maskAccountEmail } from "@/lib/display";
 
-type Plan = {
-  code: "monthly" | "quarterly" | "annual";
-  name: string;
-  duration: string;
-  amountTotal: number;
-  pointsDescription: string;
-};
 
-const DEFAULT_PLANS: Plan[] = [
-  { code: "monthly", name: "月卡", duration: "30 天", amountTotal: 2800, pointsDescription: "开通成功一次性赠送 5 积分" },
-  { code: "quarterly", name: "季卡", duration: "90 天", amountTotal: 7900, pointsDescription: "开通成功一次性赠送 20 积分" },
-  { code: "annual", name: "年卡", duration: "365 天", amountTotal: 9900, pointsDescription: "开通送10积分，含开通当天每天再送5积分（当天有效）" }
-];
+type Plan = { code: "annual"; name: string; amountTotal: number };
+
+const DEFAULT_PLAN: Plan = { code: "annual", name: "年卡", amountTotal: 9900 };
+const formatPrice = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 });
 
 const MAX_POLL_COUNT = 120; // 最多轮询 120 次 × 3 秒 = 6 分钟（覆盖微信支付 2 小时有效期足够）
 const POLL_INTERVAL = 3000;
@@ -48,12 +41,10 @@ function invokeWechatCashier(payParams: Record<string, string>, onResult: (errMs
 export default function MembershipPaymentPage() {
   const router = useRouter();
   const { profile, loading, refreshProfile } = useAuth();
-  const protectedMember = Boolean(profile && (profile.legacy_material_benefits || (profile.material_download_policy && profile.material_download_policy !== "annual_daily")));
-  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
-  const [selectedPlanCode, setSelectedPlanCode] = useState<Plan["code"]>("annual");
+  const access = useMaterialAccess()?.access;
+  const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN);
   const [configured, setConfigured] = useState(false);
   const [orderNo, setOrderNo] = useState("");
-  const [purchasedPlanCode, setPurchasedPlanCode] = useState<Plan["code"] | null>(null);
   const [qrCode, setQrCode] = useState("");
   // 服务端二维码接口输出真实 PNG 图片地址（可长按保存/识别，兼容性优于 data URL），加载失败时回退到 data URL
   const [qrSrc, setQrSrc] = useState("");
@@ -80,9 +71,8 @@ export default function MembershipPaymentPage() {
       .then((data) => {
         setConfigured(Boolean(data.configured));
         setJsapiReady(Boolean(data.jsapiConfigured));
-        const nextPlans = Array.isArray(data.plans) && data.plans.length ? data.plans as Plan[] : DEFAULT_PLANS;
-        setPlans(nextPlans);
-        if (!nextPlans.some((plan) => plan.code === "annual") && nextPlans[0]) setSelectedPlanCode(nextPlans[0].code);
+        const annual = Array.isArray(data.plans) ? data.plans.find((item: Plan) => item.code === "annual") : null;
+        if (annual) setPlan(annual);
       })
       .catch(() => setMessage("会员信息暂未同步，当前展示默认套餐。"));
   }, []);
@@ -100,14 +90,14 @@ export default function MembershipPaymentPage() {
     }
   }, []);
 
-  // 按已支付套餐跳转，月/季卡不引导至没有权限的资料下载。
+  // 支付成功后返回资料库。
   useEffect(() => {
     if (status !== "paid") return;
     const timer = window.setTimeout(() => {
-      router.push(protectedMember || purchasedPlanCode === "annual" ? "/library" : "/me");
+      router.push("/library");
     }, REDIRECT_DELAY);
     return () => window.clearTimeout(timer);
-  }, [status, router, protectedMember, purchasedPlanCode]);
+  }, [status, router]);
 
   // 轮询订单支付状态
   useEffect(() => {
@@ -140,7 +130,6 @@ export default function MembershipPaymentPage() {
         const data = await response.json();
         if (data.order?.status === "paid") {
           window.clearInterval(timer);
-          setPurchasedPlanCode(data.order.plan_code || null);
           setStatus("paid");
           setExpiry(data.order.member_expires_at || "");
           setMessage("支付成功，会员权益已自动开通。");
@@ -165,7 +154,7 @@ export default function MembershipPaymentPage() {
     const response = await fetch("/api/payments/wechat/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planCode: selectedPlanCode })
+      body: JSON.stringify({ planCode: "annual" })
     });
     const data = await response.json();
     if (!response.ok) {
@@ -187,7 +176,7 @@ export default function MembershipPaymentPage() {
       const response = await fetch("/api/payments/wechat/jsapi/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planCode: selectedPlanCode })
+        body: JSON.stringify({ planCode: "annual" })
       });
       const data = await response.json();
       if (response.status === 401 && data.needOAuth) {
@@ -218,7 +207,7 @@ export default function MembershipPaymentPage() {
       setStatus("idle");
       setMessage("网络异常，请稍后重试。");
     }
-  }, [selectedPlanCode]);
+  }, []);
 
   // 授权回跳后，等待登录态与支付配置就绪再自动唤起收银台
   useEffect(() => {
@@ -229,18 +218,11 @@ export default function MembershipPaymentPage() {
 
   const useJsapi = inWechat && jsapiReady;
 
-  const orderedPlans = ["annual", "quarterly", "monthly"].flatMap((code) => plans.filter((candidate) => candidate.code === code));
-  const plan = plans.find((candidate) => candidate.code === selectedPlanCode) || null;
-  const price = plan ? (plan.amountTotal / 100).toFixed(0) : "--";
-  const isActiveMember = Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date(Date.now() + (profile.material_download_policy === "annual_daily" ? 8 * 3600000 : 0)).toISOString().slice(0, 10));
+  const price = formatPrice.format(plan.amountTotal / 100);
+  const isActiveMember = access?.memberActive ?? Boolean(profile?.member_status === "member" && profile.member_expires_at && profile.member_expires_at >= new Date(Date.now() + (profile.material_download_policy === "annual_daily" ? 8 * 3600000 : 0)).toISOString().slice(0, 10));
   const daysRemaining = isActiveMember && profile?.member_expires_at
     ? Math.max(0, Math.ceil((new Date(`${profile.member_expires_at}T00:00:00`).getTime() - Date.now()) / 86400000))
     : 0;
-
-  // 续费时优先展示新的年卡方案，用户仍可切换月卡或季卡。
-  useEffect(() => {
-    if (isActiveMember) setSelectedPlanCode("annual");
-  }, [isActiveMember]);
 
   return (
     <main className="dimmo-membership-page">
@@ -256,39 +238,26 @@ export default function MembershipPaymentPage() {
           <div className="dimmo-membership-intro"><p>喵喵工作台</p><span>完整资料、任务小本本、小程序教育基地攻略和 Dimmo 的日常陪伴。</span></div>
           <div className="grid gap-7 pb-16 pt-8 md:grid-cols-[minmax(0,1fr)_330px]">
             <div>
-              {isActiveMember && profile ? <div className="dimmo-member-summary"><strong>★ 当前已是付费会员</strong><span>续费后将在当前有效期后顺延</span><small>当前账号：{maskAccountEmail(profile.email)}</small></div> : null}
-              <aside className="dimmo-download-rule" aria-label="资料库下载权限说明">
-                <p>资料库下载权限</p>
-                <h2>新购会员，仅年卡可下载资料</h2>
-                <span>月卡、季卡不含资料库单份及批量下载权限。</span>
-              </aside>
+              {isActiveMember && profile ? <div className="dimmo-member-summary"><strong>★ 当前已是付费会员</strong><span>开通年卡后，会员有效期将在当前到期日基础上顺延</span><small>当前账号：{maskAccountEmail(profile.email)}</small></div> : null}
+
               <div className="dimmo-plan-list">
-                {orderedPlans.map((candidate) => {
-                  const selected = candidate.code === selectedPlanCode;
-                  const annual = candidate.code === "annual";
-                  return <button key={candidate.code} type="button" aria-pressed={selected} onClick={() => setSelectedPlanCode(candidate.code)} className={`dimmo-plan ${annual ? "is-annual" : ""} ${selected ? "is-selected" : ""}`}>
-                    <span className="dimmo-plan-main">
-                      {annual ? <em>推荐</em> : null}
-                      <span className="dimmo-plan-name">{annual ? "年卡（资料库专属会员）" : candidate.name}</span>
-                      {!annual ? <small className="dimmo-plan-summary">{candidate.code === "quarterly" ? "工作计划持续跟进，重要事项到点提醒" : "待办随手记录，Dimmo 日常陪伴"}</small> : null}
-                      {!annual ? <small>任务小本本 · 教育基地攻略 · 日常陪伴</small> : null}
-                      {annual && !protectedMember ? <>
-                        <span className="dimmo-annual-facts">开通即送<b>15</b>积分，还有每日积分送不停</span>
-                        <small>首日含10长期积分和5当日积分；有效期内每天送5积分，当天有效、优先消耗。</small>
-                      </> : annual ? <small>{profile?.legacy_material_benefits ? "沿用原会员权益，续费不变" : "沿用原规则：有效期内每天赠送10积分"}</small> : null}
-                    </span>
-                    <strong>¥{(candidate.amountTotal / 100).toFixed(0)}</strong>
-                  </button>;
-                })}
+                <div className="dimmo-plan is-annual is-selected cursor-default">
+                  <span className="dimmo-plan-main">
+                    <span className="dimmo-plan-name">资料库年卡</span>
+                    <span className="dimmo-annual-facts">有效期内，全站资料直接下载</span>
+                    <small>可单份下载，也可批量打包。</small>
+                  </span>
+                  <strong>¥{price}<small> / 年</small></strong>
+                </div>
               </div>
               <div className="dimmo-membership-note">
-                <p>{protectedMember ? "保留您的原资料库权益" : "年卡专属 · 资料库权益"}</p>
-                <div className="dimmo-benefit-scope">{protectedMember ? "原下载、扣分和积分赠送规则不变，续费继续保留。" : "以下资料库下载权益仅年卡享有，月卡、季卡不包含。"}</div><ul>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>{protectedMember ? "原会员资料下载" : "年卡专属资料下载"}</b><small>{protectedMember ? "保留原下载权益，续费不变" : "可单份/批量下载，开通首日送15积分，每天还有积分送不停"}</small></span></li>
+                <p>资料库年卡权益</p>
+                <ul>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/member-only-materials.png" alt="" width={64} height={64} /><span><b>全站资料下载</b><small>会员有效期内可直接下载，重复下载不限次</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/continuous-updates.png" alt="" width={64} height={64} /><span><b>资料持续更新</b><small>新增资料和优化版本持续同步</small></span></li>
-                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>{protectedMember ? "保留原批量下载权益" : "单份、批量共用每天10个不同文件名额；已解锁不重复扣积分"}</small></span></li>
+                  <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/batch-zip-download.png" alt="" width={64} height={64} /><span><b>批量打包下载</b><small>一次选择多份资料，打包为 ZIP 下载</small></span></li>
                 </ul>
-                <h2 className="dimmo-common-heading">月卡 / 季卡 / 年卡 · 通用权益</h2>
+                <h2 className="dimmo-common-heading">其他会员权益</h2>
                 <ul>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/dimmo-task-notebook.png" alt="" width={64} height={64} /><span><b>Dimmo 任务小本本</b><small>记录待办、到点提醒，减少遗漏</small></span></li>
                   <li><Image className="dimmo-benefit-icon" src="/images/membership-benefits/education-base-guide.svg" alt="" width={64} height={64} /><span><b>教育基地导览和攻略</b><small>查看参观联系、讲解信息和配套方案</small></span></li>
@@ -308,7 +277,7 @@ export default function MembershipPaymentPage() {
               ) : null}
               {!loading && profile && status === "idle" ? (
                 <>
-                  <p className="mt-6 text-sm text-neutral-500">已选：{plan ? plan.name : "正在读取套餐"}</p>
+                  <p className="mt-6 text-sm text-neutral-500">资料库年卡</p>
                   <p className="mt-2 text-4xl font-semibold text-[#9b4d48]">¥ {price}</p>
                   <button
                     disabled={!configured}
@@ -318,7 +287,7 @@ export default function MembershipPaymentPage() {
                     }}
                     className="dimmo-checkout-button"
                   >
-                    {isActiveMember ? `续费${plan?.name || "会员"}` : (configured ? `开通${plan?.name || "会员"}` : "支付功能待配置")}
+                    {access?.planCode === "annual" && isActiveMember ? `续费${plan.name}` : (configured ? `开通${plan?.name || "会员"}` : "支付功能待配置")}
                   </button>
                   {configured && useJsapi ? (
                     <p className="mt-3 text-xs leading-5 text-neutral-400">微信内直接唤起收银台，无需扫码</p>
@@ -376,7 +345,7 @@ export default function MembershipPaymentPage() {
                   <p className="mt-5 text-lg font-semibold">会员已开通</p>
                   <p className="mt-2 text-sm text-neutral-500">有效期至 {expiry}</p>
                   <p className="mt-3 text-xs text-neutral-400">{REDIRECT_DELAY / 1000} 秒后自动跳转…</p>
-                  <Link href={protectedMember || purchasedPlanCode === "annual" ? "/library" : "/me"} className="mt-4 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">{protectedMember || purchasedPlanCode === "annual" ? "去下载资料" : "前往会员中心"}</Link>
+                  <Link href="/library" className="mt-4 inline-flex rounded-xl bg-[#a64550] px-6 py-3 text-sm text-white">去下载资料</Link>
                 </div>
               ) : null}
               {message ? <p className="mt-4 text-sm leading-6 text-[#a64550]">{message}</p> : null}
@@ -392,7 +361,7 @@ export default function MembershipPaymentPage() {
       ` }} />
       <style dangerouslySetInnerHTML={{ __html: `body:has(.dimmo-membership-page)>header,body:has(.dimmo-membership-page)>footer,body:has(.dimmo-membership-page) nav[aria-label="移动端导航"]{display:none}body:has(.dimmo-membership-page)>main{padding-bottom:0}` }} />
       <style dangerouslySetInnerHTML={{ __html: `.dimmo-membership-nav-label{color:var(--ink);font-size:13px;font-weight:650;text-decoration:none;text-decoration-thickness:1px;text-underline-offset:5px;transition:font-weight .16s ease,text-decoration-color .16s ease}.dimmo-membership-nav-label:hover{font-weight:800;text-decoration:underline}.dimmo-membership-cat{overflow:visible;border-radius:0;background:transparent}.dimmo-membership-cat img{display:block;width:306px;margin:0 0 -12px 8px}.dimmo-membership-ticket:before{display:none}.dimmo-membership-ticket span,.dimmo-membership-ticket small{color:#8d8066}.dimmo-membership-ticket strong{color:#5d574b;font-weight:650}.dimmo-membership-ticket b{color:#ab8129}.dimmo-membership-hero.is-welcome{min-height:235px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-bottom:8px;padding:17px 18px}.dimmo-welcome-link{display:inline-flex;margin-top:10px;padding:5px 10px;border:1px solid #ddd0aa;border-radius:999px;color:#786944;font-size:12px;font-weight:600;text-decoration:none}.dimmo-welcome-link:hover{background:#fff8df}.dimmo-membership-intro p{color:#354942}.dimmo-member-summary{display:grid;gap:4px;margin-bottom:13px;padding:15px 18px;border:1px solid #efd58a;border-radius:18px;background:#fff5cf;color:#695719;text-align:left}.dimmo-member-summary strong{font-size:15px}.dimmo-member-summary span{font-size:12px;line-height:1.55}.dimmo-member-summary small{color:#817144;font-size:12px}.dimmo-membership-note ul{gap:13px}.dimmo-membership-note li{grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center}.dimmo-benefit-icon{width:48px;height:48px;object-fit:contain}.dimmo-points-mark{display:flex!important;width:48px;height:38px;align-items:center;justify-content:center;border-radius:13px;background:var(--yellow);color:#4f411c!important;font-size:12px!important;font-weight:760;letter-spacing:.06em}.dimmo-membership-note b,.dimmo-membership-note small{display:block}.dimmo-membership-note b{font-size:14px}.dimmo-membership-note small{margin-top:3px;color:var(--muted);font-size:13px;line-height:1.55}.dimmo-checkout{padding:18px 20px;border-radius:18px}.dimmo-checkout .mt-6{margin-top:.85rem!important}.dimmo-checkout .mt-2{margin-top:.35rem!important}.dimmo-checkout .mt-3{margin-top:.7rem!important}.dimmo-checkout-button{margin-top:18px;padding:12px}@media(max-width:700px){.dimmo-membership-cat img{width:262px;margin-left:-2px}.dimmo-membership-hero.is-welcome{min-height:212px}.dimmo-membership-hero.is-welcome .dimmo-membership-ticket{margin-left:-38px;padding:14px 10px}.dimmo-welcome-link{margin-top:7px;padding:4px 8px;font-size:11px}.dimmo-membership-note li{grid-template-columns:48px minmax(0,1fr);gap:10px}.dimmo-benefit-icon{width:44px;height:44px}.dimmo-points-mark{width:44px}}` }} />
-      <style dangerouslySetInnerHTML={{ __html: "\n        .dimmo-download-rule{margin:0 0 18px;padding:21px 22px;border:1px solid #e8ca73;border-left:5px solid #c39323;border-radius:18px;background:#fff6d9;text-align:left}.dimmo-download-rule p{margin:0 0 7px;color:#856619;font-size:12px;font-weight:700;letter-spacing:.08em}.dimmo-download-rule h2{margin:0;color:#5c4615;font-size:21px;font-weight:800;line-height:1.45;letter-spacing:-.03em}.dimmo-download-rule>span{display:block;margin-top:8px;color:#705e36;font-size:14px;line-height:1.65}.dimmo-download-rule small{display:block;margin-top:10px;padding-top:10px;border-top:1px solid #ebdcad;color:#7d7257;font-size:12px;line-height:1.65}\n        .dimmo-plan{gap:14px}.dimmo-plan-main{min-width:0}.dimmo-plan.is-annual{border:2px solid #e7c45a;background:#fffaf0;box-shadow:0 7px 20px rgba(143,100,12,.06)}.dimmo-plan.is-annual.is-selected{background:repeating-linear-gradient(-45deg,#fffdf6 0,#fffdf6 12px,#fff8df 12px,#fff8df 24px);box-shadow:0 9px 24px rgba(143,100,12,.11)}.dimmo-plan .dimmo-plan-name{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.dimmo-download-badge{display:inline-flex;padding:3px 8px;border-radius:6px;background:#f2d475;color:#634b11;font-size:11px;font-weight:750;line-height:1.5;letter-spacing:0}.dimmo-plan .dimmo-plan-permission{margin-top:7px;color:#765619;font-size:14px;font-weight:750;line-height:1.6}.dimmo-plan .dimmo-plan-summary{margin-top:5px;color:#756d5c;font-size:13px;font-weight:650}.dimmo-plan .dimmo-annual-facts{display:block;margin-top:10px;font-size:14px;font-weight:500;line-height:1.8;color:#796031}.dimmo-annual-facts b{color:#6c4f13;font-size:15px}.dimmo-plan.is-annual>strong{align-self:center;color:#946b11}.dimmo-plan:focus-visible{outline:3px solid #b58c25;outline-offset:3px}\n        .dimmo-benefit-scope{margin:-5px 0 20px;padding:10px 12px;border:1px solid #ebd59c;border-radius:10px;background:#fffcf3;color:#775719;font-size:13px;font-weight:650;line-height:1.65}.dimmo-common-heading{margin:25px 0 17px;padding-top:21px;border-top:1px solid #e8d8ae;color:#605a4a;font-size:15px;font-weight:750;line-height:1.6}@media(max-width:700px){.dimmo-download-rule{padding:18px}.dimmo-download-rule h2{font-size:20px}.dimmo-plan.is-annual{padding:20px 18px}.dimmo-plan.is-annual>strong{font-size:30px}.dimmo-annual-facts{max-width:300px}}@media(prefers-reduced-motion:reduce){.dimmo-plan{transition:none}.dimmo-plan:hover{transform:none}}\n" }} />
+      <style dangerouslySetInnerHTML={{ __html: "\n        .dimmo-download-rule{margin:0 0 18px;padding:21px 22px;border:1px solid #e8ca73;border-left:5px solid #c39323;border-radius:18px;background:#fff6d9;text-align:left}.dimmo-download-rule p{margin:0 0 7px;color:#856619;font-size:12px;font-weight:700;letter-spacing:.08em}.dimmo-download-rule h2{margin:0;color:#5c4615;font-size:21px;font-weight:800;line-height:1.45;letter-spacing:-.03em}.dimmo-download-rule>span{display:block;margin-top:8px;color:#705e36;font-size:14px;line-height:1.65}.dimmo-download-rule small{display:block;margin-top:10px;padding-top:10px;border-top:1px solid #ebdcad;color:#7d7257;font-size:12px;line-height:1.65}\n        .dimmo-plan{gap:14px}.dimmo-plan-list>div.dimmo-plan{cursor:default;transform:none}.dimmo-plan-main{min-width:0}.dimmo-plan.is-annual{border:2px solid #e7c45a;background:#fffaf0;box-shadow:0 7px 20px rgba(143,100,12,.06)}.dimmo-plan.is-annual.is-selected{background:repeating-linear-gradient(-45deg,#fffdf6 0,#fffdf6 12px,#fff8df 12px,#fff8df 24px);box-shadow:0 9px 24px rgba(143,100,12,.11)}.dimmo-plan .dimmo-plan-name{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.dimmo-download-badge{display:inline-flex;padding:3px 8px;border-radius:6px;background:#f2d475;color:#634b11;font-size:11px;font-weight:750;line-height:1.5;letter-spacing:0}.dimmo-plan .dimmo-plan-permission{margin-top:7px;color:#765619;font-size:14px;font-weight:750;line-height:1.6}.dimmo-plan .dimmo-plan-summary{margin-top:5px;color:#756d5c;font-size:13px;font-weight:650}.dimmo-plan .dimmo-annual-facts{display:block;margin-top:10px;font-size:14px;font-weight:500;line-height:1.8;color:#796031}.dimmo-annual-facts b{color:#6c4f13;font-size:15px}.dimmo-plan.is-annual>strong{align-self:center;color:#946b11}.dimmo-plan:focus-visible{outline:3px solid #b58c25;outline-offset:3px}\n        .dimmo-benefit-scope{margin:-5px 0 20px;padding:10px 12px;border:1px solid #ebd59c;border-radius:10px;background:#fffcf3;color:#775719;font-size:13px;font-weight:650;line-height:1.65}.dimmo-common-heading{margin:25px 0 17px;padding-top:21px;border-top:1px solid #e8d8ae;color:#605a4a;font-size:15px;font-weight:750;line-height:1.6}@media(max-width:700px){.dimmo-download-rule{padding:18px}.dimmo-download-rule h2{font-size:20px}.dimmo-plan.is-annual{padding:20px 18px}.dimmo-plan.is-annual>strong{font-size:30px}.dimmo-annual-facts{max-width:300px}}@media(prefers-reduced-motion:reduce){.dimmo-plan{transition:none}.dimmo-plan:hover{transform:none}}\n" }} />
     </main>
   );
 }

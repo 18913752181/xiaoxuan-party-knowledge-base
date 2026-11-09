@@ -35,7 +35,6 @@ export default function AdminMaterialEditPage() {
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>({});
   const [file, setFile] = useState<File | null>(null);
-  const [isVip, setIsVip] = useState(false);
   const [message, setMessage] = useState("正在读取资料...");
   const [saving, setSaving] = useState(false);
 
@@ -49,7 +48,6 @@ export default function AdminMaterialEditPage() {
         }
 
         setMaterial(row);
-        setIsVip(Boolean(row.member_only));
         setForm({
           title: row.title || titleFromFileName(row.file_name),
           topic: row.topic || row.category || "",
@@ -57,7 +55,6 @@ export default function AdminMaterialEditPage() {
           stage: row.stage || "",
           tags: joinList(row.tags),
           summary: row.summary || row.description || "",
-          pointsCost: String(row.points_cost ?? 1),
           status: row.status || "published",
           introduction: row.introduction || row.article || "",
           policyBasis: row.policyBasis || row.legal_basis || "",
@@ -140,7 +137,6 @@ export default function AdminMaterialEditPage() {
     try {
       const body = new FormData();
       Object.entries(form).forEach(([key, value]) => body.append(key, value));
-      body.append("isVip", String(isVip));
       body.append("seoTitle", form.title || "");
       body.append("seoDescription", form.summary || "");
       body.append("seoKeywords", form.tags || "");
@@ -206,14 +202,9 @@ export default function AdminMaterialEditPage() {
             <Input label="标题" value={form.title || ""} onChange={(value) => setField("title", value)} />
             <Select label="所属专题" value={form.topic || ""} options={topicOptions} onChange={(value) => setField("topic", value)} />
             <Input label="所属阶段" value={form.stage || ""} onChange={(value) => setField("stage", value)} />
-            <Input label="下载所需积分" value={form.pointsCost || "1"} onChange={(value) => setField("pointsCost", value.replace(/\D/g, "").slice(0, 4))} />
             <Select label="状态" value={form.status || "published"} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary || ""} onChange={(value) => setField("summary", value)} />
-          <label className="mt-4 flex items-center gap-2 text-sm text-[#59635d]">
-            <input type="checkbox" checked={isVip} onChange={(event) => setIsVip(event.target.checked)} />
-            是否会员资料
-          </label>
         </Section>
 
         <Section title="工作分类关联">

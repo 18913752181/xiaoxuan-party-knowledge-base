@@ -23,8 +23,6 @@ export default function AdminMaterialsPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
-  const [bulkUpdating, setBulkUpdating] = useState(false);
-  const [bulkPointsCost, setBulkPointsCost] = useState("1");
   const [draggingSlug, setDraggingSlug] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const [keyword, setKeyword] = useState("");
@@ -159,64 +157,6 @@ export default function AdminMaterialsPage() {
         ? current.filter((slug) => !filteredSlugs.includes(slug))
         : Array.from(new Set([...current, ...filteredSlugs]))
     );
-  }
-
-  async function updateMembership(memberOnly: boolean) {
-    if (!selectedSlugs.length) return;
-    setBulkUpdating(true);
-    setMessage("");
-    try {
-      const response = await fetch("/api/admin/materials", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slugs: selectedSlugs, memberOnly })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "批量修改失败");
-
-      const updatedRows = new Map<string, Material>(
-        (Array.isArray(data.materials) ? data.materials : []).map((item: Material) => [item.slug || item.id, item])
-      );
-      setMaterials((current) =>
-        current.map((item) => updatedRows.get(item.slug || item.id) || item)
-      );
-      setMessage(`已将 ${updatedRows.size} 份资料设为${memberOnly ? "会员专属" : "普通资料"}。`);
-      setSelectedSlugs([]);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "批量修改失败");
-    } finally {
-      setBulkUpdating(false);
-    }
-  }
-
-  async function updatePointsCost() {
-    if (!selectedSlugs.length) return;
-    const pointsCost = Number(bulkPointsCost);
-    if (!Number.isInteger(pointsCost) || pointsCost < 0 || pointsCost > 9999) {
-      setMessage("所需积分必须是 0 至 9999 的整数。");
-      return;
-    }
-    setBulkUpdating(true);
-    setMessage("");
-    try {
-      const response = await fetch("/api/admin/materials", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slugs: selectedSlugs, pointsCost })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "批量修改失败");
-      const updatedRows = new Map<string, Material>(
-        (Array.isArray(data.materials) ? data.materials : []).map((item: Material) => [item.slug || item.id, item])
-      );
-      setMaterials((current) => current.map((item) => updatedRows.get(item.slug || item.id) || item));
-      setMessage(`已将 ${updatedRows.size} 份资料调整为 ${pointsCost} 积分。`);
-      setSelectedSlugs([]);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "批量修改失败");
-    } finally {
-      setBulkUpdating(false);
-    }
   }
 
   async function saveOrder(nextMaterials: Material[]) {
@@ -448,36 +388,13 @@ export default function AdminMaterialsPage() {
             <span className="text-sm font-medium text-[#465149]">已选择 {selectedSlugs.length} 份资料</span>
             <button
               type="button"
-              onClick={() => updateMembership(true)}
-              disabled={bulkUpdating || bulkDeleting}
-              className="rounded-xl bg-[#9b744f] px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              设为会员专属
-            </button>
-            <button
-              type="button"
-              onClick={() => updateMembership(false)}
-              disabled={bulkUpdating || bulkDeleting}
-              className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50"
-            >
-              设为普通资料
-            </button>
-            <label className="flex items-center gap-2 text-sm text-[#59635d]">
-              <span>所需积分</span>
-              <input type="number" min="0" max="9999" step="1" value={bulkPointsCost} onChange={(event) => setBulkPointsCost(event.target.value)} className="h-9 w-24 rounded-xl border border-[#cfc6ba] bg-white px-3 outline-none focus:border-[#6f8f7e]" />
-            </label>
-            <button type="button" onClick={updatePointsCost} disabled={bulkUpdating || bulkDeleting} className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50">
-              批量设置积分
-            </button>
-            <button
-              type="button"
               onClick={() => setBulkDeleteOpen(true)}
-              disabled={bulkUpdating || bulkDeleting}
+              disabled={bulkDeleting}
               className="rounded-xl border border-[#dfbcbc] bg-white px-4 py-2 text-sm font-medium text-[#a34850] disabled:opacity-50"
             >
               批量删除
             </button>
-            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkUpdating || bulkDeleting} className="text-sm text-[#6d746f] disabled:opacity-50">
+            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkDeleting} className="text-sm text-[#6d746f] disabled:opacity-50">
               取消选择
             </button>
           </section>
@@ -502,8 +419,6 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">阶段</th>
                 <th className="px-4 py-3">上一步工作</th>
                 <th className="px-4 py-3">下一步工作</th>
-                <th className="px-4 py-3">是否会员专属</th>
-                <th className="px-4 py-3">所需积分</th>
                 <th className="sticky right-0 bg-[#fbfaf6] px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">操作</th>
               </tr>
             </thead>
@@ -586,12 +501,6 @@ export default function AdminMaterialsPage() {
                       (item.relatedMap?.next || []).join("、") || "-",
                       Array.from(new Set(materials.filter((row) => (row.slug || row.id) !== slug).map((row) => row.title)))
                     )}
-                    <td className="px-4 py-3">
-                      <span className={item.member_only ? "font-medium text-[#9b744f]" : "text-[#6d746f]"}>
-                        {item.member_only ? "是" : "否"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{item.points_cost ?? 1}</td>
                     <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
@@ -606,7 +515,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={10} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={8} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>

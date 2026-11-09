@@ -13,129 +13,89 @@ function load(file, mocks) {
   return module.exports;
 }
 
+
 async function main() {
-  let signedIn = true;
-  let decision = { allowed: true, paid: false };
+  let user = { id: "session-user" };
+  let canDownload = false;
   let unavailable = false;
-  let missing = false;
-  let memberOnly = true;
-  let membershipActive = false;
-  let membershipUnavailable = false;
-  let membershipCalls = 0;
+  let fileSize = 8;
   let reads = 0;
   let counters = 0;
-  let pointClaim = { ok: true, chargedPoints: 1, pointsBalance: 9, unlockedSlugs: ["same-material"] };
-  const pointClaims = [];
-  const calls = [];
+  const entitlementCalls = [];
   const mocks = {
-    "@/lib/server-auth": { getServerSession: async () => signedIn ? { user: { id: "user" }, accessToken: "token" } : null, applyAuthCookies: () => {} },
+    "@/lib/server-auth": {
+      getServerSession: async () => user ? { user, refreshedTokens: {} } : null,
+      applyAuthCookies: (response) => response.headers.set("X-Test-Refreshed", "true")
+    },
     "@/lib/material-access": {
-      authorizeMaterialAccess: async (...args) => { calls.push(args); if (unavailable) throw Error("Database unavailable"); return decision; },
-      materialAccessMessage: (access) => access.code
-    },
-    "@/lib/membership": {
-      getMembership: async () => {
-        membershipCalls++;
-        if (membershipUnavailable) throw Error("Membership unavailable");
-        return { active: membershipActive };
-      }
-    },
-    "@/lib/material-point-state": { getMaterialPointState: async () => ({ paid: true, legacyBenefits: false, pointsBalance: 9, unlockedSlugs: [] }) },
-    "@/lib/material-point-view": load("lib/material-point-view.ts", {}),
-    "@/lib/material-download-message": load("lib/material-download-message.ts", {}),
-    "@/lib/material-points": {
-      claimMaterialPoints: async (...args) => { pointClaims.push(args); return pointClaim; }
+      getMaterialEntitlement: async (id) => {
+        entitlementCalls.push(id);
+        if (unavailable) throw Error("database unavailable");
+        return { canDownload };
+      },
+      annualMembershipRequired: { error: "需要年卡", code: "ANNUAL_MEMBERSHIP_REQUIRED" }
     },
     "@/lib/content-units": {
-      getContentUnitBySlug: async (slug) => ({ meta: { isVip: memberOnly, slug, pointsCost: 1 } }),
-      getContentUnitDownloadFilePath: async () => missing ? null : { path: "test.pdf", file: { originalName: "same.pdf" }, title: "Test" },
+      getContentUnitDownloadFilePath: async (slug) => slug === "unpublished" ? null : { path: "test.pdf", file: { originalName: "same.pdf" } },
       updateContentUnitCounter: async () => { counters++; }
     },
-    "fs/promises": { stat: async () => ({ size: 8 }), readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); } }
+    "fs/promises": {
+      stat: async () => ({ size: fileSize }),
+      readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); }
+    }
   };
   const download = load("app/api/content-units/[id]/download/route.ts", mocks).GET;
   const batch = load("app/api/content-units/batch-download/route.ts", mocks).POST;
-  const req = new Request("http://localhost/test");
-  const context = { params: { id: "content-same-material" } };
-  let response;
-  const callsBeforePublicDownload = calls.length;
-  memberOnly = false;
-  response = await download(req, context);
-  assert.equal(response.status, 200, "Ordinary materials remain downloadable with the configured points");
-  assert.equal(response.headers.get("X-Material-Points-Charged"), "1");
-  assert.equal(response.headers.get("X-Material-Points-Balance"), "9");
-  assert.equal(calls.length, callsBeforePublicDownload, "Ordinary downloads must not use batch membership access");
-  assert.equal(membershipCalls, 0, "Ordinary downloads do not need a paid membership lookup");
-  assert.deepEqual(pointClaims.at(-1), ["user", [{ slug: "same-material", cost: 1 }], undefined], "A first download claims the configured points atomically");
-  response = await download(new Request("http://localhost/test?expectedPoints=1"),context);
-  assert.equal(pointClaims.at(-1)[2],1,"Confirmed single-download prices reach the atomic claim");
-  assert.equal((await download(new Request("http://localhost/test?expectedPoints=-1"),context)).status,400);
-  pointClaim = { ok: false, code: "INSUFFICIENT_POINTS", requiredPoints: 1, chargedPoints: 0, pointsBalance: 0, unlockedSlugs: [] };
-  response = await download(req, context);
-  assert.equal(response.status, 403);
-  assert.equal((await response.json()).code, "INSUFFICIENT_POINTS");
-  pointClaim = { ok:false,code:"DAILY_DOWNLOAD_LIMIT",chargedPoints:0,pointsBalance:9,unlockedSlugs:[],dailyLimit:10,dailyUsed:10,dailyRemaining:0,requestedNew:1 };
-  response = await download(req,context);
-  assert.equal(response.status,403);
-  assert.equal((await response.json()).dailyRemaining,0);
-  pointClaim = { ok:false,code:"ANNUAL_MEMBERSHIP_REQUIRED",chargedPoints:0,pointsBalance:9,unlockedSlugs:[] };
-  response = await download(req,context);
-  assert.equal((await response.json()).code,"ANNUAL_MEMBERSHIP_REQUIRED");
-  pointClaim = { ok: true, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
-  memberOnly = true;
-  const beforeCounters = counters;
-  response = await download(req, context);
-  assert.equal(response.status, 403);
-  assert.equal((await response.json()).code, "MEMBERSHIP_REQUIRED");
-  assert.equal(counters, beforeCounters, "Rejected member-only downloads must not increment counters");
-  membershipActive = true;
-  assert.equal((await download(req, context)).status, 200, "Paid members may download member-only materials");
-  membershipUnavailable = true;
-  assert.equal((await download(req, context)).status, 503, "Membership lookup failure must deny member-only downloads");
-  membershipUnavailable = false;
-  memberOnly = false;
-  missing = true;
-  assert.equal((await download(req, context)).status, 404);
-  missing = false;
-  const batchRequest = (slugs, expectedPoints) => new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs, expectedPoints }), headers: { "Content-Type": "application/json" } });
-  decision = { allowed: false, code: "BATCH_MEMBERSHIP_REQUIRED" };
-  const beforeReads = reads;
-  assert.equal((await batch(batchRequest(["one"]))).status, 403);
-  assert.equal(reads, beforeReads, "Free batch requests must be denied before reading files");
-  assert.deepEqual(calls.at(-1), ["token", null, true, "user"]);
-  decision = { allowed: true, paid: true };
-  pointClaim = { ok: false, code: "POINTS_QUOTE_CHANGED", requiredPoints: 2, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
-  const claimsBeforeStaleQuote = pointClaims.length;
-  response = await batch(batchRequest(["one", "two"], 1));
-  assert.equal(response.status, 409, "An increased batch price requires fresh confirmation");
-  assert.equal(pointClaims.length, claimsBeforeStaleQuote + 1, "The database validates confirmed prices atomically");
-  assert.equal(pointClaims.at(-1)[2],1);
-  pointClaim = { ok: true, chargedPoints: 0, pointsBalance: 9, unlockedSlugs: [] };
-  const archive = await batch(batchRequest(["one", "two", "one"]));
+  const single = (slug) => download(new Request("http://localhost/download?expectedPoints=1"), { params: { id: slug } });
+  const zipFiles = (slugs) => batch(new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs, userId: "forged-user", expectedPoints: 0 }) }));
+  const both = () => Promise.all([single("one"), zipFiles(["one"])]);
+  user = null;
+  assert.deepEqual((await both()).map((r) => r.status), [401, 401]);
+  user = { id: "session-user" };
+  const denied = await both();
+  for (const response of denied) {
+    assert.equal(response.status, 403);
+    assert.equal(response.headers.get("Cache-Control"), "private, no-store");
+    assert.equal(response.headers.get("X-Test-Refreshed"), "true");
+    assert.equal((await response.json()).code, "ANNUAL_MEMBERSHIP_REQUIRED");
+  }
+  assert.deepEqual(entitlementCalls, ["session-user", "session-user"]);
+  assert.equal(reads, 0, "Rejected requests do not read any files");
+  assert.equal(counters, 0);
+  unavailable = true;
+  const originalError = console.error;
+  console.error = () => {};
+  try {
+    assert.deepEqual((await both()).map((r) => r.status), [503, 503]);
+  } finally {
+    console.error = originalError;
+  }
+  unavailable = false;
+  canDownload = true;
+  assert.equal((await single("unpublished")).status, 404);
+  assert.equal((await zipFiles(["one", "unpublished"])).status, 404);
+  assert.equal(reads, 0);
+  assert.equal((await zipFiles(Array(51).fill("one"))).status, 400);
+  fileSize = 100 * 1024 * 1024 + 1;
+  assert.equal((await zipFiles(["one"])).status, 413);
+  fileSize = 8;
+  for (let i = 0; i < 12; i++) {
+    const file = await single("file-" + i);
+    assert.equal(file.status, 200);
+    assert.equal(file.headers.get("X-Material-Points-Charged"), null);
+    assert.match(await file.text(), /^%PDF/);
+  }
+  const archive = await zipFiles(["content-one", "two", "one"]);
   assert.equal(archive.status, 200);
-  assert.equal(archive.headers.get("X-Material-Points-Charged"), "0");
-  assert.equal(archive.headers.get("X-Material-Points-Balance"), "9");
+  assert.equal(archive.headers.get("X-Material-Daily-Remaining"), null);
   const zip = await JSZip.loadAsync(await archive.arrayBuffer());
   assert.deepEqual(Object.keys(zip.files), ["same.pdf", "same (2).pdf"]);
-  assert.equal((await batch(batchRequest(Array(51).fill("one")))).status, 400);
-  signedIn = false;
-  for (const route of [download]) assert.equal((await route(req, context)).status, 401);
-  assert.equal((await batch(batchRequest(["one"]))).status, 401);
-  let paid = true;
-  let membershipFailure = false;
-  const accessService = load("lib/material-access.ts", {
-    "server-only": {},
-    "@/lib/material-point-state": { getMaterialPointState: async () => ({policy:"legacy_points"}) },
-    "@/lib/membership": { getMembership: async () => { if (membershipFailure) throw Error("Membership unavailable"); return { active: paid }; } }
-  });
-  for (const [slug, isBatch] of [[null, false], ["one", false], [null, true]]) {
-    assert.equal((await accessService.authorizeMaterialAccess("token", slug, isBatch, "user")).paid, true);
-  }
-  paid = false;
-  assert.equal((await accessService.authorizeMaterialAccess("token", null, true, "user")).allowed, false);
-  assert.equal((await accessService.authorizeMaterialAccess("token", null, false, "user")).paid, false);
-  membershipFailure = true;
-  await assert.rejects(() => accessService.authorizeMaterialAccess("token", "one", false, "user"));
-  console.log("PASS: point-gated downloads, member-only enforcement, paid-only ZIP and failure handling");
+  assert.equal(counters, 14);
+  const plans = load("lib/wechat-pay.ts", { "server-only": {} });
+  assert.deepEqual(plans.membershipPlans().map((p) => p.code), ["annual"]);
+  assert.equal(plans.membershipPlan("monthly"), null);
+  assert.equal(plans.membershipPlan("quarterly"), null);
+  console.log("PASS: both routes use the same verified entitlement, no daily or point limit, ZIP safety limits, annual-only checkout");
 }
+
 main().catch((error) => { console.error(error); process.exitCode = 1; });

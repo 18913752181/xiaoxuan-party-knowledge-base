@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const admin = getSupabaseAdmin();
     const { data: order, error: orderError } = await admin
       .from("membership_orders")
-      .select("id,user_id,status,amount_total,paid_at,member_expires_at")
+      .select("status,amount_total")
       .eq("out_trade_no", refund.out_trade_no)
       .single();
     if (orderError || !order) return failure("订单不存在。");
@@ -79,55 +79,12 @@ export async function POST(request: Request) {
     if (order.status === "refunded" || !isFullRefund) return success();
     if (order.status !== "paid") return failure("订单尚未支付完成。");
 
-    // 只有成功从 paid 改为 refunded 的第一个通知继续处理资料，保证幂等。
-    const { data: updated, error: updateOrderError } = await admin
-      .from("membership_orders")
-      .update({
-        status: "refunded",
-        raw_notification: body,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", order.id)
-      .eq("status", "paid")
-      .select("id")
-      .maybeSingle();
-    if (updateOrderError) throw updateOrderError;
-    if (!updated) return success();
-
-    // 年卡退款后停止该订单未来的每日积分；历史已发积分按规则保留，不作扣减。
-    const { error: revokePointsError } = await admin
-      .from("annual_membership_point_periods")
-      .update({ revoked_at: new Date().toISOString() })
-      .eq("source_order_id", order.id)
-      .is("revoked_at", null);
-    if (revokePointsError) throw revokePointsError;
-
-    // 退款订单之后还有成功续费：当前会员权益以较新的订单为准，不作取消。
-    const { data: otherPaidOrders, error: otherOrdersError } = await admin
-      .from("membership_orders")
-      .select("paid_at,member_expires_at")
-      .eq("user_id", order.user_id)
-      .eq("status", "paid")
-      .order("paid_at", { ascending: false });
-    if (otherOrdersError) throw otherOrdersError;
-
-    const hasLaterPaidOrder = Boolean(
-      order.paid_at && otherPaidOrders?.some((item) => item.paid_at && item.paid_at > order.paid_at)
-    );
-    if (hasLaterPaidOrder) return success();
-
-    const previousExpiry = otherPaidOrders?.[0]?.member_expires_at || null;
-    const today = new Date().toISOString().slice(0, 10);
-    const remainingActive = Boolean(previousExpiry && previousExpiry >= today);
-    const { error: profileError } = await admin
-      .from("profiles")
-      .update({
-        member_status: remainingActive ? "member" : "free",
-        member_expires_at: remainingActive ? previousExpiry : null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", order.user_id);
-    if (profileError) throw profileError;
+    const { error: refundError } = await admin.rpc("refund_membership_order", {
+      p_out_trade_no: refund.out_trade_no,
+      p_amount_total: order.amount_total,
+      p_raw_notification: body
+    });
+    if (refundError) throw refundError;
 
     return success();
   } catch (error) {

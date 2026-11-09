@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta, updateContentUnitOrder } from "@/lib/content-units";
+import { contentUnitToMaterial, listContentUnits, updateContentUnitOrder } from "@/lib/content-units";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -17,42 +17,6 @@ export async function GET() {
 
   const units = await listContentUnits({ includeHidden: true });
   return withAuthCookies(check.session, NextResponse.json(units.map(contentUnitToMaterial)));
-}
-
-export async function PATCH(request: Request) {
-  const check = await requireAdmin();
-  if (!check.ok) return check.response;
-
-  const body = await request.json().catch(() => null);
-  const slugs: string[] = Array.isArray(body?.slugs)
-    ? Array.from(new Set<string>(body.slugs.map((slug: unknown) => String(slug || "").trim()).filter(Boolean)))
-    : [];
-
-  const hasMemberOnly = typeof body?.memberOnly === "boolean";
-  const pointsCost = Number(body?.pointsCost);
-  const hasPointsCost = body?.pointsCost !== undefined;
-  if (!slugs.length || (!hasMemberOnly && !hasPointsCost)) {
-    return NextResponse.json({ error: "请选择资料并指定要修改的内容。" }, { status: 400 });
-  }
-  if (hasPointsCost && (!Number.isInteger(pointsCost) || pointsCost < 0 || pointsCost > 9999)) {
-    return NextResponse.json({ error: "所需积分必须是 0 至 9999 的整数。" }, { status: 400 });
-  }
-
-  const updated = [];
-  for (const slug of slugs) {
-    const unit = await updateContentUnitMeta(slug, {
-      ...(hasMemberOnly ? { isVip: body.memberOnly } : {}),
-      ...(hasPointsCost ? { pointsCost } : {}),
-    });
-    if (unit) updated.push(contentUnitToMaterial(unit));
-  }
-
-  if (!updated.length) {
-    return NextResponse.json({ error: "没有找到可修改的资料。" }, { status: 404 });
-  }
-
-  revalidatePublicMaterialLists();
-  return withAuthCookies(check.session, NextResponse.json({ ok: true, materials: updated }));
 }
 
 export async function PUT(request: Request) {

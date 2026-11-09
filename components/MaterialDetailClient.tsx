@@ -8,10 +8,6 @@ import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
 import SupportCard, { shouldShowSupportCard } from "@/components/SupportCard";
-import { MaterialDownloadStatus, DownloadQuotaNotice } from "@/components/MaterialDownloadStatus";
-import { MaterialDownloadConfirmation } from "@/components/MaterialDownloadConfirmation";
-import { useMaterialPoints } from "@/components/useMaterialPoints";
-import { InsufficientPointsNotice, type PointsShortfall } from "@/components/InsufficientPointsNotice";
 
 function blocks(text?: string) {
   if (!text) return null;
@@ -92,16 +88,11 @@ function cleanNetworkItems(items?: string[]) {
 
 export function MaterialDetailClient({ initialMaterial, initialMaterials }: { initialMaterial: Material; initialMaterials: Material[] }) {
   const router = useRouter();
-  const pointInfo = useMaterialPoints();
-  const legacyBenefits = pointInfo.state?.legacyBenefits === true;
-  const [quotaError, setQuotaError] = useState("");
-  const [shortfall, setShortfall] = useState<PointsShortfall | null>(null);
   const [material, setMaterial] = useState<Material | null>(initialMaterial);
   const [allMaterials] = useState<Material[]>(initialMaterials);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
-  const [downloadConfirmOpen, setDownloadConfirmOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
@@ -121,21 +112,13 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
     setMessage(result.favorited ? "已收藏。" : "已取消收藏。");
   }
 
-  async function download(expectedPoints: number) {
+  async function download() {
     if (!material || isDownloading) return;
     setIsDownloading(true);
-    setShortfall(null);
-    setQuotaError("");
     setMessage("正在准备下载...");
-    const result = await downloadMaterialFile(material, expectedPoints);
+    const result = await downloadMaterialFile(material);
     setIsDownloading(false);
     if (!result.ok) {
-      if (result.dailyLimitExceeded) { setQuotaError(result.error || "今日下载名额不足。"); setMessage(""); return; }
-      if (result.insufficientPoints) {
-        setShortfall({ requiredPoints: result.requiredPoints ?? 0, pointsBalance: result.pointsBalance ?? 0 });
-        setMessage("");
-        return;
-      }
       if (result.membershipRequired) {
         setMemberOnlyPrompt(true);
         setMessage("");
@@ -150,7 +133,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
     }
 
     setMaterial((current) => current ? { ...current, download_count: current.download_count + 1 } : current);
-    setMessage(`文件下载已开始。本次扣除 ${result.chargedPoints ?? 0} 积分，余额 ${result.pointsBalance ?? 0} 积分。${result.dailyRemaining !== undefined ? `今日还可下载 ${result.dailyRemaining} 个不同文件。` : ""}`);
+    setMessage("文件下载已开始。");
     if (shouldShowSupportCard()) setShowSupport(true);
   }
 
@@ -184,7 +167,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-8 lg:px-8 lg:py-10">
-      {downloadConfirmOpen ? <MaterialDownloadConfirmation material={material} onClose={() => setDownloadConfirmOpen(false)} onConfirm={(points) => { setDownloadConfirmOpen(false); void download(points); }} /> : null}
       <Link href="/library" className="inline-flex items-center gap-1 text-sm font-medium text-neutral-600 transition-colors duration-150 hover:text-brand-red">
         <span aria-hidden="true">←</span> 返回资料库
       </Link>
@@ -205,26 +187,23 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
           ) : null}
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <button type="button" onClick={() => setDownloadConfirmOpen(true)} disabled={isDownloading} className="disabled:cursor-not-allowed disabled:opacity-50 rounded-xl border border-[#eee1c7] bg-[#fff9ec] px-7 py-3 text-sm font-medium text-[#80612e] transition-[background-color,transform] duration-150 hover:border-[#e3c98f] hover:bg-[#fff1d2] active:scale-[0.98]">
-              {isDownloading ? "下载中…" : "下载"}
+            <button type="button" onClick={() => void download()} disabled={isDownloading || !material.file_url} className="disabled:cursor-not-allowed disabled:opacity-50 rounded-xl border border-[#eee1c7] bg-[#fff9ec] px-7 py-3 text-sm font-medium text-[#80612e] transition-[background-color,transform] duration-150 hover:border-[#e3c98f] hover:bg-[#fff1d2] active:scale-[0.98]">
+              {isDownloading ? "下载中…" : material.file_url ? "下载" : "暂无文件"}
             </button>
             <button type="button" onClick={onToggleFavorite} className={`rounded-xl border px-6 py-3 text-sm transition-transform duration-150 active:scale-[0.98] ${isFavorite ? "border-[#c79b52] bg-[#fff8e8] text-[#8a6b50]" : "border-brand-line bg-white text-neutral-600"}`}>
               {isFavorite ? "已收藏" : "收藏资料"}
             </button>
           </div>
 
-          <MaterialDownloadStatus state={pointInfo.state} />
-          {quotaError ? <DownloadQuotaNotice message={quotaError} /> : null}
-          {shortfall ? <InsufficientPointsNotice {...shortfall} /> : null}
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
           {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
           {memberOnlyPrompt ? (
             <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
-              <p className="font-semibold text-[#9a4650]">该资料为会员专属</p>
-              <p className="mt-2 text-sm text-neutral-600">新会员需开通年卡，每天最多下载10个不同文件，首次下载扣积分。月卡和季卡不含资料库下载权限；老会员保留原权益。</p>
+              <p className="font-semibold text-[#9a4650]">资料库年卡专享下载</p>
+              <p className="mt-2 text-sm text-neutral-600">开通年卡，有效期内可下载全站资料。</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
-                <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">成为专属会员</Link>
+                <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">开通资料库年卡</Link>
               </div>
             </div>
           ) : null}
@@ -249,10 +228,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
             <div>
               <p className="text-xs text-neutral-400">收藏数</p>
               <p className="mt-1 font-medium text-neutral-700">{material.favorite_count}</p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-400">下载所需积分</p>
-              <p className="mt-1 font-medium text-neutral-700">{legacyBenefits ? "原会员权益，免扣积分" : pointInfo.state?.unlockedSlugs.includes(articleSlug) ? "已解锁，免费下载" : `${material.points_cost ?? 1} 积分（首次下载扣除，已解锁不重复扣分）`}</p>
             </div>
           </div>
         </div>

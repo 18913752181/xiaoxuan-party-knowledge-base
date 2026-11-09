@@ -1,27 +1,34 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
 
-export function useMaterialAccess() {
-  const [access, setAccess] = useState<{ paid: boolean; used: number; remaining: number } | null>(null);
-  const [message, setMessage] = useState("正在核验资料权限…");
-  const refresh = useCallback(async () => {
-    try {
-      const response = await fetch("/api/material-access", { cache: "no-store" });
-      if (!response.ok) {
-        setAccess(null);
-        setMessage(response.status === 401 ? "请先登录。" : "资料权限暂时无法核验，请稍后重试。");
-        return;
-      }
-      setAccess(await response.json());
-      setMessage("");
-    } catch { setAccess(null); setMessage("资料权限暂时无法核验，请稍后重试。"); }
-  }, []);
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import type { MaterialEntitlement } from "@/lib/types";
+
+export function useMaterialAccess(enabled = true) {
+  const { profile } = useAuth();
+  const userId = enabled ? profile?.id : undefined;
+  const [result, setResult] = useState<{ userId: string; access: MaterialEntitlement | null; error: string }>();
+
   useEffect(() => {
+    if (!userId) return;
+    const controller = new AbortController();
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/material-access", { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error("读取失败");
+        const access: MaterialEntitlement = await response.json();
+        if (!controller.signal.aborted) setResult({ userId, access, error: "" });
+      } catch {
+        if (!controller.signal.aborted) setResult({ userId, access: null, error: "下载权限暂时无法核验，请刷新后重试。" });
+      }
+    };
     void refresh();
-    window.addEventListener("material-access-changed", refresh);
     window.addEventListener("focus", refresh);
-    return () => { window.removeEventListener("material-access-changed", refresh); window.removeEventListener("focus", refresh); };
-  }, [refresh]);
-  return { access, message };
-}
+    return () => {
+      controller.abort();
+      window.removeEventListener("focus", refresh);
+    };
+  }, [userId]);
 
+  return result?.userId === userId ? result : undefined;
+}
