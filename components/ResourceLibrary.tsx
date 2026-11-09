@@ -21,13 +21,7 @@ const preferredTopics = ["发展党员", "主题党日", "换届选举", "三会
 const libraryPageSize = 12;
 type SortMode = "updated" | "popular";
 
-/** 数量按量级展示，不暴露精确值：9 → 9+，67 → 60+，934 → 900+ */
-function magnitudeLabel(value: number) {
-  if (value <= 0) return "0";
-  if (value < 10) return `${value}+`;
-  const step = 10 ** Math.floor(Math.log10(value));
-  return `${Math.floor(value / step) * step}+`;
-}
+const formatCount = new Intl.NumberFormat("zh-CN");
 
 export function ResourceLibrary({
   initialMaterials = [],
@@ -424,9 +418,9 @@ export function ResourceLibrary({
       {!libraryOnly && !showSearchMode && !isLoading && materials.length > 0 ? (
         <div className="bg-white">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-x-7 gap-y-2 px-5 py-4 text-sm text-neutral-600 lg:px-8">
-            <span><b className="font-semibold text-brand-ink">{magnitudeLabel(materials.length)}</b> 份常用资料</span>
-            <span><b className="font-semibold text-brand-ink">{magnitudeLabel(topicCounts.size)}</b> 个工作专题</span>
-            <span><b className="font-semibold text-brand-ink">{magnitudeLabel(totalDownloads)}</b> 次资料下载</span>
+            <span><b className="font-semibold text-brand-ink">{formatCount.format(materials.length)}</b> 份常用资料</span>
+            <span><b className="font-semibold text-brand-ink">{formatCount.format(topicCounts.size)}</b> 个工作专题</span>
+            <span><b className="font-semibold text-brand-ink">{formatCount.format(totalDownloads)}</b> 次资料下载</span>
           </div>
         </div>
       ) : null}
