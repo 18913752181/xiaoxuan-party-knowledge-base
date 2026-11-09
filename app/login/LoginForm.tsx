@@ -20,6 +20,7 @@ export default function LoginForm() {
   const [verificationCode, setVerificationCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   const [inWechat, setInWechat] = useState(false);
+  const [showWechatOptions, setShowWechatOptions] = useState(false);
   const [useWechatName, setUseWechatName] = useState(false);
   const [useWechatAvatar, setUseWechatAvatar] = useState(false);
   const [loading, setLoading] = useState<"send" | "verify" | "logout" | "">("");
@@ -175,7 +176,7 @@ export default function LoginForm() {
           <p className="text-sm font-medium tracking-[0.18em] text-[#9a4650]">登录 / 注册</p>
           <h1 className="mt-3 text-2xl font-semibold text-brand-ink">登录小宣资料库</h1>
           <p className="mt-5 text-base leading-8 text-neutral-600">
-            微信内可直接使用微信一键登录；也可以输入邮箱并验证 6 位验证码登录。
+            在微信内可以使用微信登录；也可以输入邮箱并验证 6 位验证码登录。
             新用户首次登录会自动创建账号，无需设置和记忆密码；已有邮箱账号的会员权益不受影响。
           </p>
         </div>
@@ -205,22 +206,12 @@ export default function LoginForm() {
 
           {inWechat ? (
             <>
-              <fieldset className="mb-4 rounded-xl border border-brand-line px-4 py-2">
-                <legend className="px-1 text-sm font-medium text-brand-ink">首次注册时的资料（选填）</legend>
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
-                  <input type="checkbox" checked={useWechatName} onChange={(event) => setUseWechatName(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
-                  使用微信名称
-                </label>
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
-                  <input type="checkbox" checked={useWechatAvatar} onChange={(event) => setUseWechatAvatar(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
-                  使用微信头像
-                </label>
-                <p className="pb-2 text-xs leading-5 text-neutral-600">未勾选或微信未提供的项目会使用默认资料。已有账号的资料保持原样。</p>
-              </fieldset>
               <button
                 type="button"
-                onClick={startWechatLogin}
-                className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#07c160] font-medium text-white shadow-[0_8px_20px_rgba(7,193,96,0.28)] transition hover:bg-[#06ad56] active:scale-[0.99]"
+                aria-expanded={showWechatOptions}
+                aria-controls="wechat-registration-options"
+                onClick={() => setShowWechatOptions((open) => !open)}
+                className={`flex h-12 w-full items-center justify-center gap-2.5 rounded-full font-medium transition active:scale-[0.99] ${showWechatOptions ? "bg-[#eaf7ef] text-[#17633c]" : "bg-[#07c160] text-white shadow-[0_8px_20px_rgba(7,193,96,0.28)] hover:bg-[#06ad56]"}`}
               >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
@@ -229,9 +220,30 @@ export default function LoginForm() {
                 </span>
                 微信登录 / 注册
               </button>
-              <p className="mt-2.5 text-center text-xs leading-6 text-neutral-400">
+              <div id="wechat-registration-options" hidden={!showWechatOptions} className="mt-4">
+                <fieldset className="rounded-xl border border-brand-line px-4 py-2">
+                  <legend className="px-1 text-sm font-medium text-brand-ink">首次注册时的资料（选填）</legend>
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
+                    <input type="checkbox" checked={useWechatName} onChange={(event) => setUseWechatName(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
+                    使用微信名称
+                  </label>
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
+                    <input type="checkbox" checked={useWechatAvatar} onChange={(event) => setUseWechatAvatar(event.target.checked)} className="h-4 w-4 accent-[#07a954]" />
+                    使用微信头像
+                  </label>
+                  <p className="pb-2 text-xs leading-5 text-neutral-600">未勾选或微信未提供的项目会使用默认资料。已有账号的资料保持原样。</p>
+                </fieldset>
+                <button
+                  type="button"
+                  onClick={startWechatLogin}
+                  className="mt-3 h-12 w-full rounded-full bg-[#07c160] font-medium text-white transition hover:bg-[#06ad56] active:scale-[0.99]"
+                >
+                  继续微信登录
+                </button>
+              </div>
+              {!showWechatOptions ? <p className="mt-2.5 text-center text-xs leading-6 text-neutral-400">
                 无需输入邮箱，授权后自动登录 / 注册
-              </p>
+              </p> : null}
               <div className="my-6 flex items-center gap-4 text-[11px] tracking-[0.2em] text-neutral-300">
                 <span className="h-px flex-1 bg-[#eee9e0]" />
                 或使用邮箱验证码
