@@ -518,8 +518,8 @@ export default function AdminMaterialsPage() {
                     <td className="px-4 py-3">{item.member_only ? "是" : "否"}</td>
                     <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
-                        <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
-                        <Link href={`/materials/${slug}`} className="text-[#6f8f7e]">预览</Link>
+                        <Link prefetch={false} href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
+                        <Link prefetch={false} href={`/materials/${slug}`} className="text-[#6f8f7e]">预览</Link>
                         <button type="button" onClick={() => requestDelete(item)} disabled={deletingSlug === slug} className="text-[#a35c4f] disabled:opacity-50">
                           {deletingSlug === slug ? "删除中" : "删除"}
                         </button>

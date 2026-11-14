@@ -39,18 +39,26 @@ async function main() {
     assert.equal(result.sortOrder, 0, "A counter update must preserve concurrent admin ordering");
     assert.equal(result.pointsCost, 3);
     for (const key of ["title", "isVip", "createdAt", "updatedAt"]) assert.equal(result[key], original[key], key);
+    assert.equal((await lib.listContentUnits())[0].meta.downloadCount, 38, "Writes invalidate the list snapshot");
     await fs.writeFile(metaPath, "{");
     const before = await fs.readFile(metaPath, "utf8");
     const savedError = console.error;
+    const now = Date.now;
+    let offset = 6000;
+    Date.now = () => now() + offset;
     console.error = () => {};
     try {
       assert.equal((await lib.listContentUnits()).length, 0, "Broken metadata must not become a newly published slug-title material");
       assert.equal(await lib.updateContentUnitCounter(slug, "favoriteCount", 1), null);
       assert.equal(await fs.readFile(metaPath, "utf8"), before, "A failed read must never overwrite the original file with defaults");
-    } finally { console.error = savedError; }
-    await fs.writeFile(metaPath, JSON.stringify({ title: original.title, slug }));
-    const unit = (await lib.listContentUnits())[0];
-    assert.equal(unit.meta.updatedAt, "2026-07-25T00:00:00.000Z", "Missing dates must not fabricate today's upload");
+      await fs.writeFile(metaPath, JSON.stringify({ title: original.title, slug }));
+      offset += 6000;
+      const unit = (await lib.listContentUnits())[0];
+      assert.equal(unit.meta.updatedAt, "2026-07-25T00:00:00.000Z", "External edits become visible after the snapshot expires");
+      await lib.updateContentUnitMeta(slug, { status: "hidden" });
+      assert.equal(await lib.getContentUnitBySlug(slug), null, "Hidden files are not returned from an earlier index");
+      assert.equal((await lib.listContentUnits()).length, 0);
+    } finally { console.error = savedError; Date.now = now; }
     console.log("PASS: atomic metadata, concurrent reads/counters/admin changes, preserved title/permissions/dates/order, invalid-read write protection");
   } finally {
     process.chdir(cwd);

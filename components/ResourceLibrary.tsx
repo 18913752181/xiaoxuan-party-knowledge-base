@@ -20,12 +20,12 @@ type SortMode = "updated" | "popular";
 const formatCount = new Intl.NumberFormat("zh-CN");
 
 export function ResourceLibrary({
-  initialMaterials = [],
+  initialMaterials,
   initialKeyword = "",
   initialTopic = "",
   libraryOnly = false
 }: {
-  initialMaterials?: Material[];
+  initialMaterials: Material[];
   initialKeyword?: string;
   initialTopic?: string;
   libraryOnly?: boolean;
@@ -39,7 +39,6 @@ export function ResourceLibrary({
   const [topic, setTopic] = useState(initialTopic || topicAllOption);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(initialMaterials.length === 0);
   const [page, setPage] = useState(1);
   const [showMembershipNotice, setShowMembershipNotice] = useState(false);
   const [supportMaterial, setSupportMaterial] = useState<Material | null>(null);
@@ -51,33 +50,19 @@ export function ResourceLibrary({
   const [folderPath, setFolderPath] = useState("");
 
   useEffect(() => {
+    setMaterials(initialMaterials);
+  }, [initialMaterials]);
+
+  useEffect(() => {
     let active = true;
-
-    // Keep a visible page aligned with shared production content after an
-    // admin edit or a deployment; initial data still gives an immediate render.
-    fetch("/api/content-units", { cache: "no-store" })
-      .then((response) => {
-        if (!response.ok) throw new Error("资料读取失败");
-        return response.json();
-      })
-      .then((rows) => {
-        if (active) setMaterials(Array.isArray(rows) ? rows : []);
-      })
-      .catch((error) => {
-        if (active && !initialMaterials.length) setMessage(`资料读取失败：${error.message}`);
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-
     listMyFavorites().then(({ rows, error }) => {
       if (!error && active) setFavoriteSlugs(rows.map((row) => row.article_slug));
-    });
+    }).catch(() => {});
 
     return () => {
       active = false;
     };
-  }, [initialMaterials.length]);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -354,7 +339,7 @@ export function ResourceLibrary({
                     return (
                       <Link
                         key={material.id}
-                        href={`/materials/${slug}`}
+                        prefetch={false} href={`/materials/${slug}`}
                         className="flex items-center justify-between gap-4 px-4 py-3 transition-colors duration-150 hover:bg-[#faf6f2]"
                       >
                         <div className="min-w-0">
@@ -376,7 +361,7 @@ export function ResourceLibrary({
         </div>
       </section>
 
-      {!libraryOnly && !showSearchMode && !isLoading && materials.length > 0 ? (
+      {!libraryOnly && !showSearchMode && materials.length > 0 ? (
         <div className="bg-white">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-x-7 gap-y-2 px-5 py-4 text-sm text-neutral-600 lg:px-8">
             <span><b className="font-semibold text-brand-ink">{formatCount.format(materials.length)}</b> 份常用资料</span>
@@ -452,7 +437,7 @@ export function ResourceLibrary({
             </div>
           ) : null}
 
-          {libraryOnly && canBatchDownload && !isLoading && downloadableVisibleMaterials.length ? (
+          {libraryOnly && canBatchDownload && downloadableVisibleMaterials.length ? (
             <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-brand-line bg-[#fafbfc] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <button type="button" onClick={toggleVisibleSelection} className="min-h-10 rounded-xl border border-[#dfe3e7] bg-white px-3.5 font-medium text-neutral-700 transition-[border-color,background-color,transform] duration-150 hover:border-[#cbd2d9] hover:bg-[#f8f9fa] active:scale-[0.98]">
@@ -525,18 +510,6 @@ export function ResourceLibrary({
           {accessResult?.error ? <p role="status" className="mt-4 text-sm text-neutral-600">{accessResult.error}</p> : null}
           {message ? <div className="mt-4 rounded-xl border border-[#efd5d8] bg-[#fff8f8] px-4 py-3 text-sm text-[#7d4d53]">{message}</div> : null}
           {supportMaterial ? <SupportCard material={supportMaterial} onClose={() => setSupportMaterial(null)} /> : null}
-          {isLoading ? (
-            <div className="mt-4 space-y-3" role="status" aria-label="正在读取资料库">
-              {[0, 1, 2].map((row) => (
-                <div key={row} className="animate-pulse rounded-2xl bg-white p-5 ring-1 ring-brand-line">
-                  <div className="h-3 w-28 rounded bg-[#e9edf0]" />
-                  <div className="mt-3 h-5 w-2/3 rounded bg-[#e9edf0]" />
-                  <div className="mt-3 h-3 w-full rounded bg-[#f1f3f5]" />
-                  <div className="mt-2 h-3 w-4/5 rounded bg-[#f1f3f5]" />
-                </div>
-              ))}
-            </div>
-          ) : (
           <div className="xuan-workspace mt-4 divide-y divide-[#e8ebee] overflow-hidden rounded-2xl">
             {visibleMaterials.map((material) => {
               const slug = getArticleSlug(material);
@@ -555,7 +528,7 @@ export function ResourceLibrary({
                     <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                       <span>{material.topic || material.category}</span><span>·</span><span>{material.file_type}</span>
                     </div>
-                    <Link href={`/materials/${slug}`} title={material.title} className="material-title mt-2 block text-lg font-semibold leading-7 text-brand-ink transition-colors duration-150 hover:text-brand-red"><span className="xuan-hover-highlight">{displayMaterialTitle(material.title)}</span></Link>
+                    <Link prefetch={false} href={`/materials/${slug}`} title={material.title} className="material-title mt-2 block text-lg font-semibold leading-7 text-brand-ink transition-colors duration-150 hover:text-brand-red"><span className="xuan-hover-highlight">{displayMaterialTitle(material.title)}</span></Link>
                     {meaningful(material.scenarios || material.description || material.summary) ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">适用场景：{material.scenarios || material.description || material.summary}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-400">
                       <span>更新 {formatDisplayDay(material.updated_at)}</span>
@@ -572,16 +545,15 @@ export function ResourceLibrary({
               );
             })}
           </div>
-          )}
-          {libraryOnly && !isLoading && totalPages > 1 ? (
+          {libraryOnly && totalPages > 1 ? (
             <nav className="mt-6 flex items-center justify-center gap-2" aria-label="资料分页">
               <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} className="min-h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 transition-[background-color,transform] duration-150 ease-out hover:bg-[#f1f3f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40">上一页</button>
               <span className="px-2 text-sm text-neutral-600" aria-live="polite">第 {currentPage} / {totalPages} 页</span>
               <button type="button" onClick={() => changePage(currentPage + 1)} disabled={currentPage === totalPages} className="min-h-11 rounded-xl border border-brand-line bg-white px-4 text-sm text-neutral-600 transition-[background-color,transform] duration-150 ease-out hover:bg-[#f1f3f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40">下一页</button>
             </nav>
           ) : null}
-          {!isLoading && !scopedMaterials.length && !childFolders.length ? <div className="xuan-quiet-card mt-4 rounded-2xl p-10 text-center text-sm text-neutral-500">没有找到匹配资料，请更换关键词、专题或文件夹。</div> : null}
-          {!libraryOnly && !isLoading && filteredMaterials.length ? (
+          {!scopedMaterials.length && !childFolders.length ? <div className="xuan-quiet-card mt-4 rounded-2xl p-10 text-center text-sm text-neutral-500">没有找到匹配资料，请更换关键词、专题或文件夹。</div> : null}
+          {!libraryOnly && filteredMaterials.length ? (
             <p className="mt-4 text-center text-xs text-neutral-400">
               首页仅展示最新 3 份，全部资料请前往
               <Link href="/library/materials" className="ml-1 text-[#9a4650] hover:underline">资料库</Link>

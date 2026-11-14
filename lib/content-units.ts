@@ -176,8 +176,20 @@ const writeJson = async (filePath: string, value: unknown) => {
 
 // The web server shares one content volume. Serialize read/modify/write for
 // each unit so counters cannot overwrite an admin edit or saved ordering.
-const sharedState = globalThis as typeof globalThis & { __xiaoxuanContentMutations?: Map<string, Promise<void>> };
+type ContentSnapshot = { expiresAt: number; units: ContentUnit[]; bySlug: Map<string, ContentUnit> };
+type ContentIndex = { snapshot?: ContentSnapshot; pending?: Promise<ContentSnapshot>; locations?: { expiresAt: number; bySlug: Map<string, string> } };
+const sharedState = globalThis as typeof globalThis & {
+  __xiaoxuanContentMutations?: Map<string, Promise<void>>;
+  __xiaoxuanContentIndex?: ContentIndex;
+};
 const mutations = sharedState.__xiaoxuanContentMutations ||= new Map<string, Promise<void>>();
+const contentIndex = sharedState.__xiaoxuanContentIndex ||= {};
+
+function invalidateContentIndex(locationsChanged = false) {
+  contentIndex.snapshot = undefined;
+  contentIndex.pending = undefined;
+  if (locationsChanged) contentIndex.locations = undefined;
+}
 async function mutateUnit<T>(slug: string, action: () => Promise<T>): Promise<T> {
   const previous = mutations.get(slug) || Promise.resolve();
   let release!: () => void;
@@ -339,7 +351,7 @@ const normalizeNetwork = (value: unknown, meta: ContentUnitMeta, related: Relate
   };
 };
 
-const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
+const loadMeta = async (dir: string): Promise<ContentUnitMeta | null> => {
   const metaPath = path.join(dir, "meta.json");
   if (!existsSync(metaPath)) return null;
   const storedMeta = await readJson<Partial<ContentUnitMeta> | null>(metaPath, null);
@@ -347,7 +359,12 @@ const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
     console.error("Content metadata unreadable; refusing to fabricate a published material", metaPath);
     return null;
   }
-  const meta = normalizeMeta(storedMeta, dir);
+  return normalizeMeta(storedMeta, dir);
+};
+
+const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
+  const meta = await loadMeta(dir);
+  if (!meta) return null;
   const tagsFromFile = await readJson<string[]>(path.join(dir, "tags.json"), []);
   const tags = meta.tags.length ? meta.tags : tagsFromFile;
   const relatedMap = normalizeRelated(await readJson<Partial<RelatedMap>>(path.join(dir, "related.json"), emptyRelated()));
@@ -356,7 +373,7 @@ const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
   const primaryFile = files[0];
   const introduction = await readText(path.join(dir, "introduction.md"), "");
   const summary = meta.summary || (await readText(path.join(dir, "summary.md"), ""));
-  const policyBasis = await readText(path.join(dir, "policy.md"), await readText(path.join(dir, "legal_basis.md"), fallback));
+  const policyBasis = (await readText(path.join(dir, "policy.md"))) || await readText(path.join(dir, "legal_basis.md"), fallback);
   const article = await readText(path.join(dir, "article.md"), introduction || summary || fallback);
 
   return {
@@ -390,18 +407,50 @@ const loadUnit = async (dir: string): Promise<ContentUnit | null> => {
   };
 };
 
-export async function listContentUnits(options: ListOptions = {}) {
+async function readContentSnapshot(): Promise<ContentSnapshot> {
   const dirs = await collectUnitDirs();
   const units = (await Promise.all(dirs.map(loadUnit))).filter(Boolean) as ContentUnit[];
-  return units
-    .filter((unit) => options.includeHidden || (!unit.meta.hidden && unit.meta.status !== "hidden"))
-    .sort((a, b) => {
+  units.sort((a, b) => {
       const aHasOrder = Number.isFinite(a.meta.sortOrder);
       const bHasOrder = Number.isFinite(b.meta.sortOrder);
       if (aHasOrder && bHasOrder) return Number(a.meta.sortOrder) - Number(b.meta.sortOrder);
       if (aHasOrder !== bHasOrder) return aHasOrder ? 1 : -1;
       return new Date(b.meta.updatedAt).getTime() - new Date(a.meta.updatedAt).getTime();
     });
+  const bySlug = new Map<string, ContentUnit>();
+  for (const unit of units) if (!bySlug.has(unit.slug)) bySlug.set(unit.slug, unit);
+  return { units, bySlug, expiresAt: Date.now() + 5000 };
+}
+
+async function getContentSnapshot(): Promise<ContentSnapshot> {
+  if (contentIndex.snapshot && contentIndex.snapshot.expiresAt > Date.now()) return contentIndex.snapshot;
+  if (contentIndex.pending) return contentIndex.pending;
+  const pending = readContentSnapshot().then((snapshot) => {
+    // An older scan must not refill the index after a write invalidates it.
+    if (contentIndex.pending === pending) {
+      contentIndex.snapshot = snapshot;
+      contentIndex.locations = {
+        expiresAt: snapshot.expiresAt,
+        bySlug: new Map(Array.from(snapshot.bySlug, ([slug, unit]) => [slug, unit.dir]))
+      };
+    }
+    return snapshot;
+  }).finally(() => {
+    if (contentIndex.pending === pending) contentIndex.pending = undefined;
+  });
+  contentIndex.pending = pending;
+  return pending;
+}
+
+export async function listContentUnits(options: ListOptions = {}) {
+  const { units } = await getContentSnapshot();
+  return units.filter((unit) => options.includeHidden || (!unit.meta.hidden && unit.meta.status !== "hidden"));
+}
+
+async function findContentDirectory(slug: string) {
+  const locations = contentIndex.locations;
+  if (locations && locations.expiresAt > Date.now()) return locations.bySlug.get(slug);
+  return (await getContentSnapshot()).bySlug.get(slug)?.dir;
 }
 
 export async function updateContentUnitOrder(slugs: string[]) {
@@ -412,17 +461,25 @@ export async function updateContentUnitOrder(slugs: string[]) {
   const unitMap = new Map(units.map((unit) => [unit.slug, unit]));
   const orderedUnits = uniqueSlugs.map((slug) => unitMap.get(slug)).filter(Boolean) as ContentUnit[];
 
-  await Promise.all(
-    orderedUnits.map(async (unit, index) => {
-      await updateContentUnitMeta(unit.slug, { sortOrder: index });
-    })
-  );
+  try {
+    for (let index = 0; index < orderedUnits.length; index++) {
+      const unit = orderedUnits[index];
+      if (unit.meta.sortOrder !== index) {
+        const saved = await persistUnitMeta(unit.slug, unit.dir, { sortOrder: index });
+        if (!saved) throw new Error("资料已变更，请刷新后重新排序。");
+      }
+    }
+  } finally {
+    invalidateContentIndex();
+  }
 
   return listContentUnits({ includeHidden: true });
 }
 
 export async function getContentUnitBySlug(slug: string, options: ListOptions = {}) {
-  const unit = (await listContentUnits({ includeHidden: true })).find((item) => item.slug === slug) ?? null;
+  const dir = await findContentDirectory(slug);
+  const unit = dir ? await loadUnit(dir) : null;
+  if (unit?.slug !== slug) return null;
   if (!unit || (!options.includeHidden && (unit.meta.hidden || unit.meta.status === "hidden"))) return null;
   return unit;
 }
@@ -508,6 +565,7 @@ export async function createContentUnit(input: GenerateInput) {
   await writeJson(path.join(dir, "files.json"), files);
   await writeJson(path.join(dir, "tags.json"), tags);
   await writeJson(path.join(dir, "meta.json"), meta);
+  invalidateContentIndex(true);
   return { slug, dir, meta };
 }
 
@@ -584,18 +642,27 @@ export async function updateContentUnit(slug: string, input: Partial<GenerateInp
     await writeJson(path.join(unit.dir, "files.json"), files);
     await writeJson(path.join(unit.dir, "tags.json"), tags);
     await writeJson(path.join(unit.dir, "meta.json"), meta);
-    return getContentUnitBySlug(slug, { includeHidden: true });
+    invalidateContentIndex();
+    return loadUnit(unit.dir);
+  });
+}
+
+async function persistUnitMeta(slug: string, dir: string, updates: Partial<ContentUnitMeta>) {
+  return mutateUnit(slug, async () => {
+    const current = await loadMeta(dir);
+    if (!current || current.slug !== slug) return null;
+    const meta = normalizeMeta({ ...current, ...updates }, dir);
+    await writeJson(path.join(dir, "meta.json"), meta);
+    return meta;
   });
 }
 
 export async function updateContentUnitMeta(slug: string, updates: Partial<ContentUnitMeta>) {
-  return mutateUnit(slug, async () => {
-    const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-    if (!unit) return null;
-    const meta = normalizeMeta({ ...unit.meta, ...updates }, unit.dir);
-    await writeJson(path.join(unit.dir, "meta.json"), meta);
-    return { ...unit, meta };
-  });
+  const dir = await findContentDirectory(slug);
+  if (!dir) return null;
+  const meta = await persistUnitMeta(slug, dir, updates);
+  invalidateContentIndex(Boolean(updates.slug && updates.slug !== slug));
+  return meta;
 }
 
 export async function deleteContentUnit(slug: string) {
@@ -604,6 +671,7 @@ export async function deleteContentUnit(slug: string) {
   const resolved = path.resolve(unit.dir);
   if (!resolved.startsWith(path.resolve(contentRoot))) throw new Error("Invalid content unit path.");
   await rm(resolved, { recursive: true, force: true });
+  invalidateContentIndex(true);
   return true;
 }
 
@@ -624,12 +692,15 @@ export async function getContentUnitTemplatePath(slug: string) {
 
 export async function updateContentUnitCounter(slug: string, type: "download" | "favorite" | "downloadCount" | "favoriteCount", delta = 1) {
   return mutateUnit(slug, async () => {
-    const unit = await getContentUnitBySlug(slug, { includeHidden: true });
-    if (!unit) return null;
+    const dir = await findContentDirectory(slug);
+    if (!dir) return null;
+    const current = await loadMeta(dir);
+    if (!current || current.slug !== slug) return null;
     const key = type === "download" || type === "downloadCount" ? "downloadCount" : "favoriteCount";
-    const nextValue = Math.max(0, Number(unit.meta[key] || 0) + delta);
-    const meta = { ...unit.meta, [key]: nextValue };
-    await writeJson(path.join(unit.dir, "meta.json"), meta);
+    const nextValue = Math.max(0, Number(current[key] || 0) + delta);
+    const meta = { ...current, [key]: nextValue };
+    await writeJson(path.join(dir, "meta.json"), meta);
+    invalidateContentIndex();
     return meta;
   });
 }
