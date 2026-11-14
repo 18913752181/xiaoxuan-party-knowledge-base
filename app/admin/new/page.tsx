@@ -116,6 +116,7 @@ export default function AdminNewPage() {
   const [form, setForm] = useState<Record<string, string>>(emptyForm);
   const [files, setFiles] = useState<UploadItem[]>([]);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [isVip, setIsVip] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState<string[]>([]);
@@ -224,6 +225,7 @@ export default function AdminNewPage() {
         Object.entries(form).forEach(([key, value]) => body.append(key, value));
         body.set("title", title);
         body.append("category", form.topic);
+        body.set("isVip", String(isVip));
         body.append("seoTitle", title);
         body.append("seoDescription", form.summary);
         body.append("seoKeywords", "");
@@ -244,6 +246,7 @@ export default function AdminNewPage() {
       setForm({ ...emptyForm, topic: nextTopic });
       setFiles([]);
       setFileInputKey((current) => current + 1);
+      setIsVip(false);
       setStatus(`已成功上传 ${results.length} 份资料。`);
       window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     } else {
@@ -333,6 +336,11 @@ export default function AdminNewPage() {
             <Select label="状态" value={form.status} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary} onChange={(value) => setField("summary", value)} />
+          <label className="mt-4 flex w-fit items-center gap-2 text-sm text-[#59635d]">
+            <input type="checkbox" checked={isVip} onChange={(event) => setIsVip(event.target.checked)} aria-describedby="member-material-note" />
+            是否会员资料
+          </label>
+          <p id="member-material-note" className="mt-1 text-xs text-[#66706a]">用于资料分类，下载权限按资料库现行规则执行。</p>
         </Section>
 
         <Section title="三、工作分类关联">

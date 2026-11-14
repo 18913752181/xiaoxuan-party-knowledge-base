@@ -35,6 +35,7 @@ export default function AdminMaterialEditPage() {
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [form, setForm] = useState<Record<string, string>>({});
   const [file, setFile] = useState<File | null>(null);
+  const [isVip, setIsVip] = useState(false);
   const [message, setMessage] = useState("正在读取资料...");
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +49,7 @@ export default function AdminMaterialEditPage() {
         }
 
         setMaterial(row);
+        setIsVip(Boolean(row.member_only));
         setForm({
           title: row.title || titleFromFileName(row.file_name),
           topic: row.topic || row.category || "",
@@ -136,6 +138,7 @@ export default function AdminMaterialEditPage() {
 
     try {
       const body = new FormData();
+      body.set("isVip", String(isVip));
       Object.entries(form).forEach(([key, value]) => body.append(key, value));
       body.append("seoTitle", form.title || "");
       body.append("seoDescription", form.summary || "");
@@ -205,6 +208,11 @@ export default function AdminMaterialEditPage() {
             <Select label="状态" value={form.status || "published"} options={statusOptions.map((item) => item.value)} labels={Object.fromEntries(statusOptions.map((item) => [item.value, item.label]))} onChange={(value) => setField("status", value)} />
           </div>
           <Input label="一句话简介" value={form.summary || ""} onChange={(value) => setField("summary", value)} />
+          <label className="mt-4 flex w-fit items-center gap-2 text-sm text-[#59635d]">
+            <input type="checkbox" checked={isVip} onChange={(event) => setIsVip(event.target.checked)} aria-describedby="member-material-note" />
+            是否会员资料
+          </label>
+          <p id="member-material-note" className="mt-1 text-xs text-[#66706a]">用于资料分类，下载权限按资料库现行规则执行。</p>
         </Section>
 
         <Section title="工作分类关联">

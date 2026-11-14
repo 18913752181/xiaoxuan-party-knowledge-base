@@ -43,6 +43,7 @@ export async function PUT(request: Request, { params }: { params: { slug: string
 
   const formData = await request.formData();
   const file = formData.get("file");
+  const isVip = formData.get("isVip");
   const payload = {
     title: String(formData.get("title") || "").trim(),
     topic: String(formData.get("topic") || "").trim(),
@@ -50,6 +51,7 @@ export async function PUT(request: Request, { params }: { params: { slug: string
     stage: String(formData.get("stage") || "").trim(),
     tags: splitList(formData.get("tags")),
     summary: String(formData.get("summary") || "").trim(),
+    isVip: isVip === "true" ? true : isVip === "false" ? false : undefined,
     status: String(formData.get("status") || "published") as "draft" | "published" | "hidden",
     introduction: String(formData.get("introduction") || "").trim(),
     policyBasis: String(formData.get("policyBasis") || "").trim(),

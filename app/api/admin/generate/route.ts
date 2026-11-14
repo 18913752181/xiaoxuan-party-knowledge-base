@@ -54,6 +54,7 @@ export async function POST(request: Request) {
     stage: String(formData.get("stage") || "").trim(),
     tags: splitList(formData.get("tags")),
     summary: String(formData.get("summary") || "").trim(),
+    isVip: formData.get("isVip") === "true",
     status: String(formData.get("status") || "published") as "draft" | "published" | "hidden",
     introduction: String(formData.get("introduction") || "").trim(),
     policyBasis: String(formData.get("policyBasis") || "").trim(),
