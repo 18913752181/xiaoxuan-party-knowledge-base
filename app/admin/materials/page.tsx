@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import MoveMaterialDialog from "@/components/admin/MoveMaterialDialog";
 import type { Material } from "@/lib/types";
 
 function uniqueMaterials(rows: Material[]) {
@@ -24,6 +25,7 @@ export default function AdminMaterialsPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [movingSlug, setMovingSlug] = useState("");
   const [draggingSlug, setDraggingSlug] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const [keyword, setKeyword] = useState("");
@@ -55,6 +57,9 @@ export default function AdminMaterialsPage() {
       return (topic === "全部分类" || itemTopic === topic) && (!query || searchable.includes(query));
     });
   }, [keyword, materials, topic]);
+
+  const movingIndex = filteredMaterials.findIndex((item) => (item.slug || item.id) === movingSlug);
+  const movingMaterial = filteredMaterials[movingIndex];
 
   const loadMaterials = useCallback(async () => {
     setMessage("正在读取资料...");
@@ -209,8 +214,8 @@ export default function AdminMaterialsPage() {
       setMaterials(Array.isArray(data.materials) ? uniqueMaterials(data.materials) : uniqueNextMaterials);
       setMessage("资料顺序已保存，前台展示顺序已同步更新。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "顺序保存失败");
       await loadMaterials();
+      setMessage(error instanceof Error ? error.message : "顺序保存失败");
     } finally {
       setSavingOrder(false);
     }
@@ -243,22 +248,10 @@ export default function AdminMaterialsPage() {
       })
     );
 
-    setMaterials(nextMaterials);
     setDraggingSlug("");
     void saveOrder(nextMaterials).finally(() => {
       dragInProgressRef.current = false;
     });
-  }
-
-  /** 将资料移动到可见列表的最前/最后（复用拖动排序的保存逻辑）。 */
-  function moveVisibleMaterialToEdge(sourceSlug: string, edge: "front" | "back") {
-    if (!sourceSlug || savingOrder || dragInProgressRef.current) return;
-    const visibleSlugs = filteredMaterials.map((item) => item.slug || item.id);
-    const fromIndex = visibleSlugs.indexOf(sourceSlug);
-    if (fromIndex < 0) return;
-    const targetIndex = edge === "front" ? 0 : visibleSlugs.length - 1;
-    if (fromIndex === targetIndex) return;
-    moveVisibleMaterial(visibleSlugs[targetIndex], sourceSlug);
   }
 
   // ---- 内联编辑（双击单元格直接修改） ----
@@ -365,12 +358,12 @@ export default function AdminMaterialsPage() {
                 ? `找到 ${filteredMaterials.length} 份资料，共 ${materials.length} 份`
                 : `共有 ${materials.length} 份资料`}
             </p>
-            <p className="mt-2 text-xs text-[#8b918d]">拖动柄调整顺序或点「最前 / 最后」快速归位；阶段、上一步工作、下一步工作可双击直接修改。</p>
+            <p className="mt-2 text-xs text-[#8b918d]">拖动或点击「移动」调整当前列表顺序；阶段、上一步工作、下一步工作可双击直接修改。</p>
           </div>
           <Link href="/admin/new" className="rounded-full bg-[#6f8f7e] px-5 py-2 text-sm text-white">新增资料</Link>
         </div>
 
-        {message ? <p className="mt-6 text-sm text-[#6d746f]">{message}</p> : null}
+        {message ? <p role="status" className="mt-6 text-sm text-[#6d746f]">{message}</p> : null}
 
         <section className="mt-6 rounded-2xl border border-[#e4ded2] bg-white p-4 shadow-sm">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px_auto]">
@@ -464,12 +457,16 @@ export default function AdminMaterialsPage() {
                 return (
                   <tr
                     key={item.id}
-                    onDragOver={(event) => event.preventDefault()}
+                    onDragOver={(event) => {
+                      if (draggingSlug && !savingOrder) {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "move";
+                      }
+                    }}
                     onDrop={(event) => {
+                      if (!draggingSlug || savingOrder) return;
                       event.preventDefault();
-                          const sourceSlug =
-                            event.dataTransfer.getData("text/plain") || draggingSlug;
-                      moveVisibleMaterial(slug, sourceSlug);
+                      moveVisibleMaterial(slug);
                     }}
                     className={`border-t border-[#eee8dc] transition-colors ${draggingSlug === slug ? "bg-[#f2eee5] opacity-60" : "hover:bg-[#fffdf9]"}`}
                   >
@@ -483,44 +480,25 @@ export default function AdminMaterialsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
-                          draggable={!savingOrder}
-                          aria-label={`拖动调整${item.title}的顺序`}
-                          title="按住拖动调整顺序"
+                          draggable={!savingOrder && filteredMaterials.length > 1}
+                          aria-label={`移动${item.title}`}
+                          aria-haspopup="dialog"
+                          title="点击选择位置，或按住拖动"
+                          onClick={() => setMovingSlug(slug)}
                           onDragStart={(event) => {
                             setDraggingSlug(slug);
                             event.dataTransfer.effectAllowed = "move";
                             event.dataTransfer.setData("text/plain", slug);
                           }}
                           onDragEnd={() => setDraggingSlug("")}
-                          className="cursor-grab select-none rounded-lg border border-[#ddd6cc] bg-[#fbfaf6] px-2 py-1 text-base leading-none text-[#7c847f] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
-                          disabled={savingOrder}
+                          className="inline-flex min-h-11 cursor-grab select-none items-center gap-1 whitespace-nowrap rounded-lg px-2 text-sm text-[#59635d] hover:bg-[#f2eee5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#59635d] active:cursor-grabbing disabled:cursor-default disabled:opacity-50"
+                          disabled={savingOrder || filteredMaterials.length < 2}
                         >
-                          ⋮⋮
+                          <span aria-hidden="true" className="text-base leading-none">⋮⋮</span>
+                          移动
                         </button>
-                        <div className="flex flex-col gap-1">
-                          <button
-                            type="button"
-                            onClick={() => moveVisibleMaterialToEdge(slug, "front")}
-                            disabled={savingOrder}
-                            title="移到最前"
-                            className="rounded-md border border-[#ddd6cc] bg-white px-1.5 py-0.5 text-xs leading-none text-[#6f8f7e] transition hover:bg-[#eef4f0] disabled:opacity-50"
-                          >
-                            最前
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveVisibleMaterialToEdge(slug, "back")}
-                            disabled={savingOrder}
-                            title="移到最后"
-                            className="rounded-md border border-[#ddd6cc] bg-white px-1.5 py-0.5 text-xs leading-none text-[#6f8f7e] transition hover:bg-[#eef4f0] disabled:opacity-50"
-                          >
-                            最后
-                          </button>
-                        </div>
-                      </div>
                     </td>
                     <td className="px-4 py-3 font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.topic || item.category}</td>
@@ -561,6 +539,22 @@ export default function AdminMaterialsPage() {
           </table>
         </div>
       </div>
+      {movingMaterial ? (
+        <MoveMaterialDialog
+          key={movingSlug}
+          title={movingMaterial.title}
+          position={movingIndex + 1}
+          total={filteredMaterials.length}
+          filtered={filteredMaterials.length !== materials.length}
+          onClose={() => setMovingSlug("")}
+          onMove={(position) => {
+            const target = filteredMaterials[position - 1];
+            if (!target) return;
+            setMovingSlug("");
+            moveVisibleMaterial(target.slug || target.id, movingSlug);
+          }}
+        />
+      ) : null}
       <ConfirmDialog
         open={Boolean(pendingDelete)}
         title={`确定删除「${pendingDelete?.title || ""}」吗？`}
