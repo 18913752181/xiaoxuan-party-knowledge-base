@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { contentUnitToMaterial, listContentUnits, updateContentUnitOrder } from "@/lib/content-units";
+import { contentUnitToMaterial, listContentUnits, updateContentUnitMeta, updateContentUnitOrder } from "@/lib/content-units";
 import { requireAdmin, withAuthCookies } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -17,6 +17,30 @@ export async function GET() {
 
   const units = await listContentUnits({ includeHidden: true });
   return withAuthCookies(check.session, NextResponse.json(units.map(contentUnitToMaterial)));
+}
+
+export async function PATCH(request: Request) {
+  const check = await requireAdmin();
+  if (!check.ok) return check.response;
+
+  const body = await request.json().catch(() => null);
+  if (typeof body?.memberOnly !== "boolean" || !Array.isArray(body.slugs) ||
+      !body.slugs.length || body.slugs.some((slug: unknown) => typeof slug !== "string" || !slug.trim())) {
+    return withAuthCookies(check.session, NextResponse.json({ error: "请选择资料并指定会员分类。" }, { status: 400 }));
+  }
+
+  const slugs = Array.from(new Set<string>(body.slugs.map((slug: string) => slug.trim())));
+  const updatedSlugs: string[] = [];
+  for (const slug of slugs) {
+    try {
+      if (await updateContentUnitMeta(slug, { isVip: body.memberOnly })) updatedSlugs.push(slug);
+    } catch (error) {
+      console.error("Failed to update material classification", slug, error);
+    }
+  }
+
+  if (updatedSlugs.length) revalidatePublicMaterialLists();
+  return withAuthCookies(check.session, NextResponse.json({ updatedSlugs }));
 }
 
 export async function PUT(request: Request) {

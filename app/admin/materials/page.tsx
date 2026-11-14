@@ -22,6 +22,7 @@ export default function AdminMaterialsPage() {
   const [pendingDelete, setPendingDelete] = useState<Material | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [draggingSlug, setDraggingSlug] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
@@ -157,6 +158,34 @@ export default function AdminMaterialsPage() {
         ? current.filter((slug) => !filteredSlugs.includes(slug))
         : Array.from(new Set([...current, ...filteredSlugs]))
     );
+  }
+
+  async function updateMembership(memberOnly: boolean) {
+    if (!selectedSlugs.length || bulkUpdating || bulkDeleting) return;
+    setBulkUpdating(true);
+    setMessage("");
+    const slugs = [...selectedSlugs];
+    try {
+      const response = await fetch("/api/admin/materials", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs, memberOnly })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "批量修改失败，请稍后重试。");
+
+      const updated = new Set<string>(data.updatedSlugs);
+      setMaterials((current) => current.map((item) =>
+        updated.has(item.slug || item.id) ? { ...item, member_only: memberOnly, isVip: memberOnly } : item
+      ));
+      setSelectedSlugs((current) => current.filter((slug) => !updated.has(slug)));
+      const failed = slugs.length - updated.size;
+      setMessage(`已将 ${updated.size} 份资料设为${memberOnly ? "会员资料" : "普通资料"}。${failed ? `${failed} 份未更新，仍保留选中，请刷新列表或重试。` : ""}`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "批量修改失败，请稍后重试。");
+    } finally {
+      setBulkUpdating(false);
+    }
   }
 
   async function saveOrder(nextMaterials: Material[]) {
@@ -386,15 +415,21 @@ export default function AdminMaterialsPage() {
         {selectedSlugs.length ? (
           <section className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#d8d0c4] bg-[#fffdf9] px-4 py-3 shadow-sm">
             <span className="text-sm font-medium text-[#465149]">已选择 {selectedSlugs.length} 份资料</span>
+            <button type="button" onClick={() => void updateMembership(true)} disabled={bulkUpdating || bulkDeleting} className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50">
+              设为会员资料
+            </button>
+            <button type="button" onClick={() => void updateMembership(false)} disabled={bulkUpdating || bulkDeleting} className="rounded-xl border border-[#cfc6ba] bg-white px-4 py-2 text-sm text-[#59635d] disabled:opacity-50">
+              设为普通资料
+            </button>
             <button
               type="button"
               onClick={() => setBulkDeleteOpen(true)}
-              disabled={bulkDeleting}
+              disabled={bulkDeleting || bulkUpdating}
               className="rounded-xl border border-[#dfbcbc] bg-white px-4 py-2 text-sm font-medium text-[#a34850] disabled:opacity-50"
             >
               批量删除
             </button>
-            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkDeleting} className="text-sm text-[#6d746f] disabled:opacity-50">
+            <button type="button" onClick={() => setSelectedSlugs([])} disabled={bulkDeleting || bulkUpdating} className="text-sm text-[#6d746f] disabled:opacity-50">
               取消选择
             </button>
           </section>
@@ -419,6 +454,7 @@ export default function AdminMaterialsPage() {
                 <th className="px-4 py-3">阶段</th>
                 <th className="px-4 py-3">上一步工作</th>
                 <th className="px-4 py-3">下一步工作</th>
+                <th className="whitespace-nowrap px-4 py-3">会员资料</th>
                 <th className="sticky right-0 bg-[#fbfaf6] px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">操作</th>
               </tr>
             </thead>
@@ -501,6 +537,7 @@ export default function AdminMaterialsPage() {
                       (item.relatedMap?.next || []).join("、") || "-",
                       Array.from(new Set(materials.filter((row) => (row.slug || row.id) !== slug).map((row) => row.title)))
                     )}
+                    <td className="px-4 py-3">{item.member_only ? "是" : "否"}</td>
                     <td className="sticky right-0 bg-white px-4 py-3 shadow-[-8px_0_10px_-8px_rgba(60,50,40,0.25)]">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/admin/materials/${slug}/edit`} className="text-[#6f8f7e]">编辑</Link>
@@ -515,7 +552,7 @@ export default function AdminMaterialsPage() {
               })}
               {!filteredMaterials.length && !message ? (
                 <tr className="border-t border-[#eee8dc]">
-                  <td colSpan={8} className="px-4 py-10 text-center text-[#6d746f]">
+                  <td colSpan={9} className="px-4 py-10 text-center text-[#6d746f]">
                     没有找到符合条件的资料，请更换关键词或分类。
                   </td>
                 </tr>
