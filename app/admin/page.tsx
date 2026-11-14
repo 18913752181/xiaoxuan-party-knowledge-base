@@ -64,9 +64,6 @@ export default function AdminPage() {
       <div className="mx-auto max-w-5xl">
         <p className="text-sm font-medium text-[#6f8f7e]">后台管理</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">资料管理中心</h1>
-        <p className="mt-4 max-w-2xl text-base leading-8 text-[#66706a]">
-          文件是主体，知识说明是辅助。后台负责资料管理与工作小猫值班记录，不迁移文章到 Supabase。
-        </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {links.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-2xl border border-[#e4ded2] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#90a99a]">
