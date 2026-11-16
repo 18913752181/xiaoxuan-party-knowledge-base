@@ -180,8 +180,11 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
         {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
         {!guest && access?.allowed ? <>
           {androidWechat && material.file_url ? <>
-            <a href={material.file_url + "?attachment=1"} download className={button + " flex items-center justify-center"} onClick={() => void rememberDownload(material)}>下载文件</a>
-            <p className="mt-2 text-xs leading-5 text-neutral-600">若微信只打开文档，请查看右上角「⋯」是否有保存选项。已购资料可回来重新下载。</p>
+            <iframe name="material-attachment-download" title="附件下载" hidden />
+            <a href={material.file_url + "?attachment=1"} target="material-attachment-download" download className={button + " flex items-center justify-center"} onClick={() => {
+              setMessage("已请求下载。若未出现保存提示，可能是当前微信版本限制了网页下载。");
+              void rememberDownload(material);
+            }}>下载文件</a>
           </> : <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>}
           {access.remaining > 0 ? <Link href="/library/materials" className="mt-3 block text-sm text-neutral-600">剩余 {access.remaining} 次免费下载机会 · 去选资料</Link> : null}
         </> : null}
