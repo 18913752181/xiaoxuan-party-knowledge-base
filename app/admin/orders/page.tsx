@@ -5,9 +5,13 @@ import { useEffect, useState } from "react";
 
 type Order = {
   id: string;
+  kind: "membership" | "single" | "pair";
   out_trade_no: string;
   email?: string;
-  description: string;
+  user_id?: string;
+  description?: string;
+  first_material?: string;
+  second_material?: string;
   amount_total: number;
   status: string;
   wechat_transaction_id?: string;
@@ -19,6 +23,8 @@ type Order = {
 const statusText: Record<string, string> = {
   pending: "待支付", paid: "已支付", closed: "已关闭", failed: "下单失败", refunded: "已退款"
 };
+
+const orderType = { membership: "会员", single: "单份资料", pair: "双份资料" };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,7 +48,7 @@ export default function AdminOrdersPage() {
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold">订单管理</h1>
-            <p className="mt-3 text-sm text-neutral-500">共 {orders.length} 笔订单</p>
+            <p className="mt-3 text-sm text-neutral-500">显示最近 {orders.length} 笔订单</p>
           </div>
         </div>
         {message ? <p className="mt-6 rounded-xl bg-white p-4 text-sm text-[#a64550]">{message}</p> : null}
@@ -50,7 +56,8 @@ export default function AdminOrdersPage() {
           <table className="min-w-[1050px] w-full text-left text-sm">
             <thead className="bg-[#f0ece4] text-[#59625d]">
               <tr>
-                <th className="px-4 py-4">订单号</th><th className="px-4 py-4">用户邮箱</th>
+                <th className="px-4 py-4">订单号</th><th className="px-4 py-4">用户邮箱 / ID</th>
+                <th className="px-4 py-4">购买内容</th>
                 <th className="px-4 py-4">金额</th><th className="px-4 py-4">支付状态</th>
                 <th className="px-4 py-4">创建时间</th><th className="px-4 py-4">支付时间</th>
                 <th className="px-4 py-4">会员到期时间</th>
@@ -58,9 +65,15 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className="divide-y divide-[#eee8df]">
               {orders.map((order) => (
-                <tr key={order.id}>
+                <tr key={order.kind + ":" + order.id}>
                   <td className="px-4 py-4 font-mono text-xs">{order.out_trade_no}</td>
-                  <td className="px-4 py-4">{order.email || "-"}</td>
+                  <td className="max-w-[18rem] break-all px-4 py-4">{order.email || order.user_id || "-"}</td>
+                  <td className="min-w-36 px-4 py-4">
+                    <span className="font-medium">{orderType[order.kind]}</span>
+                    {order.kind === "membership" && order.description ? <p className="mt-1 text-neutral-600">{order.description}</p> : null}
+                    {order.first_material ? <p className="mt-1 break-words text-neutral-600">{order.first_material}</p> : null}
+                    {order.second_material ? <p className="mt-1 break-words text-neutral-600">{order.second_material}</p> : order.kind === "pair" && order.status === "paid" ? <p className="mt-1 text-neutral-500">第二份待领取</p> : null}
+                  </td>
                   <td className="px-4 py-4">¥ {(order.amount_total / 100).toFixed(2)}</td>
                   <td className="px-4 py-4"><span className={`rounded-full px-3 py-1 ${order.status === "paid" ? "bg-[#e5f0e9] text-[#4b755f]" : "bg-[#f5eee6] text-[#8a6b50]"}`}>{statusText[order.status] || order.status}</span></td>
                   <td className="px-4 py-4">{new Date(order.created_at).toLocaleString("zh-CN")}</td>
