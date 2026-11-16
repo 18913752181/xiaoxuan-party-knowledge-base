@@ -21,6 +21,8 @@ async function main() {
   let fileSize = 8;
   let reads = 0;
   let counters = 0;
+  let purchased = { owned: false, remaining: 0 };
+  let redeemed = 0;
   const entitlementCalls = [];
   const mocks = {
     "@/lib/server-auth": {
@@ -35,6 +37,10 @@ async function main() {
       },
       annualMembershipRequired: { error: "需要年卡", code: "ANNUAL_MEMBERSHIP_REQUIRED" }
     },
+    "@/lib/material-purchase": {
+      materialPurchaseAccess: async () => purchased,
+      redeemMaterialPurchase: async () => { redeemed++; return true; }
+    },
     "@/lib/content-units": {
       getContentUnitDownloadFilePath: async (slug) => slug === "unpublished" ? null : { path: "test.pdf", file: { originalName: "same.pdf" } },
       updateContentUnitCounter: async () => { counters++; }
@@ -44,7 +50,8 @@ async function main() {
       readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); }
     }
   };
-  const download = load("app/api/content-units/[id]/download/route.ts", mocks).GET;
+  const route = load("app/api/content-units/[id]/download/route.ts", mocks);
+  const download = route.GET;
   const batch = load("app/api/content-units/batch-download/route.ts", mocks).POST;
   const single = (slug) => download(new Request("http://localhost/download?expectedPoints=1"), { params: { id: slug } });
   const zipFiles = (slugs) => batch(new Request("http://localhost/batch", { method: "POST", body: JSON.stringify({ slugs, userId: "forged-user", expectedPoints: 0 }) }));
@@ -91,6 +98,18 @@ async function main() {
   const zip = await JSZip.loadAsync(await archive.arrayBuffer());
   assert.deepEqual(Object.keys(zip.files), ["same.pdf", "same (2).pdf"]);
   assert.equal(counters, 14);
+  canDownload = false;
+  const redeem = (id) => route.POST(new Request("http://localhost/download", {
+    method: "POST", headers: { "content-type": "application/json" }, body: '{"redeem":true}'
+  }), { params: { id } });
+  purchased = { owned: false, remaining: 1 };
+  assert.equal((await single("two")).status, 403);
+  assert.equal((await redeem("unpublished")).status, 404);
+  assert.equal(redeemed, 0, "Missing files and passive requests do not use a credit.");
+  assert.equal((await redeem("two")).status, 200);
+  purchased = { owned: true, remaining: 0 };
+  assert.equal((await single("two")).status, 200);
+  assert.equal(redeemed, 1);
   const plans = load("lib/wechat-pay.ts", { "server-only": {} });
   assert.deepEqual(plans.membershipPlans().map((p) => p.code), ["annual"]);
   assert.equal(plans.membershipPlan("monthly"), null);

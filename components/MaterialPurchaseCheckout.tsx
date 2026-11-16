@@ -1,0 +1,210 @@
+
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { downloadMaterialFile } from "@/lib/download-file";
+import type { Material } from "@/lib/types";
+
+type Access = { allowed: boolean; remaining: number; status: string | null; jsapi: boolean; pendingOrder: string | null; codeUrl: string | null; resume: Record<string, string> | null };
+type Plan = "single" | "pair";
+const qrUrl = (codeUrl: string) => "/api/payments/wechat/qrcode?url=" + encodeURIComponent(codeUrl);
+
+async function invokeWechat(params: Record<string, string>) {
+  const bridge = (window as Window & { WeixinJSBridge?: { invoke: (name: string, params: unknown, cb: (result: { err_msg?: string }) => void) => void } }).WeixinJSBridge;
+  if (!bridge) throw Error("微信收银台暂不可用，请在微信内重新打开。");
+  const result = await new Promise<{ err_msg?: string }>((resolve) => bridge.invoke("getBrandWCPayRequest", params, resolve));
+  if (result.err_msg !== "get_brand_wcpay_request:ok") throw Error("未完成支付，可继续支付或取消订单。");
+}
+
+export default function MaterialPurchaseCheckout({ material }: { material: Material }) {
+  const slug = material.slug || material.id;
+  const page = "/membership/materials?slug=" + encodeURIComponent(slug);
+  const endpoint = "/api/payments/materials?slug=" + encodeURIComponent(slug);
+  const login = "/login?redirect=" + encodeURIComponent(page);
+  const [plan, setPlan] = useState<Plan>("pair");
+  const [access, setAccess] = useState<Access | null>(null);
+  const [guest, setGuest] = useState(false);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [order, setOrder] = useState("");
+  const [qr, setQr] = useState("");
+  const [pollNonce, setPollNonce] = useState(0);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const inFlight = useRef(false);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const params = new URLSearchParams(location.search);
+    if (params.get("plan") === "single") setPlan("single");
+    if (params.get("jsapi") === "error") setMessage("微信授权未完成，请重试。");
+    fetch(endpoint, { signal: ctrl.signal, cache: "no-store" })
+      .then(async (response) => {
+        if (response.status === 401) return setGuest(true);
+        if (!response.ok) throw Error("资料购买状态暂时无法读取，请刷新重试。");
+        const data: Access = await response.json();
+        if (ctrl.signal.aborted) return;
+        setAccess(data);
+        if (data.pendingOrder && !data.allowed) {
+          setOrder(data.pendingOrder);
+          if (data.codeUrl) setQr(qrUrl(data.codeUrl));
+        } else if (!data.allowed && data.remaining > 0 && !dialog.current?.open) dialog.current?.showModal();
+      })
+      .catch((error) => { if (!ctrl.signal.aborted) setMessage(error.message || "暂时无法读取购买状态。"); });
+    return () => ctrl.abort();
+  }, [endpoint]);
+
+  useEffect(() => {
+    if (!order || access?.allowed) return;
+    const ctrl = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    async function poll() {
+      try {
+        const r = await fetch(endpoint + "&order=" + encodeURIComponent(order), { signal: ctrl.signal, cache: "no-store" });
+        if (ctrl.signal.aborted) return;
+        if (r.status === 404 || r.status === 401) {
+          setOrder(""); setQr("");
+          if (r.status === 401) setGuest(true);
+          return;
+        }
+        if (r.ok) {
+          const next: Access = await r.json();
+          if (ctrl.signal.aborted) return;
+          setAccess(next);
+          if (next.allowed || ["failed","refunded","closed"].includes(next.status || "")) {
+            setOrder(""); setQr("");
+            setMessage(next.allowed ? "支付成功，可以下载文件了。" : "订单未完成，可重新购买。");
+            return;
+          }
+        }
+      } catch {}
+      if (!ctrl.signal.aborted && ++attempts < 40) timer = setTimeout(poll, 3000);
+      else if (!ctrl.signal.aborted) setMessage("暂未确认付款，可以再次查询订单。");
+    }
+    void poll();
+    return () => { ctrl.abort(); clearTimeout(timer); };
+  }, [order, endpoint, access?.allowed, pollNonce]);
+
+  async function purchase() {
+    if (!access || order || inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true); setMessage("");
+    try {
+      const jsapi = access.jsapi && /MicroMessenger/i.test(navigator.userAgent);
+      const r = await fetch("/api/payments/materials", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, plan, jsapi })
+      });
+      const data = await r.json();
+      if (data.needOAuth) {
+        location.href = "/api/payments/wechat/oauth?return=" + encodeURIComponent(page + "&plan=" + plan);
+        return;
+      }
+      if (r.status === 401) { setGuest(true); return; }
+      if (!r.ok) throw Error(data.error || "创建订单失败。");
+      setOrder(data.outTradeNo);
+      if (data.payParams) {
+        await invokeWechat(data.payParams);
+      } else if (data.codeUrl) {
+        setQr(qrUrl(data.codeUrl));
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "支付暂不可用。");
+    } finally { inFlight.current = false; setBusy(false); }
+  }
+
+  async function manageOrder(cancel: boolean) {
+    if (!order || inFlight.current) return;
+    inFlight.current = true; setBusy(true); setMessage("");
+    try {
+      if (cancel) {
+        const r = await fetch("/api/payments/materials", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order }) });
+        const next = await r.json();
+        if (!r.ok) throw Error(next.error || "无法取消订单。");
+        setOrder(""); setQr("");
+        const check = await fetch(endpoint, { cache: "no-store" });
+        if (check.ok) setAccess(await check.json());
+      } else if (access?.resume) {
+        await invokeWechat(access.resume);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "请稍后重试。");
+    } finally { setPollNonce((n) => n + 1); inFlight.current = false; setBusy(false); }
+  }
+
+  async function download(redeem = false) {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true); setMessage("");
+    try {
+      const result = await downloadMaterialFile(material, redeem);
+      setMessage(result.ok ? "下载已开始。" : result.error || "下载失败，请重试。");
+      if (result.needsLogin) setGuest(true);
+      if (redeem) {
+        const check = await fetch(endpoint, { cache: "no-store" });
+        if (check.ok) setAccess(await check.json());
+      }
+    } catch { setMessage("网络异常，请稍后重试。"); }
+    finally { inFlight.current = false; setBusy(false); }
+  }
+
+  const button = "mt-4 min-h-11 w-full rounded-xl bg-brand-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
+  const price = plan === "pair" ? "4.90" : "3.90";
+  const purchasing = access && !access.allowed && !access.remaining && !order && !guest;
+
+  return (
+    <main className="mx-auto max-w-lg px-4 py-8">
+      <Link href="/library/materials" className="text-sm text-neutral-600">← 返回资料列表</Link>
+      <section className="mt-4 rounded-2xl border border-brand-line bg-white p-5">
+        <h1 className="break-words text-xl font-semibold text-brand-ink">{material.title}</h1>
+        {purchasing ? <>
+          <fieldset className="mt-5 grid gap-2">
+            <legend className="sr-only">购买方案</legend>
+            {([
+              ["single", "单份下载", "当前文件", "3.90"],
+              ["pair", "双份优惠", "当前文件＋购后任选一份", "4.90"]
+            ] as const).map(([key, title, detail, amount]) => (
+              <label key={key} className={"flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 " + (plan === key ? "border-[#796031] bg-[#fffdf7]" : "border-brand-line")}>
+                <input type="radio" name="material-plan" checked={plan === key} onChange={() => setPlan(key)} disabled={busy} />
+                <span className="min-w-0 flex-1"><strong className="block text-sm">{title}</strong><small className="text-neutral-600">{detail}</small></span>
+                <strong className="shrink-0">¥{amount}</strong>
+              </label>
+            ))}
+          </fieldset>
+          <button type="button" className={button} disabled={busy} onClick={() => void purchase()}>{busy ? "正在发起支付…" : "微信支付 ¥" + price}</button>
+        </> : null}
+        {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
+        {!guest && access?.allowed ? <>
+          <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>
+          {access.remaining > 0 ? <Link href="/library/materials" className="mt-3 block text-sm text-neutral-600">剩余 {access.remaining} 次免费下载机会 · 去选资料</Link> : null}
+        </> : null}
+        {!guest && access && !access.allowed && !order && access.remaining > 0 ? (
+          <button type="button" className={button} disabled={busy} onClick={() => dialog.current?.showModal()}>使用 1 次免费下载</button>
+        ) : null}
+        {!guest && order ? <div className="mt-4 text-center">
+          {qr ? <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic payment QR code */}
+            <img src={qr} width="224" height="224" alt="微信支付二维码" className="mx-auto" />
+            <p className="text-sm text-neutral-600">请用微信扫码支付</p>
+          </> : null}
+          <button type="button" className="mt-2 min-h-11 px-3 text-sm underline" onClick={() => setPollNonce((n) => n + 1)}>查询付款结果</button>
+          {access?.resume ? <button type="button" disabled={busy} className="min-h-11 px-3 text-sm underline" onClick={() => void manageOrder(false)}>继续微信支付</button> : null}
+          <button type="button" disabled={busy} className="min-h-11 px-3 text-sm underline" onClick={() => void manageOrder(true)}>取消订单</button>
+        </div> : null}
+        {!guest && !access && !message ? <p className="mt-4 text-sm text-neutral-600">正在核验下载权益…</p> : null}
+        {message ? <p className="mt-3 text-sm text-neutral-700" role="status">{message}</p> : null}
+        <Link href="/membership/payment" className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-[#fff8df] p-3 text-sm">
+          <span><strong className="block">年度会员</strong>有效期内全站资料直接下载</span><strong className="shrink-0">¥99／年</strong>
+        </Link>
+        <dialog ref={dialog} className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl p-5 backdrop:bg-black/50" aria-labelledby="material-redeem-title">
+          <h2 id="material-redeem-title" className="font-semibold">使用 1 次免费下载机会？</h2>
+          <p className="mt-2 break-words text-sm">{material.title}</p>
+          <div className="mt-4 flex justify-end gap-2">
+            <button type="button" autoFocus className="min-h-11 px-3 text-sm" onClick={() => dialog.current?.close()}>取消</button>
+            <button type="button" className="min-h-11 rounded-lg bg-brand-ink px-3 text-sm text-white" onClick={() => { dialog.current?.close(); void download(true); }}>确认下载</button>
+          </div>
+        </dialog>
+      </section>
+    </main>
+  );
+}

@@ -143,6 +143,16 @@ export async function queryNativeOrder(outTradeNo: string): Promise<WechatOrderS
   return (await response.json()) as WechatOrderState;
 }
 
+export async function closeWechatOrder(outTradeNo: string) {
+  if (!wechatPayConfigured()) return false;
+  const path = `/v3/pay/transactions/out-trade-no/${encodeURIComponent(outTradeNo)}/close`;
+  const body = JSON.stringify({ mchid: env("WECHAT_PAY_MCH_ID") });
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST", headers: wechatApiHeaders("POST", path, body), body, cache: "no-store"
+  });
+  return response.status === 204;
+}
+
 type PlatformCertificate = { serialNo: string; certificate: string };
 let certificateCache: { expiresAt: number; items: PlatformCertificate[] } | null = null;
 

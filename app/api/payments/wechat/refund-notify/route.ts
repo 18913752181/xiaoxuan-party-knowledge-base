@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isMaterialPurchaseOrder, setMaterialPurchaseStatus } from "@/lib/material-purchase";
 import {
   decryptWechatResource,
   verifyWechatNotification,
@@ -57,6 +58,13 @@ export async function POST(request: Request) {
       refund.mchid !== mchid
     ) {
       return failure("退款结果无效。");
+    }
+
+    if (isMaterialPurchaseOrder(refund.out_trade_no)) {
+      const amount = refund.amount?.total;
+      if (typeof amount !== "number" || !Number.isInteger(amount) || !Number.isInteger(refund.amount?.refund)) return failure("退款金额无效。");
+      if (refund.amount?.refund !== amount) return success();
+      return await setMaterialPurchaseStatus(refund.out_trade_no, amount, null, null, true) ? success() : failure("资料退款订单无效。");
     }
 
     const admin = getSupabaseAdmin();

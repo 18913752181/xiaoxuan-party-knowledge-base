@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isMaterialPurchaseOrder, setMaterialPurchaseStatus } from "@/lib/material-purchase";
 import {
   decryptWechatResource,
   verifyWechatNotification,
@@ -37,6 +38,11 @@ export async function POST(request: Request) {
       transaction.mchid !== identity.mchid ||
       !wechatAcceptedAppIds().includes(transaction.appid)
     ) return failure("支付结果无效。");
+
+    if (isMaterialPurchaseOrder(transaction.out_trade_no)) {
+      const ok = await setMaterialPurchaseStatus(transaction.out_trade_no, transaction.amount?.total, transaction.transaction_id, transaction.success_time);
+      return ok ? NextResponse.json({ code: "SUCCESS", message: "成功" }) : failure("资料订单或支付金额无效。");
+    }
 
     const admin = getSupabaseAdmin();
     const { data: order } = await admin

@@ -92,7 +92,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
   const [allMaterials] = useState<Material[]>(initialMaterials);
   const [favoriteSlugs, setFavoriteSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
-  const [memberOnlyPrompt, setMemberOnlyPrompt] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
@@ -120,7 +119,7 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
     setIsDownloading(false);
     if (!result.ok) {
       if (result.membershipRequired) {
-        setMemberOnlyPrompt(true);
+        router.push("/membership/materials?slug=" + encodeURIComponent(getArticleSlug(material)));
         setMessage("");
         return;
       }
@@ -197,16 +196,6 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
           {message ? <p className="mt-5 rounded-2xl bg-[#fffaf1] px-4 py-3 text-sm text-[#7a633f]">{message}</p> : null}
           {showSupport && material ? <SupportCard material={material} onClose={() => setShowSupport(false)} /> : null}
-          {memberOnlyPrompt ? (
-            <div className="mt-5 rounded-2xl border-2 border-[#9a4650] bg-[#fff7f5] p-5">
-              <p className="font-semibold text-[#9a4650]">资料库年卡专享下载</p>
-              <p className="mt-2 text-sm text-neutral-600">开通年卡，有效期内可下载全站资料。</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button type="button" onClick={() => setMemberOnlyPrompt(false)} className="rounded-xl border border-[#d8c7c1] bg-white px-5 py-2.5 text-sm text-neutral-600">暂不开通</button>
-                <Link href="/membership/payment" className="rounded-xl bg-[#9a4650] px-5 py-2.5 text-sm font-medium text-white">开通资料库年卡</Link>
-              </div>
-            </div>
-          ) : null}
 
           <div className="mt-7 grid gap-x-6 gap-y-4 rounded-2xl border border-brand-line bg-white p-5 text-sm sm:grid-cols-2 lg:grid-cols-3">
             <div>

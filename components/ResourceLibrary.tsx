@@ -211,7 +211,7 @@ export function ResourceLibrary({
     setDownloadingSlug(null);
     if (!result.ok) {
       if (result.membershipRequired) {
-        setShowMembershipNotice(true);
+        router.push("/membership/materials?slug=" + encodeURIComponent(getArticleSlug(material)));
         setMessage("");
         return;
       }

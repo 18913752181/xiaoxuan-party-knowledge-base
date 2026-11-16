@@ -139,8 +139,11 @@ async function responseError(response: Response): Promise<DownloadResult> {
   return { ok: false, error, membershipRequired: ["ANNUAL_MEMBERSHIP_REQUIRED", "MEMBERSHIP_REQUIRED", "MATERIAL_QUOTA_EXCEEDED", "BATCH_MEMBERSHIP_REQUIRED"].includes(code) };
 }
 
-export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string): Promise<DownloadResult> {
-  const response = await fetch(url, { credentials: "same-origin" });
+export async function downloadAuthenticatedUrl(url: string, fallbackFileName: string, redeem = false): Promise<DownloadResult> {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...(redeem ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ redeem: true }) } : {})
+  });
 
   if (!response.ok) {
     return responseError(response);
@@ -159,10 +162,10 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
   return { ok: true };
 }
 
-export async function downloadMaterialFile(material: Material): Promise<DownloadResult> {
+export async function downloadMaterialFile(material: Material, redeem = false): Promise<DownloadResult> {
   if (!material.file_url) return { ok: false, error: "该资料暂未上传可下载文件。" };
   let result: DownloadResult;
-  try { result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title); }
+  try { result = await downloadAuthenticatedUrl(material.file_url, material.file_name || material.title, redeem); }
   catch { result = { ok: false, error: "网络异常，请稍后重试。" }; }
   if (result.ok) await rememberDownload(material);
   return result;
