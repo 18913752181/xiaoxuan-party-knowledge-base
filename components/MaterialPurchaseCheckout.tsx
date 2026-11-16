@@ -27,6 +27,9 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
   const [guest, setGuest] = useState(false);
   const [message, setMessage] = useState("");
   const [androidWechat, setAndroidWechat] = useState(false);
+  const [inWechat, setInWechat] = useState(false);
+  const [browserLink, setBrowserLink] = useState("");
+  const [showCopyField, setShowCopyField] = useState(false);
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState("");
   const [qr, setQr] = useState("");
@@ -36,7 +39,11 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
 
   useEffect(() => {
     const ctrl = new AbortController();
-    setAndroidWechat(/Android/i.test(navigator.userAgent) && /MicroMessenger/i.test(navigator.userAgent));
+    const wechat = /MicroMessenger/i.test(navigator.userAgent);
+    setInWechat(wechat);
+    setAndroidWechat(wechat && /Android/i.test(navigator.userAgent));
+    setBrowserLink("");
+    setShowCopyField(false);
     const params = new URLSearchParams(location.search);
     if (params.get("plan") === "single") setPlan("single");
     if (params.get("jsapi") === "error") setMessage("微信授权未完成，请重试。");
@@ -152,6 +159,43 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
     finally { inFlight.current = false; setBusy(false); }
   }
 
+  async function prepareBrowserLink() {
+    if (!material.file_url || inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true);
+    setBrowserLink("");
+    setShowCopyField(false);
+    setMessage("");
+    try {
+      const response = await fetch(material.file_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ browserLink: true })
+      });
+      const data = await response.json();
+      if (response.status === 401) setGuest(true);
+      if (!response.ok) throw Error(data.error || "暂时无法生成下载链接。");
+      const url = new URL(material.file_url, location.origin);
+      url.searchParams.set("ticket", data.ticket);
+      setBrowserLink(url.href);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "暂时无法生成下载链接。");
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function copyBrowserLink() {
+    try {
+      await navigator.clipboard.writeText(browserLink);
+      setMessage("已复制，请粘贴到手机浏览器打开。");
+    } catch {
+      setShowCopyField(true);
+      setMessage("请长按复制链接，再到手机浏览器打开。");
+    }
+  }
+
   const button = "mt-4 min-h-11 w-full rounded-xl bg-brand-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
   const price = plan === "pair" ? "4.90" : "3.90";
   const purchasing = access && !access.allowed && !access.remaining && !order && !guest;
@@ -186,6 +230,19 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
               void rememberDownload(material);
             }}>下载文件</a>
           </> : <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>}
+          {inWechat && material.file_url ? <div className="mt-2">
+            <button type="button" className="min-h-11 w-full rounded-xl border border-brand-line px-4 text-sm font-semibold text-brand-ink disabled:opacity-50" disabled={busy} onClick={() => void prepareBrowserLink()}>
+              {browserLink ? "重新生成下载链接" : "用浏览器下载"}
+            </button>
+            {browserLink ? <>
+              <p className="mt-3 text-sm text-neutral-600">链接 2 分钟内有效，浏览器打开后可直接下载。</p>
+              <div className="flex flex-wrap gap-x-4 text-sm underline">
+                <a href={browserLink} rel="noreferrer" className="inline-flex min-h-11 items-center">打开下载链接</a>
+                <button type="button" className="min-h-11 underline" onClick={() => void copyBrowserLink()}>复制链接</button>
+              </div>
+              {showCopyField ? <input type="text" readOnly aria-label="下载链接" value={browserLink} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-brand-line p-2 text-sm" /> : null}
+            </> : null}
+          </div> : null}
           {access.remaining > 0 ? <Link href="/library/materials" className="mt-3 block text-sm text-neutral-600">剩余 {access.remaining} 次免费下载机会 · 去选资料</Link> : null}
         </> : null}
         {!guest && access && !access.allowed && !order && access.remaining > 0 ? (

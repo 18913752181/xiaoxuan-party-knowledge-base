@@ -125,6 +125,42 @@ async function main() {
   assert.match(attachment.headers.get("content-disposition"), /^attachment; filename="material\.pdf"; filename\*=UTF-8''same\.pdf$/);
   assert.match(await attachment.text(), /^%PDF/);
   assert.equal(redeemed, 2);
+  process.env.MATERIAL_DOWNLOAD_TICKET_SECRET = "test-download-ticket-secret";
+  const issue = () => route.POST(new Request("http://localhost/download", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ browserLink: true })
+  }), { params: { id: "two" } });
+  const useTicket = (ticket, id = "two") => download(new Request("http://localhost/download?ticket=" + ticket), { params: { id } });
+  user = null;
+  assert.equal((await issue()).status, 401);
+  user = { id: "session-user" };
+  purchased = { owned: false, remaining: 1 };
+  assert.equal((await issue()).status, 403);
+  purchased = { owned: true, remaining: 0 };
+  const issued = await issue();
+  assert.equal(issued.status, 200);
+  assert.equal(issued.headers.get("Cache-Control"), "private, no-store");
+  const { ticket } = await issued.json();
+  user = null;
+  assert.equal((await useTicket(ticket, "different")).status, 403);
+  assert.equal((await useTicket((ticket[0] === "A" ? "B" : "A") + ticket.slice(1))).status, 403);
+  const handedOff = await useTicket(ticket);
+  assert.equal(handedOff.status, 200);
+  assert.equal(handedOff.headers.get("X-Test-Refreshed"), null);
+  assert.equal(handedOff.headers.get("Referrer-Policy"), "no-referrer");
+  assert.equal(handedOff.headers.get("content-type"), "application/octet-stream");
+  assert.equal(handedOff.headers.get("content-disposition"), attachment.headers.get("content-disposition"));
+  assert.match(await handedOff.text(), /^%PDF/);
+  purchased = { owned: false, remaining: 1 };
+  assert.equal((await useTicket(ticket)).status, 403);
+  purchased = { owned: true, remaining: 0 };
+  const now = Date.now;
+  Date.now = () => now() + 120_000;
+  try {
+    assert.equal((await useTicket(ticket)).status, 403);
+  } finally {
+    Date.now = now;
+  }
+  assert.equal(redeemed, 2, "Browser handoff never uses an extra credit.");
   const plans = load("lib/wechat-pay.ts", { "server-only": {} });
   assert.deepEqual(plans.membershipPlans().map((p) => p.code), ["annual"]);
   assert.equal(plans.membershipPlan("monthly"), null);
