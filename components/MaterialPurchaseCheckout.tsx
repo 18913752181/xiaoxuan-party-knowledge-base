@@ -158,7 +158,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
-      <Link href="/library/materials" className="text-sm text-neutral-600">← 返回资料列表</Link>
+      <Link href="/library/materials" className="text-sm text-neutral-600">返回资料列表</Link>
       <section className="mt-4 rounded-2xl border border-brand-line bg-white p-5">
         <h1 className="break-words text-xl font-semibold text-brand-ink">{material.title}</h1>
         {purchasing ? <>

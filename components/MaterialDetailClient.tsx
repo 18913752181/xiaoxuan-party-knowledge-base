@@ -166,8 +166,8 @@ export function MaterialDetailClient({ initialMaterial, initialMaterials }: { in
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-8 lg:px-8 lg:py-10">
-      <Link href="/library" className="inline-flex items-center gap-1 text-sm font-medium text-neutral-600 transition-colors duration-150 hover:text-brand-red">
-        <span aria-hidden="true">←</span> 返回资料库
+      <Link href="/library" className="inline-block text-sm font-medium text-neutral-600 transition-colors duration-150 hover:text-brand-red">
+        返回资料库
       </Link>
 
       <article className="mt-5 overflow-hidden rounded-2xl border border-brand-line bg-white shadow-soft">
