@@ -323,9 +323,9 @@ export function ResourceLibrary({
           <form onSubmit={submitSearch} className={`xuan-search-shell ${libraryOnly ? "mt-6 max-w-3xl" : "mt-8"} flex items-center rounded-3xl p-2 pl-5 transition-[border-color,box-shadow] duration-150`}>
             <span className="mr-3 text-xl text-neutral-400" aria-hidden="true">⌕</span>
             <label htmlFor="material-search" className="sr-only">搜索资料</label>
-            <input id="material-search" type="search" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索主题党日、发展党员、换届选举……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-500 md:text-base" />
+            <input id="material-search" type="search" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索发展党员、换届选举……" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-brand-ink outline-none placeholder:text-neutral-500 md:text-base" />
             {submittedKeyword ? <button type="button" onClick={clearSearch} className="h-12 shrink-0 px-3 text-sm text-neutral-400 transition-colors hover:text-brand-red">清除</button> : null}
-            <button type="submit" className="h-12 shrink-0 rounded-2xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">开始查找</button>
+            <button type="submit" className="h-12 shrink-0 rounded-2xl border border-[#dfe3e7] bg-[#f4f5f6] px-5 text-sm font-semibold text-[#30343a] transition-[background-color,border-color,transform] duration-150 hover:border-[#cfd5db] hover:bg-[#e9ecef] active:scale-[0.98]">查找</button>
           </form>
           {showSearchMode ? (
             <div className="mt-3 overflow-hidden rounded-2xl border border-[#e7ded5] bg-white shadow-lg">
