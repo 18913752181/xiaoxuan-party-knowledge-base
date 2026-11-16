@@ -204,7 +204,11 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
           <span><strong className="block">年度会员</strong>有效期内全站资料直接下载</span><strong className="shrink-0">¥99／年</strong>
         </Link>
         <dialog ref={dialog} className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl p-5 backdrop:bg-black/50" aria-labelledby="material-redeem-title">
-          <h2 id="material-redeem-title" className="font-semibold">使用 1 次免费下载机会？</h2>
+          <h2 id="material-redeem-title" className="font-semibold">
+            {access && access.remaining > 1
+              ? `您还剩 ${access.remaining} 次免费下载机会，是否使用 1 次？`
+              : "您仅剩 1 次免费下载机会，是否使用？"}
+          </h2>
           <p className="mt-2 break-words text-sm">{material.title}</p>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" autoFocus className="min-h-11 px-3 text-sm" onClick={() => dialog.current?.close()}>取消</button>
