@@ -1,5 +1,7 @@
 ﻿import { readFile } from "fs/promises";
 import path from "path";
+import { access } from "fs/promises";
+import { constants } from "node:fs";
 import { NextResponse } from "next/server";
 import { getContentUnitDownloadFilePath, updateContentUnitCounter } from "@/lib/content-units";
 import { applyAuthCookies, getServerSession } from "@/lib/server-auth";
@@ -26,23 +28,25 @@ function contentType(fileName: string) {
 }
 
 function downloadFileName(headerName: string) {
-  const encoded = encodeDownloadName(headerName);
-  return `attachment; filename*=UTF-8''${encoded}`;
+  const encoded = encodeDownloadName(headerName).replace(/['()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+  const extension = path.extname(headerName);
+  const fallback = /^\.[a-z0-9]{1,10}$/i.test(extension) ? "material" + extension : "material";
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`;
 }
 
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
-  return download(params.id, false);
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  return download(params.id, false, new URL(request.url).searchParams.get("attachment") === "1");
 }
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) return NextResponse.json({ error: "请求格式无效。" }, { status: 415 });
   const body = await request.json().catch(() => null);
   if (body?.redeem !== true) return NextResponse.json({ error: "请先确认使用下载机会。" }, { status: 400 });
-  return download(params.id, true);
+  return download(params.id, true, false, body.unlockOnly === true);
 }
 
-async function download(id: string, redeem: boolean) {
+async function download(id: string, redeem: boolean, attachment = false, unlockOnly = false) {
   const session = await getServerSession();
   const finish = (response: NextResponse) => {
     response.headers.set("Cache-Control", "private, no-store");
@@ -60,17 +64,20 @@ async function download(id: string, redeem: boolean) {
     }
     const file = await getContentUnitDownloadFilePath(slug);
     if (!file) return finish(NextResponse.json({ error: "没有找到可下载的资料。" }, { status: 404 }));
-    const buffer = await readFile(file.path);
+    if (unlockOnly) await access(file.path, constants.R_OK);
+    const buffer = unlockOnly ? null : await readFile(file.path);
     if (purchase && !purchase.owned && !(await redeemMaterialPurchase(session.user.id, slug))) {
       return finish(NextResponse.json({ error: "下载机会已用完，请刷新页面。" }, { status: 409 }));
     }
+    if (!buffer) return finish(NextResponse.json({ unlocked: true }));
     const name = file.file?.originalName || (file.title + path.extname(file.path));
 
     await updateContentUnitCounter(slug, "downloadCount", 1).catch((error) => {
       console.error("Failed to update download count", error);
     });
     return finish(new NextResponse(new Uint8Array(buffer), { headers: {
-      "Content-Type": contentType(name),
+      "Content-Type": attachment ? "application/octet-stream" : contentType(name),
+      "X-Content-Type-Options": "nosniff",
       "Content-Length": String(buffer.byteLength),
       "Content-Disposition": downloadFileName(name)
     } }));

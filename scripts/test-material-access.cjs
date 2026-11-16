@@ -46,6 +46,7 @@ async function main() {
       updateContentUnitCounter: async () => { counters++; }
     },
     "fs/promises": {
+      access: async () => {},
       stat: async () => ({ size: fileSize }),
       readFile: async () => { reads++; return Buffer.from("%PDF-1.4"); }
     }
@@ -99,8 +100,8 @@ async function main() {
   assert.deepEqual(Object.keys(zip.files), ["same.pdf", "same (2).pdf"]);
   assert.equal(counters, 14);
   canDownload = false;
-  const redeem = (id) => route.POST(new Request("http://localhost/download", {
-    method: "POST", headers: { "content-type": "application/json" }, body: '{"redeem":true}'
+  const redeem = (id, unlockOnly = false) => route.POST(new Request("http://localhost/download", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ redeem: true, unlockOnly })
   }), { params: { id } });
   purchased = { owned: false, remaining: 1 };
   assert.equal((await single("two")).status, 403);
@@ -110,6 +111,20 @@ async function main() {
   purchased = { owned: true, remaining: 0 };
   assert.equal((await single("two")).status, 200);
   assert.equal(redeemed, 1);
+  const direct = () => download(new Request("http://localhost/download?attachment=1"), { params: { id: "two" } });
+  purchased = { owned: false, remaining: 1 };
+  assert.equal((await direct()).status, 403, "Direct attachment requests must not spend a credit.");
+  const beforeUnlock = reads;
+  const unlocked = await redeem("two", true);
+  assert.deepEqual(await unlocked.json(), { unlocked: true });
+  assert.equal(reads, beforeUnlock, "Unlocking does not transfer the file.");
+  purchased = { owned: true, remaining: 0 };
+  const attachment = await direct();
+  assert.equal(attachment.status, 200);
+  assert.equal(attachment.headers.get("content-type"), "application/octet-stream");
+  assert.match(attachment.headers.get("content-disposition"), /^attachment; filename="material\.pdf"; filename\*=UTF-8''same\.pdf$/);
+  assert.match(await attachment.text(), /^%PDF/);
+  assert.equal(redeemed, 2);
   const plans = load("lib/wechat-pay.ts", { "server-only": {} });
   assert.deepEqual(plans.membershipPlans().map((p) => p.code), ["annual"]);
   assert.equal(plans.membershipPlan("monthly"), null);

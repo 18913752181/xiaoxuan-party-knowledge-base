@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { downloadMaterialFile } from "@/lib/download-file";
+import { downloadMaterialFile, rememberDownload, unlockMaterialForDownload } from "@/lib/download-file";
 import type { Material } from "@/lib/types";
 
 type Access = { allowed: boolean; remaining: number; status: string | null; jsapi: boolean; pendingOrder: string | null; codeUrl: string | null; resume: Record<string, string> | null };
@@ -26,6 +26,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
   const [access, setAccess] = useState<Access | null>(null);
   const [guest, setGuest] = useState(false);
   const [message, setMessage] = useState("");
+  const [androidWechat, setAndroidWechat] = useState(false);
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState("");
   const [qr, setQr] = useState("");
@@ -35,6 +36,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
 
   useEffect(() => {
     const ctrl = new AbortController();
+    setAndroidWechat(/Android/i.test(navigator.userAgent) && /MicroMessenger/i.test(navigator.userAgent));
     const params = new URLSearchParams(location.search);
     if (params.get("plan") === "single") setPlan("single");
     if (params.get("jsapi") === "error") setMessage("微信授权未完成，请重试。");
@@ -137,8 +139,10 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
     inFlight.current = true;
     setBusy(true); setMessage("");
     try {
-      const result = await downloadMaterialFile(material, redeem);
-      setMessage(result.ok ? "下载已开始。" : result.error || "下载失败，请重试。");
+      const url = material.file_url;
+      const unlockOnly = redeem && androidWechat && url;
+      const result = unlockOnly ? await unlockMaterialForDownload(url) : await downloadMaterialFile(material, redeem);
+      setMessage(result.ok ? (unlockOnly ? "已解锁，点击「下载文件」保存。" : "已发起下载，请查看浏览器的下载提示。") : result.error || "下载失败，请重试。");
       if (result.needsLogin) setGuest(true);
       if (redeem) {
         const check = await fetch(endpoint, { cache: "no-store" });
@@ -175,7 +179,10 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
         </> : null}
         {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
         {!guest && access?.allowed ? <>
-          <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>
+          {androidWechat && material.file_url ? <>
+            <a href={material.file_url + "?attachment=1"} download className={button + " flex items-center justify-center"} onClick={() => void rememberDownload(material)}>下载文件</a>
+            <p className="mt-2 text-xs leading-5 text-neutral-600">若微信只打开文档，请查看右上角「⋯」是否有保存选项。已购资料可回来重新下载。</p>
+          </> : <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>}
           {access.remaining > 0 ? <Link href="/library/materials" className="mt-3 block text-sm text-neutral-600">剩余 {access.remaining} 次免费下载机会 · 去选资料</Link> : null}
         </> : null}
         {!guest && access && !access.allowed && !order && access.remaining > 0 ? (

@@ -75,7 +75,7 @@ function rememberDownloadLocally(userId: string, material: Material) {
   window.localStorage.setItem(`${DOWNLOADS_KEY}_${userId}`, JSON.stringify(next));
 }
 
-async function rememberDownload(material: Material) {
+export async function rememberDownload(material: Material) {
   try {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (!sessionResponse.ok) return;
@@ -88,6 +88,7 @@ async function rememberDownload(material: Material) {
     const articleSlug = material.slug || material.id;
     const response = await fetch("/api/downloads", {
       method: "POST",
+      keepalive: true,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         articleSlug,
@@ -157,7 +158,7 @@ export async function downloadAuthenticatedUrl(url: string, fallbackFileName: st
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(objectUrl);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30000);
 
   return { ok: true };
 }
@@ -169,6 +170,14 @@ export async function downloadMaterialFile(material: Material, redeem = false): 
   catch { result = { ok: false, error: "网络异常，请稍后重试。" }; }
   if (result.ok) await rememberDownload(material);
   return result;
+}
+
+export async function unlockMaterialForDownload(url: string): Promise<DownloadResult> {
+  const response = await fetch(url, {
+    method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ redeem: true, unlockOnly: true })
+  });
+  return response.ok ? { ok: true } : responseError(response);
 }
 
 export async function downloadMaterialsAsZip(materials: Material[]): Promise<BatchDownloadResult> {
