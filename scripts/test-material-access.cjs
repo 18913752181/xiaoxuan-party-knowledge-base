@@ -141,6 +141,18 @@ async function main() {
   assert.equal(issued.headers.get("Cache-Control"), "private, no-store");
   const { ticket } = await issued.json();
   user = null;
+  const openHandoff = (agent) => download(new Request("http://localhost/download?handoff=1&ticket=" + ticket, {
+    headers: { "User-Agent": agent }
+  }), { params: { id: "two" } });
+  const readsBeforeHandoff = reads;
+  const wechatPage = await openHandoff("Mozilla Android MicroMessenger");
+  assert.equal(wechatPage.status, 200);
+  assert.match(wechatPage.headers.get("content-type"), /^text\/html/);
+  assert.match(await wechatPage.text(), /在浏览器打开/);
+  const browserPage = await openHandoff("Mozilla Android Chrome");
+  assert.equal(browserPage.status, 200);
+  assert.match(await browserPage.text(), /<a href="\?ticket=[\w.-]+">下载文件<\/a>/);
+  assert.equal(reads, readsBeforeHandoff, "Opening the landing page does not send the attachment.");
   assert.equal((await useTicket(ticket, "different")).status, 403);
   assert.equal((await useTicket((ticket[0] === "A" ? "B" : "A") + ticket.slice(1))).status, 403);
   const handedOff = await useTicket(ticket);
@@ -154,9 +166,10 @@ async function main() {
   assert.equal((await useTicket(ticket)).status, 403);
   purchased = { owned: true, remaining: 0 };
   const now = Date.now;
-  Date.now = () => now() + 120_000;
+  Date.now = () => now() + 300_000;
   try {
     assert.equal((await useTicket(ticket)).status, 403);
+    assert.match(await (await openHandoff("Chrome")).text(), /链接已失效/);
   } finally {
     Date.now = now;
   }

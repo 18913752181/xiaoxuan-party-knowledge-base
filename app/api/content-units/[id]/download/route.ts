@@ -11,7 +11,7 @@ import { materialPurchaseAccess, redeemMaterialPurchase } from "@/lib/material-p
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const browserLinkLifetime = 2 * 60 * 1000;
+const browserLinkLifetime = 5 * 60 * 1000;
 
 function browserLinkSignature(payload: string) {
   const key = process.env.MATERIAL_DOWNLOAD_TICKET_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -54,6 +54,10 @@ function downloadFileName(headerName: string) {
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const query = new URL(request.url).searchParams;
   const ticket = query.get("ticket");
+  if (ticket !== null && query.get("handoff") === "1") {
+    const inWechat = /MicroMessenger/i.test(request.headers.get("user-agent") || "");
+    return download(params.id, { ticket, handoff: inWechat ? "wechat" : "browser" });
+  }
   return download(params.id, { ticket, attachment: ticket !== null || query.get("attachment") === "1" });
 }
 
@@ -65,12 +69,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
   return download(params.id, { redeem: true, unlockOnly: body.unlockOnly === true });
 }
 
-async function download(id: string, { redeem = false, attachment = false, unlockOnly = false, browserLink = false, ticket = null }: {
+async function download(id: string, { redeem = false, attachment = false, unlockOnly = false, browserLink = false, ticket = null, handoff }: {
   redeem?: boolean;
   attachment?: boolean;
   unlockOnly?: boolean;
   browserLink?: boolean;
   ticket?: string | null;
+  handoff?: "wechat" | "browser";
 }) {
   const session = ticket === null ? await getServerSession() : null;
   const finish = (response: NextResponse) => {
@@ -84,7 +89,10 @@ async function download(id: string, { redeem = false, attachment = false, unlock
   try {
     const slug = id.replace(/^content-/, "");
     const userId = ticket === null ? session?.user.id : browserLinkUser(ticket, slug);
-    if (!userId) return finish(NextResponse.json({ error: "下载链接无效或已过期，请回到微信重新生成。" }, { status: 403 }));
+    if (!userId) {
+      if (handoff) return finish(browserDownloadPage("链接已失效", "请回到微信，重新生成当前资料的下载链接。", 403));
+      return finish(NextResponse.json({ error: "下载链接无效或已过期，请回到微信重新生成。" }, { status: 403 }));
+    }
     const entitlement = await getMaterialEntitlement(userId);
     const purchase = entitlement.canDownload ? null : await materialPurchaseAccess(userId, slug);
     if (purchase && !purchase.owned && (!redeem || !purchase.remaining)) {
@@ -92,6 +100,13 @@ async function download(id: string, { redeem = false, attachment = false, unlock
     }
     const file = await getContentUnitDownloadFilePath(slug);
     if (!file) return finish(NextResponse.json({ error: "没有找到可下载的资料。" }, { status: 404 }));
+    if (handoff && ticket) {
+      if (handoff === "wechat") {
+        return finish(browserDownloadPage("在浏览器下载", "请点微信右上角的「⋯」，选择「在浏览器打开」，然后点「下载文件」。如果没有这个选项，可选择「复制链接」，再到手机浏览器打开。链接 5 分钟内有效。"));
+      }
+      const link = "?ticket=" + encodeURIComponent(ticket);
+      return finish(browserDownloadPage("资料已就绪", `<a href="${link}">下载文件</a>`));
+    }
     if (browserLink) {
       await access(file.path, constants.R_OK);
       const payload = Buffer.from(JSON.stringify({ userId, slug, expiresAt: Date.now() + browserLinkLifetime })).toString("base64url");
@@ -118,4 +133,24 @@ async function download(id: string, { redeem = false, attachment = false, unlock
     console.error("Material download failed", error);
     return finish(NextResponse.json({ error: "文件下载或权限核验暂时失败，请稍后重试。" }, { status: 503 }));
   }
+}
+
+function browserDownloadPage(title: string, content: string, status = 200) {
+  return new NextResponse(`<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} | 小宣资料库</title>
+<style>
+  body { margin: 0; color: #202020; background: #faf9f6; font: 16px/1.65 system-ui, sans-serif; }
+  main { max-width: 28rem; margin: 10vh auto; padding: 0 24px; }
+  h1 { font-size: 24px; }
+  a { display: inline-block; padding: 10px 20px; border-radius: 10px; background: #242424; color: white; text-decoration: none; }
+</style>
+<main><h1>${title}</h1><p>${content}</p></main>
+</html>`, { status, headers: {
+    "Content-Type": "text/html; charset=utf-8",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'"
+  } });
 }

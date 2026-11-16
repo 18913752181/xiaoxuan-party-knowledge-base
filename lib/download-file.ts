@@ -30,6 +30,10 @@ export type RecordedDownload = {
 
 const DOWNLOADS_KEY = "xiaoxuan_downloads";
 
+export function isAndroidWechat() {
+  return /Android/i.test(navigator.userAgent) && /MicroMessenger/i.test(navigator.userAgent);
+}
+
 export function listRecordedDownloads(userId: string) {
   if (typeof window === "undefined" || !userId) return [] as RecordedDownload[];
   try {

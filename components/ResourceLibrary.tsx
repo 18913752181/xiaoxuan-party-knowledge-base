@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { downloadMaterialFile, downloadMaterialsAsZip } from "@/lib/download-file";
+import { downloadMaterialFile, downloadMaterialsAsZip, isAndroidWechat } from "@/lib/download-file";
 import { getArticleSlug, listMyFavorites, toggleFavorite } from "@/lib/favorites";
 import { formatDisplayDay } from "@/lib/format-date";
 import type { Material } from "@/lib/types";
@@ -205,6 +205,10 @@ export function ResourceLibrary({
 
   async function download(material: Material) {
     if (downloadingSlug) return;
+    if (material.file_url && isAndroidWechat()) {
+      router.push("/membership/materials?slug=" + encodeURIComponent(getArticleSlug(material)));
+      return;
+    }
     setDownloadingSlug(getArticleSlug(material));
     setMessage("正在准备下载...");
     const result = await downloadMaterialFile(material);

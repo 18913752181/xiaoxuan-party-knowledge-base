@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { downloadMaterialFile, rememberDownload, unlockMaterialForDownload } from "@/lib/download-file";
+import { downloadMaterialFile, isAndroidWechat, unlockMaterialForDownload } from "@/lib/download-file";
 import type { Material } from "@/lib/types";
 
 type Access = { allowed: boolean; remaining: number; status: string | null; jsapi: boolean; pendingOrder: string | null; codeUrl: string | null; resume: Record<string, string> | null };
@@ -41,7 +41,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
     const ctrl = new AbortController();
     const wechat = /MicroMessenger/i.test(navigator.userAgent);
     setInWechat(wechat);
-    setAndroidWechat(wechat && /Android/i.test(navigator.userAgent));
+    setAndroidWechat(isAndroidWechat());
     setBrowserLink("");
     setShowCopyField(false);
     const params = new URLSearchParams(location.search);
@@ -149,7 +149,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
       const url = material.file_url;
       const unlockOnly = redeem && androidWechat && url;
       const result = unlockOnly ? await unlockMaterialForDownload(url) : await downloadMaterialFile(material, redeem);
-      setMessage(result.ok ? (unlockOnly ? "已解锁，点击「下载文件」保存。" : "已发起下载，请查看浏览器的下载提示。") : result.error || "下载失败，请重试。");
+      setMessage(result.ok ? (unlockOnly ? "已解锁，点击「用浏览器下载」继续。" : "已发起下载，请查看浏览器的下载提示。") : result.error || "下载失败，请重试。");
       if (result.needsLogin) setGuest(true);
       if (redeem) {
         const check = await fetch(endpoint, { cache: "no-store" });
@@ -177,6 +177,11 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
       if (!response.ok) throw Error(data.error || "暂时无法生成下载链接。");
       const url = new URL(material.file_url, location.origin);
       url.searchParams.set("ticket", data.ticket);
+      url.searchParams.set("handoff", "1");
+      if (androidWechat) {
+        location.assign(url.href);
+        return;
+      }
       setBrowserLink(url.href);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "暂时无法生成下载链接。");
@@ -223,19 +228,15 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
         </> : null}
         {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
         {!guest && access?.allowed ? <>
-          {androidWechat && material.file_url ? <>
-            <iframe name="material-attachment-download" title="附件下载" hidden />
-            <a href={material.file_url + "?attachment=1"} target="material-attachment-download" download className={button + " flex items-center justify-center"} onClick={() => {
-              setMessage("已请求下载。若未出现保存提示，可能是当前微信版本限制了网页下载。");
-              void rememberDownload(material);
-            }}>下载文件</a>
-          </> : <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>}
-          {inWechat && material.file_url ? <div className="mt-2">
+          {androidWechat ? (
+            <button type="button" className={button} disabled={busy || !material.file_url} onClick={() => void prepareBrowserLink()}>{busy ? "正在准备下载…" : "用浏览器下载"}</button>
+          ) : <button type="button" className={button} disabled={busy} onClick={() => void download()}>下载文件</button>}
+          {inWechat && !androidWechat && material.file_url ? <div className="mt-2">
             <button type="button" className="min-h-11 w-full rounded-xl border border-brand-line px-4 text-sm font-semibold text-brand-ink disabled:opacity-50" disabled={busy} onClick={() => void prepareBrowserLink()}>
               {browserLink ? "重新生成下载链接" : "用浏览器下载"}
             </button>
             {browserLink ? <>
-              <p className="mt-3 text-sm text-neutral-600">链接 2 分钟内有效，浏览器打开后可直接下载。</p>
+              <p className="mt-3 text-sm text-neutral-600">链接 5 分钟内有效，请在浏览器打开后下载。</p>
               <div className="flex flex-wrap gap-x-4 text-sm underline">
                 <a href={browserLink} rel="noreferrer" className="inline-flex min-h-11 items-center">打开下载链接</a>
                 <button type="button" className="min-h-11 underline" onClick={() => void copyBrowserLink()}>复制链接</button>
