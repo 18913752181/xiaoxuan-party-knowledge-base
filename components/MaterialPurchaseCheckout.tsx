@@ -22,8 +22,8 @@ export default function MaterialPurchaseCheckout({ material, hasPreview = false 
   const slug = material.slug || material.id;
   const page = "/membership/materials?slug=" + encodeURIComponent(slug);
   const endpoint = "/api/payments/materials?slug=" + encodeURIComponent(slug);
-  const login = "/login?redirect=" + encodeURIComponent(page);
   const [plan, setPlan] = useState<Plan>("pair");
+  const login = "/login?redirect=" + encodeURIComponent(page + "&plan=" + plan);
   const [access, setAccess] = useState<Access | null>(null);
   const [guest, setGuest] = useState(false);
   const [message, setMessage] = useState("");
@@ -204,7 +204,8 @@ export default function MaterialPurchaseCheckout({ material, hasPreview = false 
 
   const button = "mt-4 min-h-11 w-full rounded-xl bg-brand-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
   const price = plan === "pair" ? "4.90" : "3.90";
-  const purchasing = access && !access.allowed && !access.remaining && !order && !guest;
+  const purchasing = guest || (access && !access.allowed && !access.remaining && !order);
+  const description = material.description?.trim();
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
@@ -217,7 +218,7 @@ export default function MaterialPurchaseCheckout({ material, hasPreview = false 
           </div>
           <div className="min-w-0">
             <h1 className="break-words text-xl font-semibold leading-snug text-brand-ink sm:text-2xl">{material.title}</h1>
-            {material.description ? <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-neutral-600">{material.description}</p> : null}
+            {description && description !== "待补充" ? <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-neutral-600">{description}</p> : null}
           </div>
         </div>
         {hasPreview ? <MaterialPurchasePreview key={slug} slug={slug} /> : null}
@@ -235,9 +236,8 @@ export default function MaterialPurchaseCheckout({ material, hasPreview = false 
               </label>
             ))}
           </fieldset>
-          <button type="button" className={button} disabled={busy} onClick={() => void purchase()}>{busy ? "正在发起支付…" : "获取文档 · ¥" + price}</button>
+          {guest ? <Link href={login} className={button + " block text-center"}>登录并获取文档 · ¥{price}</Link> : <button type="button" className={button} disabled={busy} onClick={() => void purchase()}>{busy ? "正在发起支付…" : "获取文档 · ¥" + price}</button>}
         </> : null}
-        {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
         {!guest && access?.allowed ? <>
           {androidWechat ? (
             <button type="button" className={button} disabled={busy || !material.file_url} onClick={() => void prepareBrowserLink()}>{busy ? "正在准备下载…" : "用浏览器下载"}</button>
