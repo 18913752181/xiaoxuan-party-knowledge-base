@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { downloadMaterialFile, isAndroidWechat, unlockMaterialForDownload } from "@/lib/download-file";
 import type { Material } from "@/lib/types";
+import MaterialPurchasePreview from "@/components/MaterialPurchasePreview";
 
 type Access = { allowed: boolean; remaining: number; status: string | null; jsapi: boolean; pendingOrder: string | null; codeUrl: string | null; resume: Record<string, string> | null };
 type Plan = "single" | "pair";
@@ -17,7 +18,7 @@ async function invokeWechat(params: Record<string, string>) {
   if (result.err_msg !== "get_brand_wcpay_request:ok") throw Error("未完成支付，可继续支付或取消订单。");
 }
 
-export default function MaterialPurchaseCheckout({ material }: { material: Material }) {
+export default function MaterialPurchaseCheckout({ material, hasPreview = false }: { material: Material; hasPreview?: boolean }) {
   const slug = material.slug || material.id;
   const page = "/membership/materials?slug=" + encodeURIComponent(slug);
   const endpoint = "/api/payments/materials?slug=" + encodeURIComponent(slug);
@@ -206,25 +207,35 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
   const purchasing = access && !access.allowed && !access.remaining && !order && !guest;
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
+    <main className="mx-auto max-w-2xl px-4 py-8">
       <Link href="/library/materials" className="text-sm text-neutral-600">返回资料列表</Link>
       <section className="mt-4 rounded-2xl border border-brand-line bg-white p-5">
-        <h1 className="break-words text-xl font-semibold text-brand-ink">{material.title}</h1>
+        <div className="flex items-start gap-4 sm:gap-6">
+          <div aria-hidden="true" className="flex aspect-[3/4] w-24 shrink-0 flex-col justify-between rounded-xl bg-[#f2efe8] p-3 text-[#76624c] sm:w-32 sm:p-4">
+            <span className="line-clamp-4 text-xs font-semibold leading-relaxed sm:text-sm">{material.title}</span>
+            <span className="border-t border-[#d9d1c6] pt-2 text-xs uppercase">{material.file_type}</span>
+          </div>
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold leading-snug text-brand-ink sm:text-2xl">{material.title}</h1>
+            {material.description ? <p className="mt-3 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-neutral-600">{material.description}</p> : null}
+          </div>
+        </div>
+        {hasPreview ? <MaterialPurchasePreview key={slug} slug={slug} /> : null}
         {purchasing ? <>
-          <fieldset className="mt-5 grid gap-2">
-            <legend className="sr-only">购买方案</legend>
+          <fieldset className="mt-7 grid gap-3">
+            <legend className="mb-3 text-base font-semibold">选择获取方式</legend>
             {([
               ["single", "单份下载", "当前文件", "3.90"],
               ["pair", "双份优惠", "当前文件＋购后任选一份", "4.90"]
             ] as const).map(([key, title, detail, amount]) => (
-              <label key={key} className={"flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 " + (plan === key ? "border-[#796031] bg-[#fffdf7]" : "border-brand-line")}>
-                <input type="radio" name="material-plan" checked={plan === key} onChange={() => setPlan(key)} disabled={busy} />
+              <label key={key} className={"flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border px-4 py-4 " + (plan === key ? "border-[#796031] bg-[#fffdf7]" : "border-brand-line")}>
+                <input type="radio" name="material-plan" className="h-4 w-4 shrink-0 accent-[#796031]" checked={plan === key} onChange={() => setPlan(key)} disabled={busy} />
                 <span className="min-w-0 flex-1"><strong className="block text-sm">{title}</strong><small className="text-neutral-600">{detail}</small></span>
                 <strong className="shrink-0">¥{amount}</strong>
               </label>
             ))}
           </fieldset>
-          <button type="button" className={button} disabled={busy} onClick={() => void purchase()}>{busy ? "正在发起支付…" : "微信支付 ¥" + price}</button>
+          <button type="button" className={button} disabled={busy} onClick={() => void purchase()}>{busy ? "正在发起支付…" : "获取文档 · ¥" + price}</button>
         </> : null}
         {guest ? <Link href={login} className={button + " block text-center"}>登录后继续</Link> : null}
         {!guest && access?.allowed ? <>
@@ -261,7 +272,7 @@ export default function MaterialPurchaseCheckout({ material }: { material: Mater
         </div> : null}
         {!guest && !access && !message ? <p className="mt-4 text-sm text-neutral-600">正在核验下载权益…</p> : null}
         {message ? <p className="mt-3 text-sm text-neutral-700" role="status">{message}</p> : null}
-        <Link href="/membership/payment" className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-[#fff8df] p-3 text-sm">
+        <Link href="/membership/payment" className="mt-6 flex items-center justify-between gap-3 border-t border-brand-line pt-5 text-sm">
           <span><strong className="block">年度会员</strong>有效期内全站资料直接下载</span><strong className="shrink-0">¥99／年</strong>
         </Link>
         <dialog ref={dialog} className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl p-5 backdrop:bg-black/50" aria-labelledby="material-redeem-title">
