@@ -18,7 +18,9 @@ RUN npm run build
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends libreoffice-writer libreoffice-impress libreoffice-calc poppler-utils fonts-noto-cjk \
+RUN sed -i 's|http://deb.debian.org|http://mirrors.cloud.tencent.com|g' /etc/apt/sources.list.d/debian.sources \
+  && apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 update \
+  && apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 install -y --no-install-recommends libreoffice-writer libreoffice-impress libreoffice-calc poppler-utils fonts-noto-cjk \
   && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
